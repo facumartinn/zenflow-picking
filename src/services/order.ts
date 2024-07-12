@@ -18,6 +18,7 @@ export const getAllOrders = async (): Promise<Order[]> => {
 export const getFilteredOrders = async (filters: FilterParamTypes): Promise<Order[]> => {
   try {
     const response = await api.get(`/orders/filtered?${objectToQueryString(filters as QueryParams)}`)
+    console.log(response.data.data)
     return response.data.data
   } catch (error) {
     console.error('Error fetching filtered orders:', error)

@@ -2,11 +2,16 @@
 export interface Order {
   id: number
   state_id: number | null
+  state_picking_id: number | null
   amount: number
   user_id: number | null
   assembly_date: Date | null
   tenant_id: number
   warehouse_id: number
+  updated_at: string | null
+  created_at: string | null
+  OrderDetails?: OrderDetails[]
+  OrderPositions: OrderPosition[]
 }
 
 export interface OrderDetails {
@@ -20,6 +25,7 @@ export interface OrderDetails {
   quantityPicked: number | null
   tenant_id: number
   warehouse_id: number
+  Orders: Order
 }
 
 export interface OrderPosition {
@@ -48,6 +54,7 @@ export interface FilterParamTypes {
   assemblyDate?: string
   startDate?: Date
   endDate?: Date
+  includeDetails?: boolean
 }
 
 export enum OrderStateEnum {

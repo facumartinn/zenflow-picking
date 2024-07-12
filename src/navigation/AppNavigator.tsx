@@ -10,7 +10,6 @@ import PickerLoginScreen from '../screens/PickerLoginScreen'
 import { RootStackParamList } from './types'
 import {
   defaultHeaderOptions,
-  orderDetailHeaderOptions,
   pickingSelectionHeaderOptions,
   pickingHeaderOptions,
   packingHeaderOptions,
@@ -21,6 +20,7 @@ import { isAdminLoggedInAtom } from '../store/authAtoms'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import AdminLoginScreen from '../screens/AdminLoginScreen'
 import HomeScreen from '../screens/HomeScreen'
+import { CompletedOrderDetailScreen } from '../screens/CompletedOrderDetailScreen'
 
 const Stack = createStackNavigator<RootStackParamList>()
 
@@ -45,7 +45,8 @@ const AppNavigator = () => {
           <Stack.Screen name="PickerLogin" component={PickerLoginScreen} options={pickerLoginHeaderOptions} />
           <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={orderDetailHeaderOptions} />
+          <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="CompletedOrderDetail" component={CompletedOrderDetailScreen} options={{ headerShown: false }} />
           <Stack.Screen name="PickingSelection" component={PickingSelectionScreen} options={pickingSelectionHeaderOptions} />
           <Stack.Screen name="Picking" component={PickingScreen} options={pickingHeaderOptions} />
           <Stack.Screen name="Packing" component={PackingScreen} options={packingHeaderOptions} />

@@ -1,16 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react'
-import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native'
-import { getFilteredOrders } from '../../services/order'
-import { useQuery } from '@tanstack/react-query'
-import { OrderStateEnum } from '../../types/order'
+import { View, Text, Image } from 'react-native'
 import { styles } from './styles'
-import { Feather } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAtom } from 'jotai'
 import { isAdminLoggedInAtom } from '../../store'
 import { navigate } from '../../navigation/NavigationService'
 import { DefaultHeader } from '../../components/DefaultHeader'
+import TabSelector from '../../components/HomeTabSelector'
+import OrdersList from '../../components/OrderList'
 
 const HomeScreen = () => {
   const [, setIsAdminLoggedIn] = useAtom(isAdminLoggedInAtom)
@@ -23,39 +21,9 @@ const HomeScreen = () => {
 
     // Actualizar el átomo de autenticación
     setIsAdminLoggedIn(false)
-
     // Redirigir al usuario a la pantalla de login
     navigate('AdminLogin')
   }
-  const stateId = selectedTab === 'pending' ? OrderStateEnum.READY_TO_PICK : OrderStateEnum.COMPLETED // Define el stateId correspondiente a cada estado
-
-  const {
-    data: orders = [],
-    isLoading,
-    error
-  } = useQuery<any[]>({
-    queryKey: ['orders', stateId],
-    queryFn: () => getFilteredOrders({ stateId: [stateId] }),
-    refetchInterval: 30000 // Refetch cada 30 segundos
-  })
-  const renderOrderItem = ({ item }: any) => (
-    <View style={styles.orderItem}>
-      <View>
-        <View style={styles.orderBox}>
-          <Feather name="box" size={24} color="black" />
-          <Text style={styles.orderText}>Nro pedido</Text>
-        </View>
-        <Text style={styles.orderNumber}>{item.id}</Text>
-      </View>
-      <View>
-        <Text style={styles.orderText}>Cant.</Text>
-        <Text style={styles.orderQuantity}>{item.amount}</Text>
-      </View>
-      <View>
-        <Text style={styles.orderText}>VOS</Text>
-      </View>
-    </View>
-  )
 
   return (
     <View style={styles.container}>
@@ -85,26 +53,9 @@ const HomeScreen = () => {
           rightAction={() => navigate('Profile')}
         />
       </View>
-      <View style={styles.tabContainer}>
-        <View style={styles.tabInsideContainer}>
-          <TouchableOpacity style={[styles.tabButton, selectedTab === 'pending' && styles.activeTab]} onPress={() => setSelectedTab('pending')}>
-            <Text style={[styles.tabText, selectedTab === 'pending' && styles.tabTextActive]}>Pendientes</Text>
-            <Text style={[styles.tabTextAmount, selectedTab === 'pending' && styles.tabTextAmountActive]}>15</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.tabButton, selectedTab === 'completed' && styles.activeTab]} onPress={() => setSelectedTab('completed')}>
-            <Text style={[styles.tabText, selectedTab === 'completed' && styles.tabTextActive]}>Finalizados</Text>
-            <Text style={[styles.tabTextAmount, selectedTab === 'completed' && styles.tabTextAmountActive]}>32</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <TabSelector selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
       <Text style={styles.sectionTitle}>SELECCIÓN MULTIPLE</Text>
-      {isLoading ? (
-        <Text>Loading...</Text>
-      ) : error ? (
-        <Text>Error fetching orders</Text>
-      ) : (
-        <FlatList data={orders} renderItem={renderOrderItem} keyExtractor={item => item.id.toString()} />
-      )}
+      <OrdersList selectedTab={selectedTab} />
     </View>
   )
 }

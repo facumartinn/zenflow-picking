@@ -27,7 +27,7 @@ export const getOrderDetailsByIds = async (ids: number[]): Promise<OrderDetails[
 export const getOrderDetail = async (id: number): Promise<OrderDetails[]> => {
   try {
     const response = await api.get(`/order-details/${id}`)
-    return response.data
+    return response.data.data
   } catch (error) {
     console.error(`Error fetching order detail with ID ${id}:`, error)
     throw error

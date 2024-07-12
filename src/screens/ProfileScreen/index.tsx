@@ -29,7 +29,6 @@ const ProfileScreen = () => {
   }
   return (
     <View style={styles.container}>
-      {/* <Text>{JSON.stringify(pickerUser)}</Text> */}
       <View>
         <DefaultHeader
           title={<Text style={styles.headerTitle}>Perfil</Text>}

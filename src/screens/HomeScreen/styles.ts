@@ -1,32 +1,15 @@
+// styles.ts
 import { StyleSheet } from 'react-native'
 import Colors from '../../constants/Colors'
 
 export const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.grey1,
     flex: 1,
-    paddingHorizontal: 16
+    backgroundColor: Colors.background,
+    padding: 16
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     marginBottom: 16
-  },
-  logo: {
-    width: 40,
-    height: 40,
-    borderRadius: 20
-  },
-  companyName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.black
-  },
-  profilePicture: {
-    width: 40,
-    height: 40,
-    borderRadius: 20
   },
   tabContainer: {
     width: '100%',
@@ -48,7 +31,7 @@ export const styles = StyleSheet.create({
   tabButton: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: 12,
     borderRadius: 30,
     borderWidth: 1,
     backgroundColor: Colors.white,
@@ -63,15 +46,15 @@ export const styles = StyleSheet.create({
     fontWeight: '400',
     color: Colors.grey3
   },
-  tabTextAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.grey3
-  },
   tabTextActive: {
     fontSize: 16,
     fontWeight: '400',
     color: Colors.white
+  },
+  tabTextAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.grey3
   },
   tabTextAmountActive: {
     fontSize: 16,
@@ -88,24 +71,24 @@ export const styles = StyleSheet.create({
   },
   orderItem: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: 20,
     padding: 20,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: Colors.grey3,
-    backgroundColor: Colors.white,
     marginBottom: 8
   },
   orderBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8
+    gap: 8
   },
   orderText: {
-    marginLeft: 8,
     fontSize: 14,
-    color: Colors.grey5
+    marginBottom: 4,
+    color: Colors.grey3
   },
   orderNumber: {
     fontSize: 16,
@@ -117,8 +100,19 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.black
   },
-  selectButton: {
-    marginTop: 16,
-    backgroundColor: Colors.mainBlue
+  logo: {
+    width: 40,
+    height: 40,
+    borderRadius: 20
+  },
+  companyName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.black
+  },
+  profilePicture: {
+    width: 40,
+    height: 40,
+    borderRadius: 20
   }
 })

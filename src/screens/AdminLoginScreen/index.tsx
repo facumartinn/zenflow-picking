@@ -25,7 +25,6 @@ const AdminLoginScreen = () => {
 
       // Actualizar el átomo de autenticación
       setIsAdminLoggedIn(true)
-
       // Redirigir al usuario a la pantalla principal
       navigate('PickerLogin')
     } catch (err) {

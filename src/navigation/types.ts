@@ -7,7 +7,8 @@ export type RootStackParamList = {
   PickerLogin: undefined
   Home: undefined
   Profile: undefined
-  OrderDetail: { orderId: number }
+  OrderDetail: { orderId: number; quantity?: number; stateId?: number }
+  CompletedOrderDetail: { orderId: number; quantity?: number; stateId?: number }
   PickingSelection: undefined
   Picking: undefined
   Packing: undefined
