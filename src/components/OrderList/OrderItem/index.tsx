@@ -4,8 +4,8 @@ import { styles } from './styles'
 import { Order, OrderStateEnum, PickingStateEnum } from '../../../types/order'
 import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons'
 import { TouchableOpacity } from 'react-native-gesture-handler'
-import { navigate } from '../../../navigation/NavigationService'
 import { formatTime } from '../../../utils/queryParams'
+import { router } from 'expo-router'
 
 interface OrderItemProps {
   item: Order
@@ -15,12 +15,17 @@ interface OrderItemProps {
 const OrderItem: React.FC<OrderItemProps> = ({ item, userId }) => {
   const getQuantity = () => item?.OrderDetails?.reduce((acc, curr) => acc + (curr.quantity || 0), 0)
   const getPickedQuantity = () => item?.OrderDetails?.reduce((acc, curr) => acc + (curr.quantityPicked || 0), 0)
-  const orderDetailToNavigate = item.state_id === OrderStateEnum.READY_TO_PICK ? 'OrderDetail' : 'CompletedOrderDetail'
+  const orderDetailToNavigate = item.state_id === OrderStateEnum.READY_TO_PICK ? '/order-detail' : '/completed-order-detail'
 
   return (
     <TouchableOpacity
       style={styles.orderItem}
-      onPress={() => navigate(orderDetailToNavigate, { orderId: item.id, quantity: item?.OrderDetails?.length, stateId: item.state_id || undefined })}
+      onPress={() =>
+        router.navigate({
+          pathname: orderDetailToNavigate,
+          params: { orderId: item.id, quantity: item?.OrderDetails?.length, stateId: item.state_id || undefined }
+        })
+      }
     >
       <View style={styles.orderContainer}>
         <View style={styles.order}>

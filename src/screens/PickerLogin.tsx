@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, Image } from 'react-native'
+import { View, Text, Image, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
-import styles from './styles'
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from 'react-native-confirmation-code-field'
-import { DefaultHeader } from '../../components/DefaultHeader'
+import { DefaultHeader } from '../components/DefaultHeader'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { navigate } from '../../navigation/NavigationService'
-import { isAdminLoggedInAtom, isPickerLoggedInAtom, userAtom } from '../../store'
+import { isAdminLoggedInAtom, isPickerLoggedInAtom, userAtom } from '../store'
 import { useAtom } from 'jotai'
-import { loginPickingUser } from '../../services/auth'
-import { DefaultModal } from '../../components/DefaultModal'
+import { loginPickingUser } from '../services/auth'
+import { DefaultModal } from '../components/DefaultModal'
+import Colors from '../constants/Colors'
+import { router } from 'expo-router'
 const CELL_COUNT = 4
 
 const PickerLoginScreen = () => {
@@ -41,7 +41,7 @@ const PickerLoginScreen = () => {
       setPickerUser(response.data.user)
       await AsyncStorage.setItem('authPickerToken', response.data.token)
       await AsyncStorage.setItem('pickerId', response.data.user.id.toString())
-      navigate('Home')
+      router.navigate('/home')
       setIsPickerLoggedIn(true)
     } catch (error) {
       console.log('Error:', error)
@@ -59,7 +59,7 @@ const PickerLoginScreen = () => {
     setIsAdminLoggedIn(false)
     setValue('')
     // Redirigir al usuario a la pantalla de login
-    navigate('AdminLogin')
+    router.navigate('/admin-login')
   }
 
   return (
@@ -116,3 +116,64 @@ const PickerLoginScreen = () => {
 }
 
 export default PickerLoginScreen
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 20,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    backgroundColor: Colors.grey1
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    marginBottom: 20,
+    borderRadius: 190
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: Colors.black
+  },
+  subtitle: {
+    fontSize: 12,
+    marginVertical: 20,
+    color: '#4A4D4F'
+  },
+  input: {
+    borderColor: Colors.grey3,
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    width: '80%',
+    marginBottom: 20,
+    textAlign: 'center'
+  },
+  button: {
+    backgroundColor: Colors.mainBlue,
+    borderRadius: 5
+  },
+  root: {
+    flex: 1,
+    padding: 20
+  },
+  codeFieldRoot: {
+    marginTop: 20
+  },
+  cell: {
+    width: 40,
+    height: 48,
+    lineHeight: 45,
+    fontSize: 24,
+    borderWidth: 2,
+    borderColor: '#B7B7B7',
+    textAlign: 'center',
+    marginRight: 10,
+    borderRadius: 10
+  },
+  focusCell: {
+    borderColor: '#2D41FC'
+  }
+})

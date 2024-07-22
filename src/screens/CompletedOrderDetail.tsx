@@ -1,45 +1,36 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 import React from 'react'
-import { View, Text, TouchableOpacity, Alert, Platform } from 'react-native'
-import { DefaultHeader } from '../../components/DefaultHeader'
-import { navigate } from '../../navigation/NavigationService'
+import { View, Text, TouchableOpacity, Alert, Platform, StyleSheet } from 'react-native'
+import { DefaultHeader } from '../components/DefaultHeader'
 import { AntDesign, Feather, SimpleLineIcons } from '@expo/vector-icons'
-import styles from './styles'
-import { OrderDetailLoader } from '../../store/OrderLoader'
-import { RouteProp } from '@react-navigation/native'
-import Colors from '../../constants/Colors'
+import { OrderDetailLoader } from '../store/OrderLoader'
+import Colors from '../constants/Colors'
 import { useAtom } from 'jotai'
-import { orderDetailsAtom } from '../../store'
-import { formatTime } from '../../utils/queryParams'
-import PositionsList from '../../components/PositionCard'
+import { orderDetailsAtom } from '../store'
+import { formatTime } from '../utils/queryParams'
+import PositionsList from '../components/PositionCard'
 import RNHTMLtoPDF from 'react-native-html-to-pdf'
 import * as FileSystem from 'expo-file-system'
 import * as Sharing from 'expo-sharing'
+import { router, useLocalSearchParams } from 'expo-router'
 
-interface CompletedOrderDetailScreenProps {
-  route: RouteProp<
-    {
-      params: {
-        orderId: number
-        quantity: number
-        stateId: number
-      }
-    },
-    'params'
-  >
+type LocalSearchParams = {
+  orderId: number
+  stateId: number
+  quantity: number
 }
 
-export const CompletedOrderDetailScreen = ({ route }: CompletedOrderDetailScreenProps) => {
-  const { orderId, stateId, quantity } = route.params
+const CompletedOrderDetail = () => {
+  const { orderId, stateId, quantity }: Partial<LocalSearchParams> = useLocalSearchParams()
   const [orderDetails, setOrderDetails] = useAtom(orderDetailsAtom)
 
   const handleBack = () => {
     setOrderDetails([])
-    navigate('Home')
+    router.navigate('/home')
   }
 
   const handleOrderDetailNavigation = () => {
-    navigate('OrderDetail', { orderId, quantity, stateId })
+    router.navigate({ pathname: '/order-detail', params: { orderId, quantity, stateId } })
   }
 
   const generatePDF = async () => {
@@ -71,27 +62,38 @@ export const CompletedOrderDetailScreen = ({ route }: CompletedOrderDetailScreen
     try {
       const options = {
         html: htmlContent,
-        fileName: `order_detail_${orderId}`,
+        fileName: 'order_detail',
         base64: false
       }
-      console.log(options)
+
+      console.log('Options:', options)
 
       const pdf = await RNHTMLtoPDF.convert(options)
-      console.log(pdf, 'pdf')
+      console.log('Generated PDF:', pdf)
 
       if (pdf.filePath) {
+        const fileInfo = await FileSystem.getInfoAsync(pdf.filePath)
+        console.log('File Info:', fileInfo)
+
+        if (!fileInfo.exists) {
+          throw new Error(`PDF file not found at path: ${pdf.filePath}`)
+        }
+
         if (Platform.OS === 'ios') {
           await Sharing.shareAsync(pdf.filePath)
         } else {
           const downloadPath = `${FileSystem.documentDirectory}order_detail.pdf`
+          console.log(`Download Path: ${downloadPath}, PDF File Path: ${pdf.filePath}`)
           await FileSystem.copyAsync({
             from: pdf.filePath,
             to: downloadPath
           })
+          console.log('PDF saved successfully.')
           Alert.alert('PDF guardado', 'El PDF ha sido guardado correctamente.')
         }
       }
     } catch (error) {
+      console.log(error)
       Alert.alert('Error', 'Hubo un error al generar el PDF.')
     }
   }
@@ -114,7 +116,7 @@ export const CompletedOrderDetailScreen = ({ route }: CompletedOrderDetailScreen
 
   return (
     <View>
-      <OrderDetailLoader orderId={orderId} />
+      <OrderDetailLoader orderId={orderId!} />
       <DefaultHeader
         title={<Text style={styles.headerTitle}>Detalle pedido</Text>}
         leftIcon={
@@ -155,3 +157,61 @@ export const CompletedOrderDetailScreen = ({ route }: CompletedOrderDetailScreen
     </View>
   )
 }
+
+export default CompletedOrderDetail
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.black
+  },
+  titleBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  title: {
+    fontSize: 20,
+    marginLeft: 15,
+    color: Colors.grey5
+  },
+  value: {
+    fontSize: 20,
+    marginLeft: 15,
+    fontWeight: 'bold',
+    color: Colors.black
+  },
+  enterDetailScreen: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '50%',
+    backgroundColor: Colors.mainBlue,
+    marginVertical: 10,
+    marginHorizontal: 30,
+    height: 66,
+    borderRadius: 50
+  },
+  startPickingText: {
+    color: Colors.white,
+    fontWeight: 'bold',
+    fontSize: 16
+  },
+  buttonContainer: {
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center'
+  },
+  downloadDetailScreen: {
+    marginTop: 10
+  },
+  downloadDetailText: {
+    color: Colors.black,
+    fontWeight: 'bold',
+    fontSize: 16
+  }
+})

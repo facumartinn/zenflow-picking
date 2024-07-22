@@ -1,15 +1,14 @@
 import React, { useState } from 'react'
-import { View, Text, TouchableOpacity, Image } from 'react-native'
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native'
 import AntDesign from '@expo/vector-icons/AntDesign'
-import { DefaultHeader } from '../../components/DefaultHeader'
-import styles from './styles'
-import { navigate } from '../../navigation/NavigationService'
+import { DefaultHeader } from '../components/DefaultHeader'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { DefaultModal } from '../../components/DefaultModal'
-import Colors from '../../constants/Colors'
+import { DefaultModal } from '../components/DefaultModal'
+import Colors from '../constants/Colors'
 import { useAtom } from 'jotai'
-import { userAtom } from '../../store'
+import { userAtom } from '../store'
 import { Feather } from '@expo/vector-icons'
+import { router } from 'expo-router'
 
 const ProfileScreen = () => {
   const [pickerUser] = useAtom(userAtom)
@@ -24,7 +23,7 @@ const ProfileScreen = () => {
   const handlePickerLogout = async () => {
     await AsyncStorage.removeItem('authPickerToken')
     await AsyncStorage.removeItem('pickerId')
-    navigate('PickerLogin')
+    router.navigate('/picker-login')
     setModalVisible(false)
   }
   return (
@@ -37,7 +36,7 @@ const ProfileScreen = () => {
               <AntDesign name="arrowleft" size={24} color="black" style={{ padding: 8 }} />
             </View>
           }
-          leftAction={() => navigate('Home')}
+          leftAction={() => router.navigate('/home')}
         />
       </View>
       <View style={{ marginTop: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -84,3 +83,20 @@ const ProfileScreen = () => {
 }
 
 export default ProfileScreen
+
+const styles = StyleSheet.create({
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '400',
+    color: Colors.black
+  },
+  container: {
+    display: 'flex',
+    justifyContent: 'space-between'
+  },
+  logo: {
+    width: 150,
+    height: 150,
+    borderRadius: 100
+  }
+})

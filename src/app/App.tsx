@@ -1,22 +1,18 @@
-import 'react-native-gesture-handler'
+import { ExpoRoot } from 'expo-router'
 import React from 'react'
-import { NavigationContainer } from '@react-navigation/native'
 import { Provider as JotaiProvider } from 'jotai'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { navigationRef } from '../navigation/NavigationService'
-import AppNavigator from '../navigation/AppNavigator'
+import { requireContext } from '../utils/requireContext'
 
 const queryClient = new QueryClient()
 
 const App = () => {
   return (
-    <NavigationContainer ref={navigationRef} independent={true}>
-      <JotaiProvider>
-        <QueryClientProvider client={queryClient}>
-          <AppNavigator />
-        </QueryClientProvider>
-      </JotaiProvider>
-    </NavigationContainer>
+    <JotaiProvider>
+      <QueryClientProvider client={queryClient}>
+        <ExpoRoot context={requireContext} />
+      </QueryClientProvider>
+    </JotaiProvider>
   )
 }
 

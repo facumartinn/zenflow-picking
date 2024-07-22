@@ -1,46 +1,38 @@
-// OrderDetailScreen.tsx
 import React from 'react'
-import { View, Text, FlatList } from 'react-native'
-import { DefaultHeader } from '../../components/DefaultHeader'
+import { View, Text, FlatList, StyleSheet } from 'react-native'
+import { DefaultHeader } from '../components/DefaultHeader'
 import AntDesign from '@expo/vector-icons/AntDesign'
-import { navigate } from '../../navigation/NavigationService'
-import styles from './styles'
-import { RouteProp } from '@react-navigation/native'
 import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons'
 import Feather from '@expo/vector-icons/Feather'
-import Colors from '../../constants/Colors'
-import ProductCard from '../../components/ProductCard'
-import { OrderStateEnum } from '../../types/order'
+import Colors from '../constants/Colors'
+import ProductCard from '../components/ProductCard'
+import { OrderStateEnum } from '../types/order'
 import { TouchableOpacity } from 'react-native-gesture-handler'
-import { OrderDetailLoader } from '../../store/OrderLoader'
-import { orderDetailsAtom } from '../../store'
+import { OrderDetailLoader } from '../store/OrderLoader'
+import { orderDetailsAtom } from '../store'
 import { useAtom } from 'jotai'
+import { router, useLocalSearchParams } from 'expo-router'
 
-interface OrderDetailScreenProps {
-  route: RouteProp<
-    {
-      params: {
-        orderId: number
-        quantity: number
-        stateId: number
-      }
-    },
-    'params'
-  >
+type LocalSearchParams = {
+  orderId: number
+  stateId: number
+  quantity: number
 }
 
-const OrderDetailScreen = ({ route }: OrderDetailScreenProps) => {
-  const { orderId, stateId, quantity } = route.params
+const OrderDetailScreen = () => {
+  const { orderId, stateId, quantity }: Partial<LocalSearchParams> = useLocalSearchParams()
   const [orderDetails, setOrderDetails] = useAtom(orderDetailsAtom)
 
   const handleBack = () => {
     setOrderDetails([])
-    return stateId === OrderStateEnum.READY_TO_PICK ? navigate('Home') : navigate('CompletedOrderDetail', { orderId, stateId, quantity })
+    return stateId === OrderStateEnum.READY_TO_PICK
+      ? router.navigate('/home')
+      : router.navigate({ pathname: '/completed-order-detail', params: { orderId, stateId, quantity } })
   }
 
   return (
     <View style={{ flex: 1 }}>
-      <OrderDetailLoader orderId={orderId} />
+      <OrderDetailLoader orderId={orderId!} />
       <DefaultHeader
         title={<Text style={styles.headerTitle}>Detalle pedido</Text>}
         leftIcon={
@@ -73,3 +65,41 @@ const OrderDetailScreen = ({ route }: OrderDetailScreenProps) => {
 }
 
 export default OrderDetailScreen
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.black
+  },
+  titleBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  title: {
+    fontSize: 20,
+    marginLeft: 15,
+    color: Colors.grey5
+  },
+  value: {
+    fontSize: 20,
+    marginLeft: 15,
+    fontWeight: 'bold',
+    color: Colors.black
+  },
+  startPickingButton: {
+    backgroundColor: Colors.mainBlue,
+    padding: 20,
+    height: 66,
+    alignItems: 'center'
+  },
+  startPickingText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16
+  }
+})

@@ -1,17 +1,11 @@
 import React from 'react'
 import { View, Text, FlatList, Button } from 'react-native'
-import { useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'
 import { getFilteredOrders } from '../services/order'
 import { Order } from '../types/order'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { RootStackParamList } from '../navigation/types'
-
-type CompletedOrdersScreenNavigationProp = StackNavigationProp<RootStackParamList, 'OrderDetail'>
+import { router } from 'expo-router'
 
 const CompletedOrdersScreen = () => {
-  const navigation = useNavigation<CompletedOrdersScreenNavigationProp>()
-
   const {
     data: orders = [],
     isLoading,
@@ -45,12 +39,12 @@ const CompletedOrdersScreen = () => {
         data={orders}
         renderItem={({ item }) => (
           <View>
-            <Text>{item.id}</Text>
-            <Text>{item.amount}</Text>
-            <Button title="Detalles" onPress={() => navigation.navigate('OrderDetail', { orderId: item.id })} />
+            <Text>{item?.id}</Text>
+            <Text>{item?.amount}</Text>
+            <Button title="Detalles" onPress={() => router.navigate({ pathname: '/order-detail', params: { orderId: item.id } })} />
           </View>
         )}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={item => item?.id?.toString()}
       />
     </View>
   )

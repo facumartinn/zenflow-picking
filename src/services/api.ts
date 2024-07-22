@@ -47,10 +47,6 @@ api.interceptors.response.use(
       // Redirigir al usuario a la pantalla de login
       // Aquí debes usar la navegación de tu aplicación
       // Ejemplo: navigation.navigate('Login');
-
-      // Si estás usando react-navigation, puedes hacer algo como esto:
-      // const navigation = useNavigation();
-      // navigation.navigate('Login');
     }
 
     return Promise.reject(error)

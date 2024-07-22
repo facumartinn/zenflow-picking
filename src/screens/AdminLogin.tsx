@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
-import { View, TextInput, Text } from 'react-native'
+import { router } from 'expo-router'
+import { View, TextInput, Text, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { loginAdmin } from '../../services/auth'
-import { navigate } from '../../navigation/NavigationService'
-import { isAdminLoggedInAtom } from '../../store/authAtoms'
+import { loginAdmin } from '../services/auth'
+import { isAdminLoggedInAtom } from '../store/authAtoms'
 import { useAtom } from 'jotai'
-import { styles } from './styles'
-import { DefaultButton } from '../../components/DefaultButton'
+import { DefaultButton } from '../components/DefaultButton'
+import Colors from '../constants/Colors'
 
 const AdminLoginScreen = () => {
   const [, setIsAdminLoggedIn] = useAtom(isAdminLoggedInAtom)
@@ -16,6 +16,7 @@ const AdminLoginScreen = () => {
 
   const handleLogin = async () => {
     try {
+      console.log('hoa')
       const { token, user } = await loginAdmin(userEmail, password)
 
       // Guardar el token, tenantId y warehouseId en AsyncStorage
@@ -26,7 +27,7 @@ const AdminLoginScreen = () => {
       // Actualizar el átomo de autenticación
       setIsAdminLoggedIn(true)
       // Redirigir al usuario a la pantalla principal
-      navigate('PickerLogin')
+      router.navigate('/picker-login')
     } catch (err) {
       setError('Invalid credentials')
     }
@@ -44,5 +45,42 @@ const AdminLoginScreen = () => {
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: Colors.white
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginVertical: 25,
+    color: Colors.black
+  },
+  inputTitle: {
+    fontSize: 14,
+    marginVertical: 5,
+    color: Colors.black,
+    fontWeight: '500'
+  },
+  input: {
+    borderColor: Colors.grey3,
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 20,
+    fontSize: 16
+  },
+  button: {
+    marginTop: 20,
+    backgroundColor: Colors.mainBlue,
+    borderRadius: 5
+  },
+  error: {
+    color: Colors.red,
+    marginTop: 10
+  }
+})
 
 export default AdminLoginScreen
