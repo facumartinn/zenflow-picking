@@ -115,7 +115,7 @@ const CompletedOrderDetail = () => {
   ]
 
   return (
-    <View>
+    <View style={styles.container}>
       <OrderDetailLoader orderId={orderId!} />
       <DefaultHeader
         title={<Text style={styles.headerTitle}>Detalle pedido</Text>}
@@ -126,7 +126,7 @@ const CompletedOrderDetail = () => {
         }
         leftAction={handleBack}
       />
-      <View style={styles.container}>
+      <View style={styles.bodyContainer}>
         <View style={styles.titleBox}>
           <SimpleLineIcons name="social-dropbox" size={24} color={Colors.grey5} />
           <Text style={styles.title}>Nro Pedido </Text>
@@ -140,9 +140,9 @@ const CompletedOrderDetail = () => {
         <View style={styles.titleBox}>
           <Feather name="watch" size={24} color={Colors.grey5} />
           <Text style={styles.title}>Inicio </Text>
-          <Text style={styles.value}>{formatTime(orderDetails[0]?.Orders.created_at!)}</Text>
+          <Text style={styles.value}>{formatTime(orderDetails[0]?.Orders?.created_at!)}</Text>
           <Text style={styles.title}>Fin </Text>
-          <Text style={styles.value}>{formatTime(orderDetails[0]?.Orders.updated_at!)}</Text>
+          <Text style={styles.value}>{formatTime(orderDetails[0]?.Orders?.updated_at!)}</Text>
         </View>
         <PositionsList positions={positionsData} />
       </View>
@@ -162,11 +162,15 @@ export default CompletedOrderDetail
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16
+    paddingTop: 20
+  },
+  bodyContainer: {
+    paddingTop: 30,
+    paddingHorizontal: 16
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontFamily: 'Inter_400Regular',
     color: Colors.black
   },
   titleBox: {
@@ -182,7 +186,7 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 20,
     marginLeft: 15,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.black
   },
   enterDetailScreen: {
@@ -198,7 +202,7 @@ const styles = StyleSheet.create({
   },
   startPickingText: {
     color: Colors.white,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 16
   },
   buttonContainer: {
@@ -211,7 +215,7 @@ const styles = StyleSheet.create({
   },
   downloadDetailText: {
     color: Colors.black,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 16
   }
 })

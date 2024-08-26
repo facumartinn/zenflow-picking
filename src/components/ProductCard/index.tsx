@@ -9,7 +9,8 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
-  const isFullPicked = OrderStateEnum.COMPLETED && product.quantityPicked === product?.quantityPicked
+  const isFullPicked = OrderStateEnum.COMPLETED && product.quantity_picked === product?.quantity_picked
+  console.log(product, 'product')
 
   return (
     <View style={styles.cardContainer}>
@@ -34,7 +35,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
               <Text style={styles.orderQuantity}>{product.quantity}</Text>
             ) : (
               <View style={styles.incompleteQuantityNumber}>
-                <Text style={styles.orderQuantityIncomplete}>{product.quantityPicked}</Text>
+                <Text style={styles.orderQuantityIncomplete}>{product.quantity_picked}</Text>
                 <Text style={styles.orderTotalQuantityIncomplete}>/{product.quantity}</Text>
               </View>
             )}

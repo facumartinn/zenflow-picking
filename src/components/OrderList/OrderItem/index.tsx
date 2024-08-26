@@ -3,7 +3,7 @@ import { View, Text, Image } from 'react-native'
 import { styles } from './styles'
 import { Order, OrderStateEnum, PickingStateEnum } from '../../../types/order'
 import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons'
-import { TouchableOpacity } from 'react-native-gesture-handler'
+import { TouchableOpacity } from 'react-native'
 import { formatTime } from '../../../utils/queryParams'
 import { router } from 'expo-router'
 

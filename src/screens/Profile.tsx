@@ -46,14 +46,14 @@ const ProfileScreen = () => {
           }}
           style={styles.logo}
         />
-        <Text style={{ marginTop: 20, fontSize: 24, fontWeight: 'bold' }}>{pickerUser?.name}</Text>
+        <Text style={{ marginTop: 20, fontSize: 24, fontFamily: 'Inter_700Bold' }}>{pickerUser?.name}</Text>
         <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', width: '100%' }}>
           <View style={{ width: '50%', padding: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 32, fontWeight: 'bold' }}>1234</Text>
+            <Text style={{ fontSize: 32, fontFamily: 'Inter_700Bold' }}>1234</Text>
             <Text style={{ fontSize: 20, textAlign: 'center' }}>Código de acceso</Text>
           </View>
           <View style={{ width: '50%', padding: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 32, fontWeight: 'bold' }}>55min</Text>
+            <Text style={{ fontSize: 32, fontFamily: 'Inter_700Bold' }}>55min</Text>
             <Text style={{ fontSize: 20, textAlign: 'center' }}>Velocidad de picking</Text>
           </View>
         </View>
@@ -86,13 +86,14 @@ export default ProfileScreen
 
 const styles = StyleSheet.create({
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '400',
+    fontSize: 16,
+    fontFamily: 'Inter_400Regular',
     color: Colors.black
   },
   container: {
     display: 'flex',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    paddingTop: 20
   },
   logo: {
     width: 150,

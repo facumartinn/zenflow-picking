@@ -5,6 +5,7 @@ export const styles = StyleSheet.create({
   container: {
     height: 70,
     width: '100%',
+    paddingTop: 30,
     paddingHorizontal: 10,
     display: 'flex',
     flexDirection: 'row',
@@ -28,7 +29,7 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.black
   }
 })

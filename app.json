@@ -22,11 +22,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.INTERNET"
-      ]
+      "permissions": ["android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.INTERNET"]
     },
     "web": {
       "bundler": "metro",
@@ -35,7 +31,13 @@
     },
     "plugins": [
       "expo-router",
-      "expo-file-system"
+      "expo-file-system",
+      [
+        "expo-font",
+        {
+          "fonts": ["node_modules/@expo-google-fonts/inter/Inter_900Black.ttf"]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

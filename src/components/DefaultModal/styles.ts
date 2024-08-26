@@ -16,18 +16,28 @@ export const styles = StyleSheet.create({
     alignItems: 'center'
   },
   iconContainer: {
+    padding: 5,
+    borderRadius: 10,
+    backgroundColor: Colors.lightRed,
     marginBottom: 10
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     marginBottom: 10
   },
   description: {
     fontSize: 14,
     textAlign: 'center',
+    color: Colors.grey4,
+    fontFamily: 'Inter_400Regular'
+  },
+  subDescription: {
+    fontSize: 16,
+    textAlign: 'center',
     marginBottom: 20,
-    color: Colors.grey4
+    color: Colors.grey5,
+    fontFamily: 'Inter_700Bold'
   },
   primaryButton: {
     width: '100%',
@@ -38,7 +48,7 @@ export const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: 'white',
-    fontWeight: 'bold'
+    fontFamily: 'Inter_700Bold'
   },
   secondaryButton: {
     width: '100%',
@@ -47,7 +57,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center'
   },
   secondaryButtonText: {
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.black
   }
 })

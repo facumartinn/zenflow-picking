@@ -1,3 +1,5 @@
+import { Warehouse } from './warehouse'
+import { Tenant } from './tenant'
 // src/types/auth.ts
 export interface User {
   id: number
@@ -6,6 +8,8 @@ export interface User {
   role_id: number
   tenant_id: number
   warehouse_id: number
+  Warehouses: Warehouse
+  Tenants: Tenant
 }
 
 export interface Role {

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react'
-import { View, Text, Image, StyleSheet } from 'react-native'
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAtom } from 'jotai'
 import { isAdminLoggedInAtom } from '../store'
@@ -26,37 +26,41 @@ const HomeScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <DefaultHeader
-          title={
-            <Text style={styles.companyName} onPress={handleLogout}>
-              Unilever
-            </Text>
-          }
-          leftIcon={
-            <Image
-              source={{
-                uri: 'https://i.pinimg.com/564x/63/73/a2/6373a27fc967248faf8ba9ac82041a97.jpg'
-              }}
-              style={styles.logo}
-            />
-          }
-          rightIcon={
-            <Image
-              source={{
-                uri: 'https://t4.ftcdn.net/jpg/03/64/21/11/360_F_364211147_1qgLVxv1Tcq0Ohz3FawUfrtONzz8nq3e.jpg'
-              }}
-              style={styles.profilePicture}
-            />
-          }
-          rightAction={() => router.navigate('/profile')}
-        />
+    <>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <DefaultHeader
+            title={
+              <Text style={styles.companyName} onPress={handleLogout}>
+                Unilever
+              </Text>
+            }
+            leftIcon={
+              <Image
+                source={{
+                  uri: 'https://i.pinimg.com/564x/63/73/a2/6373a27fc967248faf8ba9ac82041a97.jpg'
+                }}
+                style={styles.logo}
+              />
+            }
+            rightIcon={
+              <Image
+                source={{
+                  uri: 'https://t4.ftcdn.net/jpg/03/64/21/11/360_F_364211147_1qgLVxv1Tcq0Ohz3FawUfrtONzz8nq3e.jpg'
+                }}
+                style={styles.profilePicture}
+              />
+            }
+            rightAction={() => router.navigate('/profile')}
+          />
+        </View>
+        <TabSelector selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+        <TouchableOpacity onPress={() => router.navigate('/multi-picking')}>
+          <Text style={styles.sectionTitle}>SELECCIÓN MULTIPLE</Text>
+        </TouchableOpacity>
+        <OrdersList selectedTab={selectedTab} />
       </View>
-      <TabSelector selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
-      <Text style={styles.sectionTitle}>SELECCIÓN MULTIPLE</Text>
-      <OrdersList selectedTab={selectedTab} />
-    </View>
+    </>
   )
 }
 
@@ -66,7 +70,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    padding: 16
+    paddingTop: 30,
+    paddingHorizontal: 16
   },
   header: {
     marginBottom: 16
@@ -103,27 +108,27 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 16,
-    fontWeight: '400',
+    fontFamily: 'Inter_400Regular',
     color: Colors.grey3
   },
   tabTextActive: {
     fontSize: 16,
-    fontWeight: '400',
+    fontFamily: 'Inter_400Regular',
     color: Colors.white
   },
   tabTextAmount: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.grey3
   },
   tabTextAmountActive: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.white
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontFamily: 'Inter_700Bold',
     color: Colors.mainBlue,
     marginTop: 14,
     marginBottom: 14,
@@ -152,12 +157,11 @@ const styles = StyleSheet.create({
   },
   orderNumber: {
     fontSize: 16,
-    fontWeight: 'bold',
     color: Colors.black
   },
   orderQuantity: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.black
   },
   logo: {
@@ -167,7 +171,7 @@ const styles = StyleSheet.create({
   },
   companyName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.black
   },
   profilePicture: {

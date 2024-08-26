@@ -59,12 +59,12 @@ export const styles = StyleSheet.create({
   },
   orderNumber: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.black
   },
   orderQuantity: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.black
   },
   orderQuantityIncompleteBox: {
@@ -78,7 +78,7 @@ export const styles = StyleSheet.create({
   },
   orderQuantityIncomplete: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.white
   },
   orderTotalQuantityIncomplete: {
@@ -90,7 +90,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.white
   }
 })

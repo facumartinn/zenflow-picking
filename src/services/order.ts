@@ -2,6 +2,7 @@
 import api from './api'
 import { FilterParamTypes, Order, OrderDetails } from '../types/order'
 import { QueryParams, objectToQueryString } from '../utils/queryParams'
+import { FlowData, FlowResponse } from '../types/flow'
 
 // Obtener todos los pedidos
 export const getAllOrders = async (): Promise<Order[]> => {
@@ -17,8 +18,9 @@ export const getAllOrders = async (): Promise<Order[]> => {
 // Obtener pedidos con filtros
 export const getFilteredOrders = async (filters: FilterParamTypes): Promise<Order[]> => {
   try {
+    console.log(`/orders/filteredddd?${objectToQueryString(filters as QueryParams)}`)
     const response = await api.get(`/orders/filtered?${objectToQueryString(filters as QueryParams)}`)
-    console.log(response.data.data)
+    console.log(response.data)
     return response.data.data
   } catch (error) {
     console.error('Error fetching filtered orders:', error)
@@ -85,6 +87,16 @@ export const updateOrderStatus = async (stateId: number, statusData: any): Promi
     await api.post(`/orders/update-status/${stateId}`, statusData)
   } catch (error) {
     console.error(`Error updating order status with state ID ${stateId}:`, error)
+    throw error
+  }
+}
+
+export const createFlow = async (flowData: FlowData): Promise<FlowResponse> => {
+  try {
+    const response = await api.post('/picking/flow/create', flowData)
+    return response.data.data
+  } catch (error) {
+    console.error('Error creating flow:', error)
     throw error
   }
 }

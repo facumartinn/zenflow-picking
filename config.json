@@ -1,0 +1,38 @@
+{
+  "automatic_picking": {
+    "status": true
+  },
+  "use_picking_baskets": {
+    "status": true,
+    "volume": 0
+  },
+  "use_weight": {
+    "status": true,
+    "total_length": 10,
+    "product_code_start": 1,
+    "product_code_length": 7,
+    "weight_start": 8,
+    "weight_length": 7,
+    "weight_format": "grams"
+  },
+  "use_shifts": {
+    "status": true,
+    "shifts": [
+      {
+        "id": 1,
+        "name": "Mañana",
+        "start_time": "08:00",
+        "end_time": "16:00"
+      }
+    ]
+  },
+  "use_resources": {
+    "status": true,
+    "resources": [
+      {
+        "id": 1,
+        "name": "Recurso 1"
+      }
+    ]
+  }
+}

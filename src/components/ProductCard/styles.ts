@@ -39,7 +39,7 @@ export const styles = StyleSheet.create({
     color: Colors.grey5
   },
   infoValue: {
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 18
   },
   barcodeContainer: {
@@ -68,7 +68,7 @@ export const styles = StyleSheet.create({
   },
   orderQuantityIncomplete: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.white
   },
   orderTotalQuantityIncomplete: {
@@ -80,7 +80,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.white
   },
   orderQuantityBox: {
@@ -94,7 +94,7 @@ export const styles = StyleSheet.create({
   },
   orderQuantity: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.black
   },
   orderText: {

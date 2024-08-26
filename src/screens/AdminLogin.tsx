@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { router } from 'expo-router'
+import React, { useCallback, useState } from 'react'
+import { SplashScreen, router } from 'expo-router'
 import { View, TextInput, Text, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { loginAdmin } from '../services/auth'
@@ -7,8 +7,12 @@ import { isAdminLoggedInAtom } from '../store/authAtoms'
 import { useAtom } from 'jotai'
 import { DefaultButton } from '../components/DefaultButton'
 import Colors from '../constants/Colors'
+import { useFonts, Inter_700Bold, Inter_500Medium } from '@expo-google-fonts/inter'
+
+SplashScreen.preventAutoHideAsync()
 
 const AdminLoginScreen = () => {
+  const [fontsLoaded] = useFonts({ Inter_700Bold, Inter_500Medium })
   const [, setIsAdminLoggedIn] = useAtom(isAdminLoggedInAtom)
   const [userEmail, setUserEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -16,9 +20,8 @@ const AdminLoginScreen = () => {
 
   const handleLogin = async () => {
     try {
-      console.log('hoa')
       const { token, user } = await loginAdmin(userEmail, password)
-
+      console.log('token', token, user)
       // Guardar el token, tenantId y warehouseId en AsyncStorage
       await AsyncStorage.setItem('authToken', token)
       await AsyncStorage.setItem('tenantId', user.tenant_id.toString())
@@ -33,8 +36,18 @@ const AdminLoginScreen = () => {
     }
   }
 
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded) {
+      await SplashScreen.hideAsync()
+    }
+  }, [fontsLoaded])
+
+  if (!fontsLoaded) {
+    return null
+  }
+
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={onLayoutRootView}>
       <Text style={styles.title}>Inicio de sesión</Text>
       <Text style={styles.inputTitle}>Correo electrónico</Text>
       <TextInput placeholder="Correo electrónico" value={userEmail} onChangeText={setUserEmail} style={styles.input} />
@@ -49,12 +62,13 @@ const AdminLoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingTop: 20,
+    paddingHorizontal: 20,
     backgroundColor: Colors.white
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     marginVertical: 25,
     color: Colors.black
   },
@@ -62,7 +76,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginVertical: 5,
     color: Colors.black,
-    fontWeight: '500'
+    fontFamily: 'Inter_500Medium'
   },
   input: {
     borderColor: Colors.grey3,
@@ -70,16 +84,19 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginBottom: 20,
-    fontSize: 16
+    fontSize: 16,
+    fontFamily: 'Inter_500Medium'
   },
   button: {
     marginTop: 20,
     backgroundColor: Colors.mainBlue,
-    borderRadius: 5
+    borderRadius: 5,
+    fontFamily: 'Inter_500Medium'
   },
   error: {
     color: Colors.red,
-    marginTop: 10
+    marginTop: 10,
+    fontFamily: 'Inter_500Medium'
   }
 })
 

@@ -1,5 +1,5 @@
-import React from 'react'
-import { Text, FlatList } from 'react-native'
+import React, { useState } from 'react'
+import { Text, FlatList, RefreshControl } from 'react-native'
 import { useQuery } from '@tanstack/react-query'
 import { getFilteredOrders } from '../../services/order'
 import OrderItem from './OrderItem'
@@ -13,18 +13,28 @@ interface OrdersListProps {
 
 const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
   const [pickerUser] = useAtom(userAtom)
+  const [refreshing, setRefreshing] = useState(false)
+  console.log(pickerUser)
   const stateId = selectedTab === 'pending' ? OrderStateEnum.READY_TO_PICK : OrderStateEnum.COMPLETED
+
   const {
     data: orders = [],
     isLoading,
-    error
+    error,
+    refetch // <-- Añadido para poder recargar los datos manualmente
   } = useQuery<Order[]>({
     queryKey: ['orders', stateId],
-    queryFn: () => getFilteredOrders({ stateId: [stateId], includeDetails: true }),
-    refetchInterval: 30000
+    queryFn: () => getFilteredOrders({ stateId: [stateId], userId: pickerUser?.id, includeDetails: true })
+    // refetchInterval: 30000
   })
 
-  if (isLoading) {
+  const onRefresh = async () => {
+    setRefreshing(true)
+    await refetch()
+    setRefreshing(false)
+  }
+
+  if (isLoading && !refreshing) {
     return <Text>Loading...</Text>
   }
 
@@ -32,7 +42,14 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
     return <Text>Error fetching orders</Text>
   }
 
-  return <FlatList data={orders} renderItem={({ item }) => <OrderItem item={item} userId={pickerUser?.id} />} keyExtractor={item => item.id.toString()} />
+  return (
+    <FlatList
+      data={orders}
+      renderItem={({ item }) => <OrderItem item={item} userId={pickerUser?.id} />}
+      keyExtractor={item => item.id.toString()}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />} // Añadido para "pull to refresh"
+    />
+  )
 }
 
 export default OrdersList

@@ -18,11 +18,13 @@ const Colors = {
 
   // Acento
   red: '#EC0000',
-  lightRed: '#EC0000', // Asegúrate de usar el color correcto
+  lightRed: '#EC00001A', // Asegúrate de usar el color correcto
   yellow: '#F1C34F',
   lightYellow: '#F1C34F', // Asegúrate de usar el color correcto
   green: '#3EBC59',
-  lightGreen: '#E1FFD9'
+  lightGreen: '#E1FFD9',
+  orange: '#DEAE34',
+  lightOrange: '#F1C34F1A'
 }
 
 export default Colors

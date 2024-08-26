@@ -34,22 +34,22 @@ export const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 18,
-    fontWeight: '400',
+    fontFamily: 'Inter_400Regular',
     color: Colors.grey3
   },
   tabTextActive: {
     fontSize: 18,
-    fontWeight: '400',
+    fontFamily: 'Inter_400Regular',
     color: Colors.white
   },
   tabTextAmount: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.grey3
   },
   tabTextAmountActive: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.white
   }
 })

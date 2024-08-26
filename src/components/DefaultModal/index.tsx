@@ -10,6 +10,7 @@ interface DefaultModalProps {
   icon?: React.ReactNode
   title?: string
   description?: string
+  subDescription?: string
   primaryButtonText?: string
   primaryButtonAction?: () => void
   secondaryButtonText?: string
@@ -26,6 +27,7 @@ export const DefaultModal: React.FC<DefaultModalProps> = ({
   icon,
   title,
   description,
+  subDescription,
   primaryButtonText,
   primaryButtonAction,
   secondaryButtonText,
@@ -42,6 +44,7 @@ export const DefaultModal: React.FC<DefaultModalProps> = ({
           {icon && <View style={styles.iconContainer}>{icon}</View>}
           {title && <Text style={styles.title}>{title}</Text>}
           {description && <Text style={styles.description}>{description}</Text>}
+          {subDescription && <Text style={styles.subDescription}>{subDescription}</Text>}
           {primaryButtonText && (
             <DefaultButton backgroundColor={primaryButtonColor} color={primaryButtonTextColor} label={primaryButtonText} onPress={primaryButtonAction} />
           )}

@@ -1,0 +1,19 @@
+import React from 'react'
+import Svg, { Path } from 'react-native-svg'
+
+interface BoxDetailSvgProps {
+  width: number
+  height: number
+  color: string
+}
+
+export const BoxDetailSvg = ({ width, height, color }: BoxDetailSvgProps) => {
+  return (
+    <Svg width={width} height={height} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M5.60563 18.5882V9.13452L4 5.78202L4.8362 5.41174L6.59641 9.09116H17.4036L19.1638 5.41174L20 5.78202L18.3944 9.13452V18.5882H5.60563ZM10.173 12.9507H13.827C13.9564 12.9507 14.0648 12.9091 14.1524 12.8258C14.2399 12.7426 14.2837 12.6395 14.2837 12.5165C14.2837 12.3934 14.2399 12.2905 14.1524 12.2076C14.0648 12.1248 13.9564 12.0834 13.827 12.0834H10.173C10.0436 12.0834 9.93515 12.125 9.84761 12.2082C9.76007 12.2914 9.7163 12.3946 9.7163 12.5176C9.7163 12.6407 9.76007 12.7436 9.84761 12.8264C9.93515 12.9093 10.0436 12.9507 10.173 12.9507ZM6.51911 17.7209H17.4809V9.95847H6.51911V17.7209Z"
+        fill={color}
+      />
+    </Svg>
+  )
+}

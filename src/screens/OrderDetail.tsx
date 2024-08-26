@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, FlatList, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native'
 import { DefaultHeader } from '../components/DefaultHeader'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons'
@@ -7,7 +7,6 @@ import Feather from '@expo/vector-icons/Feather'
 import Colors from '../constants/Colors'
 import ProductCard from '../components/ProductCard'
 import { OrderStateEnum } from '../types/order'
-import { TouchableOpacity } from 'react-native-gesture-handler'
 import { OrderDetailLoader } from '../store/OrderLoader'
 import { orderDetailsAtom } from '../store'
 import { useAtom } from 'jotai'
@@ -25,13 +24,14 @@ const OrderDetailScreen = () => {
 
   const handleBack = () => {
     setOrderDetails([])
-    return stateId === OrderStateEnum.READY_TO_PICK
+    return stateId == OrderStateEnum.READY_TO_PICK
       ? router.navigate('/home')
       : router.navigate({ pathname: '/completed-order-detail', params: { orderId, stateId, quantity } })
   }
+  console.log(orderDetails, 'dsdsdssd')
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, paddingTop: 20 }}>
       <OrderDetailLoader orderId={orderId!} />
       <DefaultHeader
         title={<Text style={styles.headerTitle}>Detalle pedido</Text>}
@@ -46,7 +46,7 @@ const OrderDetailScreen = () => {
         <View style={styles.titleBox}>
           <SimpleLineIcons name="social-dropbox" size={24} color={Colors.grey5} />
           <Text style={styles.title}>Nro Pedido </Text>
-          <Text style={styles.value}>{orderId}</Text>
+          <Text style={styles.value}>0000{orderId}</Text>
         </View>
         <View style={styles.titleBox}>
           <Feather name="shopping-cart" size={24} color={Colors.grey5} />
@@ -54,7 +54,7 @@ const OrderDetailScreen = () => {
           <Text style={styles.value}>{quantity}</Text>
         </View>
       </View>
-      <FlatList data={orderDetails} renderItem={({ item }) => <ProductCard product={item} />} keyExtractor={item => item.product_id.toString()} />
+      <FlatList data={orderDetails[0]} renderItem={({ item }) => <ProductCard product={item} />} keyExtractor={item => item?.product_id?.toString()} />
       {stateId === OrderStateEnum.READY_TO_PICK ? (
         <TouchableOpacity style={styles.startPickingButton}>
           <Text style={styles.startPickingText}>INICIAR PICKING</Text>
@@ -68,11 +68,12 @@ export default OrderDetailScreen
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16
+    paddingTop: 30,
+    paddingHorizontal: 16
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontFamily: 'Inter_400Regular',
     color: Colors.black
   },
   titleBox: {
@@ -81,14 +82,15 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   title: {
-    fontSize: 20,
+    fontSize: 16,
     marginLeft: 15,
-    color: Colors.grey5
+    color: Colors.grey5,
+    fontFamily: 'Inter_400Regular'
   },
   value: {
     fontSize: 20,
     marginLeft: 15,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: Colors.black
   },
   startPickingButton: {
@@ -99,7 +101,7 @@ const styles = StyleSheet.create({
   },
   startPickingText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 16
   }
 })

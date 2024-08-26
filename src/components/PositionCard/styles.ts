@@ -10,7 +10,7 @@ export const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     marginBottom: 16,
     color: Colors.black
   },
@@ -39,7 +39,7 @@ export const styles = StyleSheet.create({
   position: {
     textAlign: 'center',
     fontSize: 18,
-    fontWeight: 'bold'
+    fontFamily: 'Inter_700Bold'
   },
   detailBox: {
     flex: 1,
@@ -57,7 +57,7 @@ export const styles = StyleSheet.create({
   },
   detailQuantity: {
     fontSize: 16,
-    fontWeight: 'bold'
+    fontFamily: 'Inter_700Bold'
   },
   rightContainer: {
     justifyContent: 'center',

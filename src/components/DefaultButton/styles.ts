@@ -10,7 +10,8 @@ export const styles = StyleSheet.create({
     borderRadius: 50,
     backgroundColor: '#2D41FC',
     color: '#FFFFFF',
-    fontSize: 16
+    fontSize: 16,
+    fontFamily: 'Inter_700Bold'
   },
   secondary: {
     height: 43,
@@ -20,12 +21,12 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     color: '#2D41FC',
     fontSize: 16,
-    fontWeight: 'bold'
+    fontFamily: 'Inter_400Regular'
   },
   buttonLabel: {
     color: '#FFFFFF',
     textAlign: 'center',
     fontSize: 16,
-    fontWeight: 'bold'
+    fontFamily: 'Inter_700Bold'
   }
 })

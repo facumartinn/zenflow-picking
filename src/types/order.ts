@@ -22,9 +22,13 @@ export interface OrderDetails {
   product_photo: string | null
   product_barcode: string | null
   quantity: number
-  quantityPicked: number | null
+  quantity_picked: number | null
+  weight: number | null
+  warehouse_order: number | null
   tenant_id: number
   warehouse_id: number
+  state_picking_details_id: null | number // Nuevo campo para el estado del producto
+  picking_type: 'manual' | 'scan' | null // Nuevo campo para trackear el tipo de picking
   Orders: Order
 }
 
@@ -79,3 +83,10 @@ export const ORDER_STATES = [
   { id: 5, description: 'Finalizado' },
   { id: 6, description: 'Eliminado' }
 ]
+
+export enum PickingDetailEnum {
+  PENDING = 1,
+  IN_PROGRESS = 2,
+  COMPLETED = 3,
+  INCOMPLETE = 4
+}

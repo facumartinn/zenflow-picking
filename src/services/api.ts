@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 // Crear una instancia de axios
 const api = axios.create({
-  baseURL: 'http://10.0.2.2:4000', // Reemplaza con la URL base de tu API
+  baseURL: 'https://zenflow-api-daq3y.ondigitalocean.app', // Reemplaza con la URL base de tu API
   timeout: 100000 // Opcional: establecer un tiempo de espera
 })
 
@@ -24,6 +24,7 @@ api.interceptors.request.use(
       config.headers['x-warehouse-id'] = warehouseId
     }
 
+    console.log(config.headers.authorization)
     return config
   },
   error => {
