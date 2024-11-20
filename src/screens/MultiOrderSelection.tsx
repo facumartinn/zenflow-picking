@@ -6,7 +6,7 @@ import Colors from '../constants/Colors'
 import { router } from 'expo-router'
 import MultiSelectOrdersList from '../components/MultiSelectOrderList'
 import BottomButton from '../components/BottomButton'
-import { createFlow } from '../services/order'
+import { createFlow } from '../services/flow'
 import { useAtom } from 'jotai'
 import { flowAtom, flowOrderDetailsAtom, userAtom } from '../store'
 import { FlowData, FlowResponse, FlowTypeEnum } from '../types/flow'
@@ -16,9 +16,7 @@ const MultiOrderSelectionScreen = () => {
   const [pickerUser] = useAtom(userAtom)
   const [, setFlow] = useAtom(flowAtom)
   const [, setFlowOrderDetails] = useAtom(flowOrderDetailsAtom)
-
   const handleSelectionChange = (selectedOrders: number[]) => {
-    console.log(selectedOrders)
     setSelectedOrders(selectedOrders)
   }
 
@@ -65,7 +63,7 @@ export default MultiOrderSelectionScreen
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 20,
+    // paddingTop: 20,
     flex: 1
   },
   scrollContainer: {

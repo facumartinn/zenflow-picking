@@ -12,8 +12,9 @@ import { groupOrderDetailsByOrderId } from '../helpers/groupOrders'
 import OrderCard from '../components/BasketSelection/OrderCard'
 import BottomButton from '../components/BottomButton' // Asegúrate de tener este componente
 import { DefaultModal } from '../components/DefaultModal'
-import LoadingScreen from '../components/LoadingScreen'
+import LoadingPickingScreen from '../components/LoadingPickingScreen'
 import { WarningSvg } from '../components/svg/Warning'
+import { assignBasketsToOrders } from '../services/flow'
 
 const BasketSelectionScreen = () => {
   const [orderDetails] = useAtom(flowOrderDetailsAtom)
@@ -37,8 +38,13 @@ const BasketSelectionScreen = () => {
   }
 
   const allOrdersReady = groupedOrders.every(order => basketsByOrder[order.order_id]?.length > 0)
+  console.log(basketsByOrder, 'basketsByOrder')
 
-  const handleStartPicking = () => {
+  const handleStartPicking = async () => {
+    // Add API call to save baskets to orders
+    console.log(basketsByOrder, 'basketsByOrderrr')
+    const orderBarcodes = await assignBasketsToOrders(basketsByOrder)
+    console.log('orderBarcodes', orderBarcodes)
     setLoading(true)
   }
 
@@ -48,7 +54,7 @@ const BasketSelectionScreen = () => {
   }
 
   if (loading) {
-    return <LoadingScreen message="Iniciando picking" color={Colors.mainLightBlue} />
+    return <LoadingPickingScreen message="Iniciando picking" color={Colors.mainLightBlue} />
   }
 
   return (

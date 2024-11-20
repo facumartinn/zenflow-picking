@@ -17,6 +17,7 @@ import {
   useFonts
 } from '@expo-google-fonts/inter'
 import * as SplashScreen from 'expo-splash-screen'
+import { ToastProvider } from '../context/toast'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -55,34 +56,41 @@ const AppNavigator = () => {
 
   return (
     <>
-      <QueryClientProvider client={queryClient}>
-        {isAdminLoggedIn ? (
-          <Stack
-            initialRouteName={isAdminLoggedIn ? 'picker-login/index' : 'admin-login/index'}
-            screenOptions={{
-              headerShown: false
-            }}
-          >
-            <Stack.Screen name="home/index" options={{ headerShown: false }} />
-            <Stack.Screen name="picker-login/index" options={{ headerShown: false }} />
-            <Stack.Screen name="profile/index" options={{ headerShown: false }} />
-            <Stack.Screen name="order-detail/index" options={{ headerShown: false }} />
-            <Stack.Screen name="completed-order-detail/index" options={{ headerShown: false }} />
-            <Stack.Screen name="multi-picking/index" options={{ headerShown: false }} />
-            <Stack.Screen name="picking/index" options={{ headerShown: false }} />
-            <Stack.Screen name="packing/index" options={{ headerShown: false }} />
-          </Stack>
-        ) : (
-          <Stack
-            initialRouteName={isAdminLoggedIn ? 'picker-login/index' : 'admin-login/index'}
-            screenOptions={{
-              headerShown: false
-            }}
-          >
-            <Stack.Screen name="home/index" options={{ headerShown: false }} />
-          </Stack>
-        )}
-      </QueryClientProvider>
+      <ToastProvider>
+        <QueryClientProvider client={queryClient}>
+          {isAdminLoggedIn ? (
+            <Stack
+              initialRouteName={isAdminLoggedIn ? 'picker-login/index' : 'admin-login/index'}
+              screenOptions={{
+                headerShown: false
+              }}
+            >
+              <Stack.Screen name="home/index" options={{ headerShown: false }} />
+              <Stack.Screen name="picker-login/index" options={{ headerShown: false }} />
+              <Stack.Screen name="profile/index" options={{ headerShown: false }} />
+              <Stack.Screen name="order-detail/index" options={{ headerShown: false }} />
+              <Stack.Screen name="completed-order-detail/index" options={{ headerShown: false }} />
+              <Stack.Screen name="multi-picking/index" options={{ headerShown: false }} />
+              <Stack.Screen name="picking/index" options={{ headerShown: false }} />
+              <Stack.Screen name="picking-completed/index" options={{ headerShown: false }} />
+              <Stack.Screen name="packing/index" options={{ headerShown: false }} />
+              <Stack.Screen name="packing-orders/index" options={{ headerShown: false }} />
+              <Stack.Screen name="packing-order-detail/index" options={{ headerShown: false }} />
+              <Stack.Screen name="packing-order-overview/index" options={{ headerShown: false }} />
+              <Stack.Screen name="packing-order-completed/index" options={{ headerShown: false }} />
+            </Stack>
+          ) : (
+            <Stack
+              initialRouteName={isAdminLoggedIn ? 'picker-login/index' : 'admin-login/index'}
+              screenOptions={{
+                headerShown: false
+              }}
+            >
+              <Stack.Screen name="home/index" options={{ headerShown: false }} />
+            </Stack>
+          )}
+        </QueryClientProvider>
+      </ToastProvider>
     </>
   )
 }

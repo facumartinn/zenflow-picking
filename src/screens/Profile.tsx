@@ -92,8 +92,8 @@ const styles = StyleSheet.create({
   },
   container: {
     display: 'flex',
-    justifyContent: 'space-between',
-    paddingTop: 20
+    justifyContent: 'space-between'
+    // paddingTop: 20
   },
   logo: {
     width: 150,

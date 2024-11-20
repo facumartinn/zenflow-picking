@@ -30,7 +30,8 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     color: Colors.grey4,
-    fontFamily: 'Inter_400Regular'
+    fontFamily: 'Inter_400Regular',
+    marginBottom: 10
   },
   subDescription: {
     fontSize: 16,

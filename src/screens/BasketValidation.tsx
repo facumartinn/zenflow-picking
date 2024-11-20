@@ -4,24 +4,35 @@ import { useRouter } from 'expo-router'
 import Colors from '../constants/Colors'
 import { AntDesign } from '@expo/vector-icons'
 import { DefaultHeader } from '../components/DefaultHeader'
-import { basketsByOrderAtom, flowOrderDetailsAtom, currentProductAtom, currentProductIndexAtom } from '../store'
-import { PickingDetailEnum } from '../types/order'
+import { basketsByOrderAtom, flowOrderDetailsAtom, currentProductAtom, currentProductIndexAtom, flowAtom } from '../store'
+import { OrderDetails, OrderStateEnum, PickingDetailEnum, PickingStateEnum, PickingUpdate } from '../types/order'
 import { useAtom } from 'jotai'
 import { LinearGradient } from 'expo-linear-gradient'
 import { BarcodeScannerSvg } from '../components/svg/BarcodeScanner'
 import { BoxDetailSvg } from '../components/svg/BoxDetail'
 import { BasketSvg } from '../components/svg/Basket'
 import { DefaultModal } from '../components/DefaultModal'
+import { useToast } from '../context/toast'
+import { WarningSvg } from '../components/svg/Warning'
+import LoadingPackingScreen from '../components/LoadingPackingScreen'
+import { updateOrderDetails } from '../services/orderDetail'
+import { updateOrderStatus } from '../services/order'
+import { groupOrderDetailsByOrderId } from '../helpers/groupOrders'
 
 const BasketValidationScreen = () => {
   const [flowOrderDetails, setFlowOrderDetails] = useAtom(flowOrderDetailsAtom)
+  // const [flowOrder, setFlowOrder] = useAtom(flowAtom)
   const [basketsByOrder] = useAtom(basketsByOrderAtom)
   const [currentProduct] = useAtom(currentProductAtom)
   const [currentProductIndex, setCurrentProductIndex] = useAtom(currentProductIndexAtom)
   const router = useRouter()
   const [modalVisible, setModalVisible] = useState(false)
-  const [scannedBasketCode, setScannedBasketCode] = useState(0)
+  const [modalIncompleteVisible, setModalIncompleteVisible] = useState(false)
+  const [scannedBasketCode, setScannedBasketCode] = useState<number | undefined>(undefined)
+  const [loading, setLoading] = useState(false)
   const inputRef = useRef<TextInput>(null)
+  const { showToast } = useToast()
+  const isPickingIncomplete = flowOrderDetails.some(detail => detail.state_picking_details_id === PickingDetailEnum.INCOMPLETE)
 
   useEffect(() => {
     // Enfocar el input invisible automáticamente al cargar la pantalla
@@ -29,6 +40,19 @@ const BasketValidationScreen = () => {
       inputRef.current.focus()
     }
   }, [])
+
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        router.push('/packing-orders') // Navega a la pantalla de picking
+      }, 3000) // 3 segundos de pantalla de carga
+      return () => clearTimeout(timer) // Limpia el timer si el componente se desmonta
+    }
+  }, [loading, router])
+
+  if (loading) {
+    return <LoadingPackingScreen title="PICKING FINALIZADO" message="INICIANDO EMPAQUETADO" color={Colors.green} />
+  }
 
   if (!currentProduct) {
     return (
@@ -43,11 +67,13 @@ const BasketValidationScreen = () => {
 
   const baskets = basketsByOrder[currentProduct!.order_id]?.join(', ') || 'N/A'
 
-  const handleBasketValidation = () => {
-    console.log(basketsByOrder[currentProduct.order_id], scannedBasketCode)
-    if (!basketsByOrder[currentProduct.order_id]?.includes(scannedBasketCode)) {
+  const handleBasketValidation = async () => {
+    console.log(scannedBasketCode, 'basketsByOrder')
+    if (!basketsByOrder[currentProduct.order_id]?.includes(scannedBasketCode as number)) {
       // Mostrar modal de error si el canasto no coincide
       setModalVisible(true)
+      // Reset input
+      setScannedBasketCode(undefined)
       return
     }
 
@@ -70,17 +96,47 @@ const BasketValidationScreen = () => {
 
     if (currentProductIndex < flowOrderDetails.length - 1) {
       // Navegar de vuelta al PickingScreen después de que el estado se actualice
+      showToast(`${currentProduct.quantity_picked!} productos levantados`, currentProduct.order_id, Colors.green, Colors.white)
       setCurrentProductIndex(currentProductIndex + 1)
       router.replace('/picking')
     } else {
       console.log('Picking process completed.')
-      router.replace('/picking-completed') // Pantalla de proceso completado
+      // Aca habria que pegarle a la api para guardar el resultado del picking
+      console.log(flowOrderDetails)
+      // Función de utilidad para transformar los datos
+      const transformOrderDetailsForUpdate = (details: OrderDetails[]): PickingUpdate[] => {
+        return details.map(detail => ({
+          order_id: detail.order_id,
+          product_id: detail.product_id,
+          quantity: detail.quantity,
+          quantity_picked: detail.quantity_picked!,
+          final_weight: detail.final_weight,
+          state_picking_details_id: detail.state_picking_details_id!
+        }))
+      }
+      const groupedOrders = groupOrderDetailsByOrderId(flowOrderDetails)
+
+      try {
+        console.log(groupedOrders)
+        await updateOrderDetails(transformOrderDetailsForUpdate(flowOrderDetails))
+        // await updateOrderStatus(currentProduct.order_id, PickingStateEnum.COMPLETE)
+      } catch (error) {
+        console.error('Error updating order details:', error)
+        throw error
+      }
+      // Aca se va a mostrar un modal si hay pedidos incompletos
+      if (isPickingIncomplete) {
+        setModalIncompleteVisible(true)
+        return
+      }
+      setLoading(true)
+      // router.replace('/picking-completed') // Pantalla de proceso completado
     }
   }
 
-  const handleOnChangeText = (text: string) => {
-    setScannedBasketCode(parseInt(text))
-  }
+  //   const handleOnChangeText = (text: string) => {
+  //     setScannedBasketCode(parseInt(text))
+  //   }
 
   return (
     <LinearGradient
@@ -105,8 +161,8 @@ const BasketValidationScreen = () => {
       <View style={styles.contentContainer}>
         <Text style={styles.productName}>{currentProduct?.product_name}</Text>
         <View style={styles.quantityContainer}>
-          <Text style={styles.quantityLabel}>Cant.</Text>
-          <Text style={styles.quantityValue}>{currentProduct?.quantity_picked}</Text>
+          <Text style={styles.quantityLabel}>{currentProduct?.weighable ? 'Peso' : 'Cant.'}</Text>
+          <Text style={styles.quantityValue}>{currentProduct?.weighable ? `${currentProduct.final_weight!} gr` : currentProduct.quantity_picked}</Text>
         </View>
         <View style={styles.orderInfoContainer}>
           <View style={styles.orderBox}>
@@ -131,7 +187,7 @@ const BasketValidationScreen = () => {
         <TextInput
           ref={inputRef}
           style={styles.invisibleInput}
-          value={scannedBasketCode.toString()}
+          value={scannedBasketCode?.toString()}
           onChangeText={text => setScannedBasketCode(Number(text))}
           onSubmitEditing={handleBasketValidation}
           autoFocus={true}
@@ -150,6 +206,20 @@ const BasketValidationScreen = () => {
         primaryButtonColor={Colors.mainBlue}
         primaryButtonTextColor={Colors.white}
       />
+      <DefaultModal
+        visible={modalIncompleteVisible}
+        title="¡Pedidos incompetos!"
+        description={'Algunos de los pedidos le falta algún articulo'}
+        icon={<WarningSvg width={40} height={41} color={Colors.red} />}
+        primaryButtonText="VER PEDIDOS"
+        primaryButtonAction={() => router.replace('/picking-orders')}
+        primaryButtonColor={Colors.mainBlue}
+        primaryButtonTextColor={Colors.white}
+        secondaryButtonText="SEGUIR SIN COMPLETAR"
+        secondaryButtonAction={() => setLoading(true)}
+        secondaryButtonColor={Colors.white}
+        secondaryButtonTextColor={Colors.red}
+      />
     </LinearGradient>
   )
 }
@@ -159,7 +229,7 @@ export default BasketValidationScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
+    // paddingTop: 20,
     backgroundColor: Colors.grey1,
     alignItems: 'center'
   },
@@ -198,7 +268,7 @@ const styles = StyleSheet.create({
   },
   quantityContainer: {
     backgroundColor: Colors.lightOrange,
-    width: 100,
+    width: 170,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',

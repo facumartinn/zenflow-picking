@@ -1,5 +1,5 @@
 import { atom } from 'jotai'
-import { Flow } from '../types/flow'
+import { Flow, PackingOrder } from '../types/flow'
 import { OrderDetails } from '../types/order'
 
 export const flowAtom = atom<Flow>({
@@ -22,3 +22,6 @@ export const currentProductIndexAtom = atom(0)
 
 // Átomo derivado para obtener el producto actual en función del índice
 export const currentProductAtom = atom(get => get(flowOrderDetailsAtom)[get(currentProductIndexAtom)])
+
+// Átomo para almacenar el packing de los pedidos
+export const packingOrdersAtom = atom<{ [orderId: number]: PackingOrder }>([])

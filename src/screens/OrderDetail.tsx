@@ -28,10 +28,9 @@ const OrderDetailScreen = () => {
       ? router.navigate('/home')
       : router.navigate({ pathname: '/completed-order-detail', params: { orderId, stateId, quantity } })
   }
-  console.log(orderDetails, 'dsdsdssd')
 
   return (
-    <View style={{ flex: 1, paddingTop: 20 }}>
+    <View style={{ flex: 1 }}>
       <OrderDetailLoader orderId={orderId!} />
       <DefaultHeader
         title={<Text style={styles.headerTitle}>Detalle pedido</Text>}
@@ -54,7 +53,7 @@ const OrderDetailScreen = () => {
           <Text style={styles.value}>{quantity}</Text>
         </View>
       </View>
-      <FlatList data={orderDetails[0]} renderItem={({ item }) => <ProductCard product={item} />} keyExtractor={item => item?.product_id?.toString()} />
+      <FlatList data={orderDetails} renderItem={({ item }) => <ProductCard product={item} />} keyExtractor={item => item?.product_id?.toString()} />
       {stateId === OrderStateEnum.READY_TO_PICK ? (
         <TouchableOpacity style={styles.startPickingButton}>
           <Text style={styles.startPickingText}>INICIAR PICKING</Text>

@@ -5,13 +5,16 @@ import { RestartSvg } from '../../svg/Restart'
 import Colors from '../../../constants/Colors'
 
 interface PickingInfoProps {
+  productId: number
+  orderId: number
   quantity: number
   quantityPicked: number
   warehouseOrder: number
-  onRestartQuantity: () => void // Nueva prop para manejar el reinicio
+  onRestartQuantity: (productId: number, orderId: number) => void // Nueva prop para manejar el reinicio
 }
 
-const PickingInfo: React.FC<PickingInfoProps> = ({ quantity, quantityPicked, warehouseOrder, onRestartQuantity }) => {
+const PickingInfo: React.FC<PickingInfoProps> = ({ productId, orderId, quantity, quantityPicked, warehouseOrder, onRestartQuantity }) => {
+  const progress = Math.round((quantityPicked / quantity) * 100) / 100
   return (
     <View style={styles.quantityBox}>
       <View style={styles.quantityContainer}>
@@ -24,14 +27,14 @@ const PickingInfo: React.FC<PickingInfoProps> = ({ quantity, quantityPicked, war
           <Text style={styles.positionValue}>00{warehouseOrder}</Text>
         </View>
         <View>
-          <ProgressBar progress={quantityPicked / quantity} color={Colors.mainBlue} indeterminate={false} style={styles.progressBar} />
+          <ProgressBar progress={progress} color={Colors.mainBlue} indeterminate={false} style={styles.progressBar} />
           <View style={styles.quantityTotals}>
             <Text>{quantityPicked}</Text>
             <Text>{quantity}</Text>
           </View>
         </View>
       </View>
-      <TouchableOpacity style={styles.restartButton} onPress={onRestartQuantity}>
+      <TouchableOpacity style={styles.restartButton} onPress={() => onRestartQuantity(productId, orderId)}>
         <RestartSvg width={30} height={30} color={Colors.black} />
       </TouchableOpacity>
     </View>

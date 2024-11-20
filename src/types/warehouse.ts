@@ -26,9 +26,23 @@ export interface WarehouseConfig {
   }
   use_resources: {
     status: boolean
-    resources?: {
-      id: number
-      name: string
-    }[]
+    resources?: Resources[]
   }
+  use_weight: {
+    status: boolean
+    productCodeStart: number
+    productCodeEnd: number
+    weightStart: number
+    weightEnd: number
+    productDecimals?: number
+    weightDecimals?: number
+    priceDecimals?: number
+    isWeightBased?: boolean
+  }
+}
+
+export interface Resources {
+  id: number
+  name: string
+  quantity?: number
 }

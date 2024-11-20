@@ -33,3 +33,17 @@ export enum FlowStateEnum {
   COMPLETED = 2,
   CANCELLED = 3
 }
+
+export interface PackingOrder {
+  print_status: PrintStatusEnum
+  resources: {
+    resource_id: number
+    resource_name: string
+    barcodes: number[]
+  }[]
+}
+
+export enum PrintStatusEnum {
+  NOT_PRINTED = 1,
+  PRINTED = 2
+}

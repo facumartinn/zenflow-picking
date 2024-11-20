@@ -24,6 +24,9 @@ export interface OrderDetails {
   quantity: number
   quantity_picked: number | null
   weight: number | null
+  weighable: number
+  final_weight: number | null
+  sales_unit: number | null
   warehouse_order: number | null
   tenant_id: number
   warehouse_id: number
@@ -89,4 +92,13 @@ export enum PickingDetailEnum {
   IN_PROGRESS = 2,
   COMPLETED = 3,
   INCOMPLETE = 4
+}
+
+export interface PickingUpdate {
+  order_id: number
+  product_id: number
+  quantity: number
+  quantity_picked: number
+  final_weight: number | null
+  state_picking_details_id: number
 }

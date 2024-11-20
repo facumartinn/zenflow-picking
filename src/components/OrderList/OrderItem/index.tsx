@@ -14,7 +14,7 @@ interface OrderItemProps {
 
 const OrderItem: React.FC<OrderItemProps> = ({ item, userId }) => {
   const getQuantity = () => item?.OrderDetails?.reduce((acc, curr) => acc + (curr.quantity || 0), 0)
-  const getPickedQuantity = () => item?.OrderDetails?.reduce((acc, curr) => acc + (curr.quantityPicked || 0), 0)
+  const getPickedQuantity = () => item?.OrderDetails?.reduce((acc, curr) => acc + (curr.quantity_picked || 0), 0)
   const orderDetailToNavigate = item.state_id === OrderStateEnum.READY_TO_PICK ? '/order-detail' : '/completed-order-detail'
 
   return (

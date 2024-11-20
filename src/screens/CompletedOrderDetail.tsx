@@ -66,8 +66,6 @@ const CompletedOrderDetail = () => {
         base64: false
       }
 
-      console.log('Options:', options)
-
       const pdf = await RNHTMLtoPDF.convert(options)
       console.log('Generated PDF:', pdf)
 
@@ -162,7 +160,7 @@ export default CompletedOrderDetail
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 20
+    // paddingTop: 20
   },
   bodyContainer: {
     paddingTop: 30,

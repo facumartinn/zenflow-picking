@@ -116,7 +116,7 @@ export default BasketAssignmentScreen
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 20,
+    // paddingTop: 20,
     flex: 1,
     backgroundColor: Colors.grey1
   },

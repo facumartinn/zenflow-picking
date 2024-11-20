@@ -136,7 +136,7 @@ export default PickerLoginScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
+    // paddingTop: 20,
     justifyContent: 'flex-start',
     alignItems: 'center',
     backgroundColor: Colors.grey1

@@ -16,7 +16,6 @@ const MultiSelectOrdersList: React.FC<MultiSelectOrdersListProps> = ({ selectedT
   const [pickerUser] = useAtom(userAtom)
   const [selectedOrders, setSelectedOrders] = useState<number[]>([])
   const [refreshing, setRefreshing] = useState(false) // Estado para controlar el refresh
-  console.log('first')
 
   const stateId = selectedTab === 'pending' ? OrderStateEnum.READY_TO_PICK : OrderStateEnum.COMPLETED
 
@@ -30,6 +29,9 @@ const MultiSelectOrdersList: React.FC<MultiSelectOrdersListProps> = ({ selectedT
     queryFn: () => getFilteredOrders({ stateId: [stateId], userId: pickerUser?.id, includeDetails: true })
     // refetchInterval: 30000
   })
+  const firstShowPickerOrdersThenTheRest = orders
+    .filter(order => order.user_id === pickerUser?.id)
+    .concat(orders.filter(order => order.user_id !== pickerUser?.id))
 
   const toggleSelection = (orderId: number) => {
     let updatedSelection
@@ -43,8 +45,6 @@ const MultiSelectOrdersList: React.FC<MultiSelectOrdersListProps> = ({ selectedT
   }
 
   const onRefresh = async () => {
-    console.log('firstddd')
-
     setRefreshing(true)
     await refetch()
     setRefreshing(false)
@@ -60,7 +60,7 @@ const MultiSelectOrdersList: React.FC<MultiSelectOrdersListProps> = ({ selectedT
 
   return (
     <FlatList
-      data={orders}
+      data={firstShowPickerOrdersThenTheRest}
       renderItem={({ item }) => (
         <MultiSelectOrderItem
           item={item}

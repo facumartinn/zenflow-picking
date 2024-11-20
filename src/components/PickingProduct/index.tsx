@@ -8,6 +8,7 @@ import ProductDetails from './components/ProductDetails'
 import PickingInfo from './components/PickingInfo'
 import { useAtom } from 'jotai'
 import { basketsByOrderAtom } from '../../store'
+import PickingInfoWeight from './components/PickingInfoWeight'
 
 const { width } = Dimensions.get('window')
 
@@ -24,12 +25,18 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ item, onRestartQuantity }) =>
   return (
     <View style={styles.card}>
       <ProductDetails productPhoto={item.product_photo!} productName={item.product_name} productBarcode={item.product_barcode!} />
-      <PickingInfo
-        quantity={item.quantity}
-        quantityPicked={item.quantity_picked ?? 0}
-        warehouseOrder={item.warehouse_order!}
-        onRestartQuantity={onRestartQuantity}
-      />
+      {item.weighable ? (
+        <PickingInfoWeight item={item} onRestartQuantity={onRestartQuantity} />
+      ) : (
+        <PickingInfo
+          productId={item.id}
+          orderId={item.order_id}
+          quantity={item.quantity}
+          quantityPicked={item.quantity_picked ?? 0}
+          warehouseOrder={item.warehouse_order!}
+          onRestartQuantity={onRestartQuantity}
+        />
+      )}
       <View style={styles.flowInfo}>
         <View style={styles.orderBox}>
           <View style={styles.orderContainer}>

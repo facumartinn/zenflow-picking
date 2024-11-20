@@ -17,5 +17,16 @@ export const warehousesAtom = atom<WarehouseConfig>({
   use_resources: {
     status: false,
     resources: []
+  },
+  use_weight: {
+    status: false,
+    productCodeStart: 0,
+    productCodeEnd: 0,
+    weightStart: 0,
+    weightEnd: 0,
+    productDecimals: 0,
+    weightDecimals: 0,
+    priceDecimals: 0,
+    isWeightBased: false
   }
 })

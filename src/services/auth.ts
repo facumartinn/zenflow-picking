@@ -24,7 +24,6 @@ export const registerUser = async (userData: UserRequest): Promise<User> => {
 export const loginAdmin = async (userEmail: string, password: string): Promise<{ user: User; token: string; metadata: { code: number; message: string } }> => {
   try {
     const response = await api.post('/auth/admin/login', { userEmail, password })
-    console.log(response)
     return response.data.data
   } catch (error) {
     console.error('Error logging in:', error)

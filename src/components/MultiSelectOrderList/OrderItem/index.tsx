@@ -14,7 +14,7 @@ interface MultiSelectOrderItemProps {
 
 const MultiSelectOrderItem: React.FC<MultiSelectOrderItemProps> = ({ item, userId, isSelected, onSelect }) => {
   const getQuantity = () => item?.OrderDetails?.reduce((acc, curr) => acc + (curr.quantity || 0), 0)
-  const getPickedQuantity = () => item?.OrderDetails?.reduce((acc, curr) => acc + (curr.quantityPicked || 0), 0)
+  const getPickedQuantity = () => item?.OrderDetails?.reduce((acc, curr) => acc + (curr.quantity_picked || 0), 0)
 
   return (
     <TouchableOpacity style={[styles.orderItem, isSelected && styles.selectedOrderItem]} onPress={onSelect}>

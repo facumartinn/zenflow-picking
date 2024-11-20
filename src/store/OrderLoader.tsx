@@ -12,7 +12,6 @@ export const OrderDetailLoader = ({ orderId }: OrderDetailLoaderProps) => {
   const fetchOrderDetail = async () => {
     try {
       const response = await getOrderDetail(orderId)
-      console.log(response, 'responseee')
       setOrderDetails(response)
       return response
     } catch (err) {

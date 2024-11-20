@@ -14,7 +14,6 @@ interface OrdersListProps {
 const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
   const [pickerUser] = useAtom(userAtom)
   const [refreshing, setRefreshing] = useState(false)
-  console.log(pickerUser)
   const stateId = selectedTab === 'pending' ? OrderStateEnum.READY_TO_PICK : OrderStateEnum.COMPLETED
 
   const {
@@ -27,6 +26,9 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
     queryFn: () => getFilteredOrders({ stateId: [stateId], userId: pickerUser?.id, includeDetails: true })
     // refetchInterval: 30000
   })
+  const firstShowPickerOrdersThenTheRest = orders
+    .filter(order => order.user_id === pickerUser?.id)
+    .concat(orders.filter(order => order.user_id !== pickerUser?.id))
 
   const onRefresh = async () => {
     setRefreshing(true)
@@ -44,7 +46,7 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
 
   return (
     <FlatList
-      data={orders}
+      data={firstShowPickerOrdersThenTheRest}
       renderItem={({ item }) => <OrderItem item={item} userId={pickerUser?.id} />}
       keyExtractor={item => item.id.toString()}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />} // Añadido para "pull to refresh"

@@ -1,19 +1,19 @@
 import React from 'react'
 import Svg, { Path, G, Rect, Defs, ClipPath } from 'react-native-svg'
 
-interface LoadingBackgroundSvgProps {
+interface LoadingPackingBackgroundSvgProps {
   width: number | string
   height: number | string
   color: string
 }
 
-export const LoadingBackgroundSvg = ({ width, height, color }: LoadingBackgroundSvgProps) => {
+export const LoadingPackingBackgroundSvg = ({ width, height, color }: LoadingPackingBackgroundSvgProps) => {
   return (
     <Svg width={width} height={height} viewBox="0 0 360 276" fill="none">
-      <G opacity="0.15" clipPath="url(#clip0_137_2806)">
+      <G opacity="0.7" clip-path="url(#clip0_137_2481)">
         <Path
           opacity="0.35"
-          d="M588.36 276C585.716 271.643 583.073 267.379 580.46 263.083C517.913 162.458 442.646 110.574 368.001 116.425C297.243 122.059 229.13 180.853 170.409 275.938H588.36V276Z"
+          d="M588.359 276C585.716 271.643 583.072 267.379 580.459 263.083C517.913 162.458 442.646 110.574 368 116.425C297.243 122.059 229.129 180.853 170.408 275.938H588.359V276Z"
           fill={color}
         />
         <Path
@@ -28,7 +28,7 @@ export const LoadingBackgroundSvg = ({ width, height, color }: LoadingBackground
         />
       </G>
       <Defs>
-        <ClipPath id="clip0_137_2806">
+        <ClipPath id="clip0_137_2481">
           <Rect width="360" height="276" fill="white" />
         </ClipPath>
       </Defs>

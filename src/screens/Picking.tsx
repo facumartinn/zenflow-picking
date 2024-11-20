@@ -8,6 +8,7 @@ import { DefaultModal } from '../components/DefaultModal'
 import { usePickingLogic } from '../hooks/usePickingLogic'
 import ProductInfo from '../components/PickingProduct'
 import { WarningSvg } from '../components/svg/Warning'
+import { router } from 'expo-router'
 
 const PickingScreen = () => {
   const {
@@ -23,7 +24,6 @@ const PickingScreen = () => {
     handleConfirmQuantity,
     handleIncompleteConfirm
   } = usePickingLogic()
-  console.log(currentProduct.weight, 'currentProdduct')
 
   return (
     <LinearGradient
@@ -34,7 +34,15 @@ const PickingScreen = () => {
       locations={[0.35, 0.35]}
     >
       <View style={styles.topBodyContainer}>
-        <PickingHeader title="Escanear artículo" leftAction={() => simulateScan('123456789')} rightAction={() => console.log('Ir a Detalles de la Orden')} />
+        <PickingHeader
+          title="Escanear artículo"
+          leftAction={() => simulateScan('123456789')}
+          // leftAction={() => {
+          //   console.log('dfdfd')
+          //   simulateScan('2000017005000')
+          // }}
+          rightAction={() => router.navigate('/picking-orders')}
+        />
       </View>
       <View style={styles.bodyContainer}>
         {currentProduct ? (
@@ -82,7 +90,7 @@ export default PickingScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
+    // paddingTop: 20,
     backgroundColor: Colors.grey1
   },
   topBodyContainer: {

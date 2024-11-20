@@ -21,7 +21,6 @@ const AdminLoginScreen = () => {
   const handleLogin = async () => {
     try {
       const { token, user } = await loginAdmin(userEmail, password)
-      console.log('token', token, user)
       // Guardar el token, tenantId y warehouseId en AsyncStorage
       await AsyncStorage.setItem('authToken', token)
       await AsyncStorage.setItem('tenantId', user.tenant_id.toString())
@@ -62,7 +61,7 @@ const AdminLoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
+    // paddingTop: 20,
     paddingHorizontal: 20,
     backgroundColor: Colors.white
   },
