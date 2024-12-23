@@ -17,3 +17,11 @@ export interface Role {
   description: string
   tenant_id: number
 }
+
+export interface TokenPayload {
+  userId: number
+  tenant_id: number
+  warehouse_id: number
+  aud?: string
+  exp?: number
+}

@@ -1,5 +1,6 @@
 import api from './api'
 import { User } from '../types/auth'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 // Interfaz para la solicitud de registro
 export interface UserRequest {
@@ -24,6 +25,10 @@ export const registerUser = async (userData: UserRequest): Promise<User> => {
 export const loginAdmin = async (userEmail: string, password: string): Promise<{ user: User; token: string; metadata: { code: number; message: string } }> => {
   try {
     const response = await api.post('/auth/admin/login', { userEmail, password })
+    const { token } = response.data.data
+
+    await AsyncStorage.setItem('authToken', token)
+
     return response.data.data
   } catch (error) {
     console.error('Error logging in:', error)
@@ -34,6 +39,10 @@ export const loginAdmin = async (userEmail: string, password: string): Promise<{
 export const loginPickingUser = async (barcode: number): Promise<{ data: { user: User; token: string; metadata: { code: number; message: string } } }> => {
   try {
     const response = await api.post('/auth/picker/login', { barcode })
+    const { token } = response.data.data
+
+    await AsyncStorage.setItem('authToken', token)
+
     return response.data
   } catch (error) {
     console.error('Error logging in:', error)

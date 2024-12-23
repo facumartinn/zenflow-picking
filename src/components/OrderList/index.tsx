@@ -5,7 +5,7 @@ import { getFilteredOrders } from '../../services/order'
 import OrderItem from './OrderItem'
 import { Order, OrderStateEnum } from '../../types/order'
 import { useAtom } from 'jotai'
-import { userAtom } from '../../store'
+import { orderTotalsAtom, userAtom } from '../../store'
 
 interface OrdersListProps {
   selectedTab: 'pending' | 'completed'
@@ -13,8 +13,9 @@ interface OrdersListProps {
 
 const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
   const [pickerUser] = useAtom(userAtom)
+  const [, setOrderTotals] = useAtom(orderTotalsAtom)
   const [refreshing, setRefreshing] = useState(false)
-  const stateId = selectedTab === 'pending' ? OrderStateEnum.READY_TO_PICK : OrderStateEnum.COMPLETED
+  const stateId = selectedTab === 'pending' ? [OrderStateEnum.READY_TO_PICK, OrderStateEnum.SCHEDULED] : [OrderStateEnum.FINISHED, OrderStateEnum.DELETED]
 
   const {
     data: orders = [],
@@ -23,9 +24,16 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
     refetch // <-- Añadido para poder recargar los datos manualmente
   } = useQuery<Order[]>({
     queryKey: ['orders', stateId],
-    queryFn: () => getFilteredOrders({ stateId: [stateId], userId: pickerUser?.id, includeDetails: true })
-    // refetchInterval: 30000
+    queryFn: async () => {
+      const orders = await getFilteredOrders({ stateId: stateId, userId: pickerUser?.id, includeDetails: true })
+      setOrderTotals(prev => ({
+        ...prev,
+        [selectedTab]: orders.length
+      }))
+      return orders
+    }
   })
+
   const firstShowPickerOrdersThenTheRest = orders
     .filter(order => order.user_id === pickerUser?.id)
     .concat(orders.filter(order => order.user_id !== pickerUser?.id))
@@ -33,6 +41,10 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
   const onRefresh = async () => {
     setRefreshing(true)
     await refetch()
+    setOrderTotals(prev => ({
+      ...prev,
+      [selectedTab]: orders.length
+    }))
     setRefreshing(false)
   }
 

@@ -4,12 +4,8 @@ import { View, Text, Image, StyleSheet } from 'react-native'
 import { DefaultHeader } from '../components/DefaultHeader'
 import Colors from '../constants/Colors'
 import { router } from 'expo-router'
-import { flowOrderDetailsAtom } from '../store'
-import { useAtom } from 'jotai'
 
 const PickingCompletedScreen = () => {
-  const [flowOrderDetails] = useAtom(flowOrderDetailsAtom)
-  console.log(flowOrderDetails)
   return (
     <>
       <View style={styles.container}>
@@ -50,7 +46,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    // paddingTop: 30,
     paddingHorizontal: 16
   },
   header: {

@@ -1,5 +1,3 @@
-// screens/BasketSelectionScreen.tsx
-
 import React, { useEffect, useState } from 'react'
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import { DefaultHeader } from '../components/DefaultHeader'
@@ -7,20 +5,29 @@ import { AntDesign } from '@expo/vector-icons'
 import Colors from '../constants/Colors'
 import { useRouter } from 'expo-router'
 import { useAtom } from 'jotai'
-import { flowOrderDetailsAtom, basketsByOrderAtom } from '../store'
+import { flowOrderDetailsAtom, basketsByOrderAtom, flowAtom, resetAllFlowAtoms } from '../store'
 import { groupOrderDetailsByOrderId } from '../helpers/groupOrders'
 import OrderCard from '../components/BasketSelection/OrderCard'
 import BottomButton from '../components/BottomButton' // Asegúrate de tener este componente
 import { DefaultModal } from '../components/DefaultModal'
 import LoadingPickingScreen from '../components/LoadingPickingScreen'
 import { WarningSvg } from '../components/svg/Warning'
-import { assignBasketsToOrders } from '../services/flow'
+import { assignBasketsToOrders, updateFlowStatus } from '../services/flow'
+import { OrderStateEnum } from '../types/order'
+import { FlowStateEnum } from '../types/flow'
+import { updateOrderStatus } from '../services/order'
+import { BasketSvg } from '../components/svg/Basket'
+// import { updateOrderStatus } from '../services/order'
+// import { OrderStateEnum } from '../types/order'
 
 const BasketSelectionScreen = () => {
+  const [flow] = useAtom(flowAtom)
+  const [, setResetFlow] = useAtom(resetAllFlowAtoms)
   const [orderDetails] = useAtom(flowOrderDetailsAtom)
   const [basketsByOrder] = useAtom(basketsByOrderAtom)
   const groupedOrders = groupOrderDetailsByOrderId(orderDetails)
   const [modalVisible, setModalVisible] = useState(false)
+  const [startPickingModalVisible, setStartPickingModalVisible] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -38,19 +45,25 @@ const BasketSelectionScreen = () => {
   }
 
   const allOrdersReady = groupedOrders.every(order => basketsByOrder[order.order_id]?.length > 0)
-  console.log(basketsByOrder, 'basketsByOrder')
+  const orderIds = Object.keys(basketsByOrder).map(Number)
 
   const handleStartPicking = async () => {
     // Add API call to save baskets to orders
-    console.log(basketsByOrder, 'basketsByOrderrr')
-    const orderBarcodes = await assignBasketsToOrders(basketsByOrder)
-    console.log('orderBarcodes', orderBarcodes)
-    setLoading(true)
+    try {
+      await assignBasketsToOrders(basketsByOrder)
+      // Actualizar el estado de los pedidos.
+      await updateOrderStatus(OrderStateEnum.IN_PREPARATION, orderIds)
+      setLoading(true)
+    } catch (error) {
+      console.error('Error al asignar cajones a las órdenes', error)
+    }
   }
 
-  const handleBack = () => {
+  const handleBack = async () => {
     // Aca pegarle a la api para cancelar el flow de picking
-    router.navigate('/home')
+    await updateFlowStatus(flow.id, FlowStateEnum.CANCELLED, OrderStateEnum.READY_TO_PICK)
+    router.navigate('/multi-picking')
+    setResetFlow()
   }
 
   if (loading) {
@@ -81,17 +94,30 @@ const BasketSelectionScreen = () => {
           })}
         </View>
       </ScrollView>
-      {allOrdersReady && <BottomButton text="INICIAR PICKING" onPress={handleStartPicking} />}
+      {allOrdersReady && <BottomButton text="INICIAR PICKING" onPress={() => setStartPickingModalVisible(true)} />}
       <DefaultModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         icon={<WarningSvg width={40} height={41} color={Colors.red} />}
+        iconBackgroundColor={Colors.lightRed}
         title="¿Volver al inicio?"
         description="Se perderán todos los avances y tendrás que volver a empezar."
         primaryButtonText="VOLVER AL INICIO"
+        primaryButtonColor={Colors.mainBlue}
         primaryButtonAction={handleBack}
         secondaryButtonText="ATRÁS"
         secondaryButtonAction={() => setModalVisible(false)}
+      />
+      <DefaultModal
+        visible={startPickingModalVisible}
+        icon={<BasketSvg width={40} height={41} color={Colors.mainBlue} />}
+        title="¿Iniciar picking?"
+        description={`Pedido: ${flow.id}`}
+        primaryButtonText="EMPEZAR"
+        primaryButtonColor={Colors.mainBlue}
+        primaryButtonAction={handleStartPicking}
+        secondaryButtonText="ATRÁS"
+        secondaryButtonAction={() => setStartPickingModalVisible(false)}
       />
     </View>
   )

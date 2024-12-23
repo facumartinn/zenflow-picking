@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react'
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native'
-import { useRouter } from 'expo-router'
+import { RelativePathString, useRouter } from 'expo-router'
 import Colors from '../../constants/Colors'
 import { LoadingPickingBackgroundSvg } from '../svg/LoadingPickingBackground'
-// import LoadingBackground from '../../app/basket-selection/loadingbg'
 
 interface LoadingScreenProps {
   message: string
@@ -18,7 +17,7 @@ const LoadingPickingScreen: React.FC<LoadingScreenProps> = ({ message, color = C
   useEffect(() => {
     const timer = setTimeout(() => {
       if (nextRoute) {
-        router.push(nextRoute)
+        router.push(nextRoute as RelativePathString)
       }
     }, duration)
 

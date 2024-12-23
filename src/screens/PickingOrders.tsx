@@ -1,18 +1,24 @@
 // screens/PickingOrderDetailScreen.tsx
-import React from 'react'
-import { View, Text, StyleSheet, ScrollView } from 'react-native'
+import React, { useState } from 'react'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
 import Colors from '../constants/Colors'
 import { AntDesign } from '@expo/vector-icons'
 import { DefaultHeader } from '../components/DefaultHeader'
-import { basketsByOrderAtom, flowOrderDetailsAtom } from '../store'
+import { basketsByOrderAtom, flowAtom, flowOrderDetailsAtom, resetAllFlowAtoms } from '../store'
 import { useAtom } from 'jotai'
 import { OrderCard } from '../components/PickingOrders/components/OrderCard'
 import { groupOrderDetailsByOrderId } from '../helpers/groupOrders'
+import { DefaultModal } from '../components/DefaultModal'
+import { WarningSvg } from '../components/svg/Warning'
+import { cancelFlow } from '../services/flow'
 
 export const PickingOrdersScreen = () => {
   const [flowOrderDetails] = useAtom(flowOrderDetailsAtom)
+  const [flow] = useAtom(flowAtom)
+  const [, setResetFlow] = useAtom(resetAllFlowAtoms)
   const [basketsByOrder] = useAtom(basketsByOrderAtom)
+  const [cancelPickingModalVisible, setCancelPickingModalVisible] = useState(false)
 
   const groupedOrders = groupOrderDetailsByOrderId(flowOrderDetails)
 
@@ -21,6 +27,13 @@ export const PickingOrdersScreen = () => {
   const handleCardPress = (orderId: number) => {
     // Navegar a la pantalla de detalle de pedido
     router.push({ pathname: '/picking-order-detail', params: { orderId } })
+  }
+
+  const handleCancelPicking = async () => {
+    await cancelFlow(flow.id)
+    setCancelPickingModalVisible(false)
+    setResetFlow()
+    router.push('/home')
   }
 
   return (
@@ -58,7 +71,26 @@ export const PickingOrdersScreen = () => {
             />
           )
         })}
+        <TouchableOpacity style={styles.buttonContainer} onPress={() => setCancelPickingModalVisible(true)}>
+          <AntDesign name="close" size={24} color={Colors.red} />
+          <Text style={styles.buttonText}>Cancelar picking</Text>
+        </TouchableOpacity>
       </ScrollView>
+      <DefaultModal
+        visible={cancelPickingModalVisible}
+        title="¿Cancelar picking?"
+        iconBackgroundColor={Colors.lightRed}
+        icon={<WarningSvg width={40} height={41} color={Colors.red} />}
+        description="Se perderán todos los avances y tendrás que volver a empezar."
+        primaryButtonText="ATRAS"
+        primaryButtonColor={Colors.mainBlue}
+        primaryButtonAction={() => {
+          setCancelPickingModalVisible(false)
+        }}
+        secondaryButtonText="CANCELAR PICKING"
+        secondaryButtonAction={handleCancelPicking}
+        secondaryButtonTextColor={Colors.red}
+      />
     </View>
   )
 }
@@ -84,5 +116,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter_400Regular',
     color: Colors.black
+  },
+  buttonContainer: {
+    width: '100%',
+    marginTop: 20,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+    gap: 10,
+    borderRadius: 10
+  },
+  buttonText: {
+    color: Colors.red,
+    textAlign: 'center',
+    fontSize: 18
   }
 })

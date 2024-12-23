@@ -1,6 +1,6 @@
 import React from 'react'
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native'
-import { Order, OrderStateEnum, PickingStateEnum } from '../../../types/order'
+import { Order, OrderStateEnum } from '../../../types/order'
 import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons'
 import Colors from '../../../constants/Colors'
 import { formatTime } from '../../../utils/queryParams'
@@ -33,7 +33,7 @@ const MultiSelectOrderItem: React.FC<MultiSelectOrderItemProps> = ({ item, userI
               style={styles.profilePicture}
             />
           )}
-          {item.state_id === OrderStateEnum.COMPLETED && (
+          {item.state_id === OrderStateEnum.FINISHED && (
             <View>
               <Text style={styles.orderText}>Entrega</Text>
               <Text style={styles.orderNumber}>{item?.updated_at ? formatTime(item?.updated_at) : '-'}</Text>
@@ -41,9 +41,9 @@ const MultiSelectOrderItem: React.FC<MultiSelectOrderItemProps> = ({ item, userI
           )}
         </View>
       </View>
-      <View style={item.state_picking_id === PickingStateEnum.COMPLETE ? styles.orderQuantityBox : styles.orderQuantityIncompleteBox}>
-        <Text style={item.state_picking_id === PickingStateEnum.COMPLETE ? styles.orderText : styles.orderTextIncomplete}>Cant</Text>
-        {item.state_picking_id === PickingStateEnum.COMPLETE ? (
+      <View style={item.state_picking_id === null ? styles.orderQuantityBox : styles.orderQuantityIncompleteBox}>
+        <Text style={item.state_picking_id === null ? styles.orderText : styles.orderTextIncomplete}>Cant</Text>
+        {item.state_picking_id === null ? (
           <Text style={styles.orderQuantity}>{item?.OrderDetails?.length}</Text>
         ) : (
           <View style={styles.incompleteQuantityNumber}>

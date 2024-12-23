@@ -1,4 +1,3 @@
-// src/types/order.ts
 export interface Order {
   id: number
   state_id: number | null
@@ -67,10 +66,13 @@ export interface FilterParamTypes {
 export enum OrderStateEnum {
   NEW = 1,
   READY_TO_PICK = 2,
-  PROGRAMMED = 3,
-  IN_PREPARATION = 4,
-  COMPLETED = 5,
-  DELETED = 6
+  SCHEDULED = 3,
+  BASKET_ASSIGNMENT = 4,
+  IN_PREPARATION = 5,
+  PACKING = 6,
+  DELIVERING = 7,
+  FINISHED = 8,
+  DELETED = 9
 }
 
 export enum PickingStateEnum {
@@ -83,8 +85,10 @@ export const ORDER_STATES = [
   { id: 2, description: 'Listo para preparar' },
   { id: 3, description: 'Programado' },
   { id: 4, description: 'En preparación' },
-  { id: 5, description: 'Finalizado' },
-  { id: 6, description: 'Eliminado' }
+  { id: 5, description: 'Empaquetado' },
+  { id: 6, description: 'Entregado' },
+  { id: 7, description: 'Finalizado' },
+  { id: 8, description: 'Eliminado' }
 ]
 
 export enum PickingDetailEnum {
@@ -101,4 +105,32 @@ export interface PickingUpdate {
   quantity_picked: number
   final_weight: number | null
   state_picking_details_id: number
+}
+
+export interface OrderResource {
+  resource_id: number
+  barcode: string
+  position: string
+}
+
+export interface OrderResources {
+  order_id: number
+  resources: OrderResource[]
+}
+
+export interface OrderResourcesPayload {
+  orderResources: OrderResources[]
+}
+
+export interface OrderResourceResponse {
+  order_id: number
+  resources: OrderResourceItem[]
+}
+
+export interface OrderResourceItem {
+  resource_id: number
+  quantity: number
+  barcode: string
+  position: string
+  resource_name: string
 }

@@ -29,13 +29,27 @@ const PickingProductOrderDetail = () => {
   } = usePickingLogic()
   const { productId, orderId }: Partial<{ productId: number; orderId: number }> = useLocalSearchParams() // Assuming productId is passed as a parameter
   const [flowOrderDetails] = useAtom(flowOrderDetailsAtom)
+
+  // Validación temprana
+  if (!flowOrderDetails || !productId || !orderId) {
+    return null // O un componente de loading/error
+  }
+
   const productInfo = flowOrderDetails.find(product => product.id == productId && product.order_id == orderId)
 
-  console.log(productInfo) // productId is the product id passed as a parameter
+  if (!productInfo) {
+    return null // O un componente de error
+  }
+
   // We can load the specific product in usePickingLogic based on the productId passed, if needed
   const handlePicking = () => {
     simulateScanForIncomplete('123456789', productId!, orderId!)
     // router.back()
+  }
+
+  const handleNavigation = () => {
+    // Asegúrate de limpiar el estado antes de navegar
+    router.push('/picking-orders')
   }
 
   return (
@@ -50,7 +64,7 @@ const PickingProductOrderDetail = () => {
         <PickingHeader
           title="Escanear artículo"
           leftAction={handlePicking}
-          rightAction={() => router.back()} // Navigates back to the PickingOrderDetailScreen
+          rightAction={handleNavigation} // Navigates back to the PickingOrderDetailScreen
         />
       </View>
       <View style={styles.bodyContainer}>
@@ -65,13 +79,27 @@ const PickingProductOrderDetail = () => {
           <Text>No hay más productos</Text>
         )}
       </View>
-      <ManualPickingModal
-        visible={modalVisible}
-        quantityPicked={currentProduct.quantity_picked ?? 0}
-        maxQuantity={currentProduct.quantity}
-        onConfirm={handleConfirmQuantity}
-        onClose={() => setModalVisible(false)}
-      />
+      {currentProduct && (
+        <>
+          <ManualPickingModal
+            visible={modalVisible}
+            quantityPicked={currentProduct?.quantity_picked ?? 0}
+            maxQuantity={currentProduct?.quantity}
+            onConfirm={handleConfirmQuantity}
+            onClose={() => setModalVisible(false)}
+          />
+          <DefaultModal
+            visible={errorModalVisible} // Modal para el error de producto incorrecto
+            title="Producto equivocado"
+            description={`Código del producto: `}
+            subDescription={`${currentProduct?.product_barcode}`}
+            primaryButtonText="ATRÁS"
+            primaryButtonAction={() => setErrorModalVisible(false)}
+            icon={<WarningSvg width={40} height={41} color={Colors.red} />}
+            iconBackgroundColor={Colors.lightRed}
+          />
+        </>
+      )}
       <DefaultModal
         visible={incompleteModalVisible}
         title="Artículos pendientes"
@@ -80,15 +108,6 @@ const PickingProductOrderDetail = () => {
         primaryButtonAction={handleIncompleteConfirm}
         secondaryButtonText="ATRÁS"
         secondaryButtonAction={() => setIncompleteModalVisible(false)}
-      />
-      <DefaultModal
-        visible={errorModalVisible} // Modal para el error de producto incorrecto
-        title="Producto equivocado"
-        description={`Código del producto: `}
-        subDescription={`${currentProduct?.product_barcode}`}
-        primaryButtonText="ATRÁS"
-        primaryButtonAction={() => setErrorModalVisible(false)}
-        icon={<WarningSvg width={40} height={41} color={Colors.red} />}
       />
     </LinearGradient>
   )

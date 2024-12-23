@@ -1,10 +1,12 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { jwtDecode } from 'jwt-decode'
+import { TokenPayload } from '../types/auth'
 
 // Crear una instancia de axios
 const api = axios.create({
   // baseURL: 'https://zenflow-api-daq3y.ondigitalocean.app', // Reemplaza con la URL base de tu API
-  baseURL: 'http://192.168.0.3:4000', // Reemplaza con la URL base de tu API
+  baseURL: 'http://192.168.0.22:4000', // Reemplaza con la URL base de tu API
   timeout: 100000 // Opcional: establecer un tiempo de espera
 })
 
@@ -12,17 +14,14 @@ const api = axios.create({
 api.interceptors.request.use(
   async config => {
     const token = await AsyncStorage.getItem('authToken')
-    const tenantId = await AsyncStorage.getItem('tenantId')
-    const warehouseId = await AsyncStorage.getItem('warehouseId')
 
     if (token) {
       config.headers.authorization = token
-    }
-    if (tenantId) {
-      config.headers['x-tenant-id'] = tenantId
-    }
-    if (warehouseId) {
-      config.headers['x-warehouse-id'] = warehouseId
+
+      // Decodificar el token para obtener tenant_id y warehouse_id
+      const decoded: TokenPayload = jwtDecode(token)
+      config.headers['x-tenant-id'] = decoded.tenant_id.toString()
+      config.headers['x-warehouse-id'] = decoded.warehouse_id.toString()
     }
     return config
   },

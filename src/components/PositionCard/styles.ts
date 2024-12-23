@@ -34,7 +34,8 @@ export const styles = StyleSheet.create({
   },
   positionLabel: {
     fontSize: 16,
-    color: Colors.grey5
+    color: Colors.grey5,
+    fontFamily: 'Inter_400Regular'
   },
   position: {
     textAlign: 'center',
@@ -52,8 +53,9 @@ export const styles = StyleSheet.create({
     marginVertical: 4
   },
   detailType: {
-    fontSize: 14,
-    color: Colors.grey5
+    fontSize: 16,
+    color: Colors.grey5,
+    fontFamily: 'Inter_400Regular'
   },
   detailQuantity: {
     fontSize: 16,
@@ -65,12 +67,28 @@ export const styles = StyleSheet.create({
   },
   iconContainer: {
     backgroundColor: Colors.grey1,
-    padding: 8,
+    padding: 6,
     borderRadius: 100
   },
   separator: {
     height: 1,
     backgroundColor: '#eee',
     marginVertical: 8
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 100
+  },
+  noResourcesText: {
+    textAlign: 'center',
+    color: Colors.grey5,
+    padding: 20,
+    fontSize: 16,
+    fontFamily: 'Inter_400Regular'
+  },
+  iconContainerDisabled: {
+    opacity: 0.5
   }
 })

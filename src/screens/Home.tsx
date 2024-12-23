@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAtom } from 'jotai'
-import { isAdminLoggedInAtom } from '../store'
+import { isAdminLoggedInAtom, userAtom } from '../store'
 import { DefaultHeader } from '../components/DefaultHeader'
 import TabSelector from '../components/HomeTabSelector'
 import OrdersList from '../components/OrderList'
@@ -12,6 +12,7 @@ import { router } from 'expo-router'
 
 const HomeScreen = () => {
   const [, setIsAdminLoggedIn] = useAtom(isAdminLoggedInAtom)
+  const [user] = useAtom(userAtom)
   const [selectedTab, setSelectedTab] = useState<'pending' | 'completed'>('pending')
 
   const handleLogout = async () => {
@@ -25,6 +26,10 @@ const HomeScreen = () => {
     router.navigate('/admin-login')
   }
 
+  const handleMultiPicking = () => {
+    router.navigate('/multi-picking')
+  }
+
   return (
     <>
       <View style={styles.container}>
@@ -32,13 +37,13 @@ const HomeScreen = () => {
           <DefaultHeader
             title={
               <Text style={styles.companyName} onPress={handleLogout}>
-                Unilever
+                Pedidos
               </Text>
             }
             leftIcon={
               <Image
                 source={{
-                  uri: 'https://i.pinimg.com/564x/63/73/a2/6373a27fc967248faf8ba9ac82041a97.jpg'
+                  uri: user?.Tenants.logo
                 }}
                 style={styles.logo}
               />
@@ -55,8 +60,8 @@ const HomeScreen = () => {
           />
         </View>
         <TabSelector selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
-        <TouchableOpacity onPress={() => router.navigate('/multi-picking')}>
-          <Text style={styles.sectionTitle}>SELECCIÓN MULTIPLE</Text>
+        <TouchableOpacity onPress={handleMultiPicking}>
+          <Text style={styles.sectionTitle}>SELECCIÓN MÚLTIPLE</Text>
         </TouchableOpacity>
         <OrdersList selectedTab={selectedTab} />
       </View>

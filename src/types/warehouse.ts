@@ -44,5 +44,4 @@ export interface WarehouseConfig {
 export interface Resources {
   id: number
   name: string
-  quantity?: number
 }

@@ -36,11 +36,15 @@ export enum FlowStateEnum {
 
 export interface PackingOrder {
   print_status: PrintStatusEnum
-  resources: {
-    resource_id: number
-    resource_name: string
-    barcodes: number[]
-  }[]
+  resources: Resource[]
+  packing_delivery_status: 0 | 1
+}
+
+export interface Resource {
+  resource_id: number
+  resource_name: string
+  barcode: number
+  position?: string
 }
 
 export enum PrintStatusEnum {

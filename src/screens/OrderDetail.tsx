@@ -20,10 +20,11 @@ type LocalSearchParams = {
 
 const OrderDetailScreen = () => {
   const { orderId, stateId, quantity }: Partial<LocalSearchParams> = useLocalSearchParams()
-  const [orderDetails, setOrderDetails] = useAtom(orderDetailsAtom)
+  const [orderDetails] = useAtom(orderDetailsAtom)
+  const orderDetailsArray = Array.isArray(orderDetails[0]) ? orderDetails[0] : []
 
   const handleBack = () => {
-    setOrderDetails([])
+    // setOrderDetails([])
     return stateId == OrderStateEnum.READY_TO_PICK
       ? router.navigate('/home')
       : router.navigate({ pathname: '/completed-order-detail', params: { orderId, stateId, quantity } })
@@ -53,8 +54,9 @@ const OrderDetailScreen = () => {
           <Text style={styles.value}>{quantity}</Text>
         </View>
       </View>
-      <FlatList data={orderDetails} renderItem={({ item }) => <ProductCard product={item} />} keyExtractor={item => item?.product_id?.toString()} />
-      {stateId === OrderStateEnum.READY_TO_PICK ? (
+      {/* <Text>{JSON.stringify(orderDetails)}</Text> */}
+      <FlatList data={orderDetailsArray} renderItem={({ item }) => <ProductCard product={item} />} keyExtractor={item => item?.product_id?.toString()} />
+      {stateId == OrderStateEnum.READY_TO_PICK ? (
         <TouchableOpacity style={styles.startPickingButton}>
           <Text style={styles.startPickingText}>INICIAR PICKING</Text>
         </TouchableOpacity>

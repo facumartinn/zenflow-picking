@@ -15,8 +15,7 @@ const PackingOrderCompletedScreen = () => {
   const { orderId } = useLocalSearchParams<{ orderId: string }>()
   const [packingOrderDetail] = useAtom(packingOrdersAtom)
 
-  const totalItems = packingOrderDetail[parseInt(orderId as string)].resources.reduce((sum, item) => sum + item.barcodes.length, 0)
-  console.log('first')
+  const totalItems = packingOrderDetail[parseInt(orderId as string)]?.resources?.length || 0
 
   const handleContinue = () => {
     router.navigate('/packing-orders')

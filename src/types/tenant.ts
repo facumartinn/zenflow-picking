@@ -2,6 +2,7 @@
 export interface Tenant {
   id: number
   name: string
+  logo: string
 }
 
 export interface SubstitutionPreference {

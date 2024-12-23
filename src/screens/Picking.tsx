@@ -34,15 +34,7 @@ const PickingScreen = () => {
       locations={[0.35, 0.35]}
     >
       <View style={styles.topBodyContainer}>
-        <PickingHeader
-          title="Escanear artículo"
-          leftAction={() => simulateScan('123456789')}
-          // leftAction={() => {
-          //   console.log('dfdfd')
-          //   simulateScan('2000017005000')
-          // }}
-          rightAction={() => router.navigate('/picking-orders')}
-        />
+        <PickingHeader title="Escanear artículo" leftAction={() => simulateScan('123456789')} rightAction={() => router.navigate('/picking-orders')} />
       </View>
       <View style={styles.bodyContainer}>
         {currentProduct ? (
@@ -53,34 +45,41 @@ const PickingScreen = () => {
             </TouchableOpacity>
           </View>
         ) : (
-          <Text>No hay más productos</Text>
+          <View style={styles.emptyStateContainer}>
+            <Text style={styles.emptyStateText}>No hay productos disponibles</Text>
+          </View>
         )}
       </View>
-      <ManualPickingModal
-        visible={modalVisible}
-        quantityPicked={currentProduct.quantity_picked ?? 0}
-        maxQuantity={currentProduct.quantity}
-        onConfirm={handleConfirmQuantity}
-        onClose={() => setModalVisible(false)}
-      />
-      <DefaultModal
-        visible={incompleteModalVisible}
-        title="Artículos pendientes"
-        description="Quedaron productos pendientes de escanear. Podrá levantar el producto al final de la preparación."
-        primaryButtonText="SEGUIR SIN LEVANTAR"
-        primaryButtonAction={handleIncompleteConfirm}
-        secondaryButtonText="ATRÁS"
-        secondaryButtonAction={() => setIncompleteModalVisible(false)}
-      />
-      <DefaultModal
-        visible={errorModalVisible} // Modal para el error de producto incorrecto
-        title="Producto equivocado"
-        description={`Código del producto: `}
-        subDescription={`${currentProduct?.product_barcode}`}
-        primaryButtonText="ATRÁS"
-        primaryButtonAction={() => setErrorModalVisible(false)}
-        icon={<WarningSvg width={40} height={41} color={Colors.red} />}
-      />
+      {currentProduct && (
+        <>
+          <ManualPickingModal
+            visible={modalVisible}
+            quantityPicked={0}
+            maxQuantity={currentProduct.quantity}
+            onConfirm={handleConfirmQuantity}
+            onClose={() => setModalVisible(false)}
+          />
+          <DefaultModal
+            visible={incompleteModalVisible}
+            title="Artículos pendientes"
+            description="Quedaron productos pendientes de escanear. Podrá levantar el producto al final de la preparación."
+            primaryButtonText="SEGUIR SIN LEVANTAR"
+            primaryButtonAction={handleIncompleteConfirm}
+            secondaryButtonText="ATRÁS"
+            secondaryButtonAction={() => setIncompleteModalVisible(false)}
+          />
+          <DefaultModal
+            visible={errorModalVisible}
+            title="Producto equivocado"
+            description={`Código del producto: ${currentProduct.product_barcode}`}
+            primaryButtonText="ATRÁS"
+            primaryButtonColor={Colors.mainBlue}
+            primaryButtonAction={() => setErrorModalVisible(false)}
+            icon={<WarningSvg width={40} height={41} color={Colors.red} />}
+            iconBackgroundColor={Colors.lightRed}
+          />
+        </>
+      )}
     </LinearGradient>
   )
 }
@@ -113,5 +112,17 @@ const styles = StyleSheet.create({
     marginTop: 14,
     marginBottom: 14,
     marginLeft: 10
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontFamily: 'Inter_400Regular',
+    color: Colors.grey3,
+    textAlign: 'center'
   }
 })

@@ -12,12 +12,15 @@ import ProductCard from '../components/ProductCard'
 import { OrderDetails } from '../types/order'
 import { basketsByOrderAtom, flowOrderDetailsAtom } from '../store'
 import { BarcodeScannerSvg } from '../components/svg/BarcodeScanner'
+import { DefaultModal } from '../components/DefaultModal'
+import { WarningSvg } from '../components/svg/Warning'
 
 type LocalSearchParams = {
   orderId: number
 }
 
 const BasketAssignmentScreen = () => {
+  const [modalVisible, setModalVisible] = useState(false)
   const { orderId }: Partial<LocalSearchParams> = useLocalSearchParams()
   const [orderDetails] = useAtom(flowOrderDetailsAtom)
   const [basketsByOrder, setBasketsByOrder] = useAtom(basketsByOrderAtom)
@@ -41,6 +44,8 @@ const BasketAssignmentScreen = () => {
       const updatedBaskets = [...baskets, basketId]
       setBaskets(updatedBaskets)
       setBasketsByOrder(prev => ({ ...prev, [orderId!]: updatedBaskets }))
+    } else {
+      setModalVisible(true)
     }
   }
 
@@ -95,7 +100,9 @@ const BasketAssignmentScreen = () => {
           )}
           <TextInput ref={inputRef} style={styles.hiddenInput} onSubmitEditing={e => handleAddBasket(e.nativeEvent.text)} blurOnSubmit={false} />
           <View style={styles.orderDetailsBox}>
-            <Text style={styles.orderDetailsTitle}>Detalle del pedido</Text>
+            <TouchableOpacity onPress={() => handleAddBasket('1234')}>
+              <Text style={styles.orderDetailsTitle}>Detalle del pedido</Text>
+            </TouchableOpacity>
             <Text style={styles.orderDetailsQuantity}>Cantidad {filteredOrderDetails.reduce((acc, detail) => acc + detail.quantity, 0)}</Text>
             {filteredOrderDetails.map(detail => (
               <ProductCard key={detail.id} product={detail} />
@@ -108,6 +115,16 @@ const BasketAssignmentScreen = () => {
           <Text style={styles.saveButtonText}>GUARDAR</Text>
         </TouchableOpacity>
       )}
+      <DefaultModal
+        visible={modalVisible}
+        icon={<WarningSvg width={40} height={41} color={Colors.red} />}
+        iconBackgroundColor={Colors.lightRed}
+        title="Ya usaste este cajón"
+        description="Probá con otro."
+        primaryButtonText="VOLVER"
+        primaryButtonColor={Colors.mainBlue}
+        primaryButtonAction={() => setModalVisible(false)}
+      />
     </View>
   )
 }
@@ -116,7 +133,6 @@ export default BasketAssignmentScreen
 
 const styles = StyleSheet.create({
   container: {
-    // paddingTop: 20,
     flex: 1,
     backgroundColor: Colors.grey1
   },

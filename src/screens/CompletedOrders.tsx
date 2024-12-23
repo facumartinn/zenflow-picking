@@ -2,7 +2,7 @@ import React from 'react'
 import { View, Text, FlatList, Button } from 'react-native'
 import { useQuery } from '@tanstack/react-query'
 import { getFilteredOrders } from '../services/order'
-import { Order } from '../types/order'
+import { Order, OrderStateEnum } from '../types/order'
 import { router } from 'expo-router'
 
 const CompletedOrdersScreen = () => {
@@ -12,7 +12,7 @@ const CompletedOrdersScreen = () => {
     error
   } = useQuery<Order[]>({
     queryKey: ['completedOrders'],
-    queryFn: getFilteredOrders,
+    queryFn: () => getFilteredOrders({ stateId: [OrderStateEnum.FINISHED, OrderStateEnum.DELETED] }),
     refetchInterval: 30000 // Refetch cada 30 segundos
   })
 

@@ -78,6 +78,9 @@ const AppNavigator = () => {
               <Stack.Screen name="packing-order-detail/index" options={{ headerShown: false }} />
               <Stack.Screen name="packing-order-overview/index" options={{ headerShown: false }} />
               <Stack.Screen name="packing-order-completed/index" options={{ headerShown: false }} />
+              <Stack.Screen name="packing-delivery/index" options={{ headerShown: false }} />
+              <Stack.Screen name="packing-delivery-detail/index" options={{ headerShown: false }} />
+              <Stack.Screen name="flow-finished/index" options={{ headerShown: false }} />
             </Stack>
           ) : (
             <Stack

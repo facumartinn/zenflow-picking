@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useRef, useState } from 'react'
 import { AppState, AppStateStatus, Alert } from 'react-native'
-import * as FileSystem from 'expo-file-system'
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { AntDesign } from '@expo/vector-icons'
@@ -12,11 +11,12 @@ import { packingOrdersAtom } from '../store'
 import { DefaultHeader } from '../components/DefaultHeader'
 import BarcodePdf from '../components/BarcodeGenerator'
 import { PackingOrder, PrintStatusEnum } from '../types/flow'
+import { usePdfViewer } from '../hooks/usePdfGenerator'
 
 const PackingOrderOverviewScreen = () => {
   const router = useRouter()
   const barcodePdfRef = useRef<any>() // Puedes definir un tipo más específico si lo deseas
-  const [pdfPath, setPdfPath] = useState(null)
+  const [pdfPath, setPdfPath] = useState<string | null>(null)
   const [, setIsPrinting] = useState(false)
   const [shouldRedirect, setShouldRedirect] = useState(false)
 
@@ -25,35 +25,42 @@ const PackingOrderOverviewScreen = () => {
 
   const currentOrder: PackingOrder = packingOrderDetail[parseInt(orderId as string)]
 
-  const totalItems = currentOrder.resources.reduce((sum, item) => sum + item.barcodes.length, 0)
+  // Calcular el total de etiquetas (número de objetos en `resources`)
+  const totalItems = currentOrder?.resources?.length || 0
 
+  // Generar códigos de barras desde la nueva estructura de datos
   const generateBarcodes = () => {
-    const barcodes: any[] = []
-
-    currentOrder.resources.forEach(item => {
-      item.barcodes.forEach(barcode => {
-        barcodes.push({
-          value: barcode,
-          label: item.resource_name
-        })
-      })
-    })
-
-    console.log('Barcodes generados:', barcodes) // Log para depuración
-    return barcodes
+    return (
+      currentOrder?.resources?.map(item => ({
+        value: item.barcode.toString(), // Convertir el barcode en string
+        label: item.resource_name
+      })) || []
+    )
   }
+
   const barcodes = generateBarcodes()
+
+  const { showPdf, deletePdf } = usePdfViewer()
 
   const handlePrintLabels = async () => {
     try {
       setIsPrinting(true)
       console.log('Generando etiquetas...')
-      const filePath = await barcodePdfRef.current?.generatePdf()
-      console.log('PDF generado en:', filePath)
-      setPdfPath(filePath)
 
-      if (filePath) {
-        // Actualizar el estado de impresión
+      const viewRef = barcodePdfRef.current
+      if (!viewRef) {
+        throw new Error('La referencia del PDF no está disponible')
+      }
+
+      const filePath = await viewRef.generatePdf()
+      if (!filePath) {
+        throw new Error('No se pudo generar la ruta del archivo PDF')
+      }
+
+      setPdfPath(filePath)
+      const shared = await showPdf(filePath)
+
+      if (shared) {
         const updatedPackingOrders = {
           ...packingOrderDetail,
           [orderId as string]: {
@@ -63,9 +70,6 @@ const PackingOrderOverviewScreen = () => {
         }
         setShouldRedirect(true)
         setPackingOrderDetail(updatedPackingOrders)
-      } else {
-        console.log('No se pudo generar el PDF')
-        Alert.alert('Error', 'No se pudo generar el PDF. Por favor, intenta nuevamente.')
       }
     } catch (error) {
       console.error('Error al imprimir:', error)
@@ -77,32 +81,26 @@ const PackingOrderOverviewScreen = () => {
 
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      console.log('nextAppState', nextAppState)
       if (nextAppState === 'active' && shouldRedirect) {
-        console.log('Intentando redirigir...')
-        // La aplicación vuelve a estar activa y no está en proceso de impresión
         if (pdfPath) {
-          FileSystem.deleteAsync(pdfPath, { idempotent: true })
+          deletePdf(pdfPath)
             .then(() => console.log('PDF eliminado'))
             .catch(error => console.error('Error al eliminar el PDF:', error))
             .finally(() => {
-              console.log('Redirigiendo a packing-order-completed')
               router.push({ pathname: '/packing-order-completed', params: { orderId } })
             })
         } else {
-          console.log('Redirigiendo a packing-order-completed (sin PDF)')
           router.push({ pathname: '/packing-order-completed', params: { orderId } })
         }
-        setShouldRedirect(false)
       }
     }
 
     const subscription = AppState.addEventListener('change', handleAppStateChange)
-
     return () => {
       subscription.remove()
     }
-  }, [router, pdfPath, shouldRedirect, orderId])
+  }, [router, pdfPath, shouldRedirect, orderId, deletePdf])
+
   return (
     <LinearGradient
       colors={[Colors.lightOrange, Colors.background]}
@@ -130,10 +128,10 @@ const PackingOrderOverviewScreen = () => {
         <View style={styles.summaryWrapper}>
           <View style={styles.summaryContainer}>
             <Text style={styles.summaryTitle}>Etiquetas</Text>
-            {currentOrder.resources.map((item, index) => (
+            {currentOrder?.resources?.map((item, index) => (
               <View key={index} style={styles.itemRow}>
                 <Text style={styles.itemName}>{item.resource_name}</Text>
-                <Text style={styles.itemQuantity}>{item.barcodes.length}</Text>
+                <Text style={styles.itemQuantity}>1</Text> {/* Cada recurso es una etiqueta */}
               </View>
             ))}
             <View style={styles.totalRow}>
@@ -149,7 +147,6 @@ const PackingOrderOverviewScreen = () => {
           <Text style={styles.continueButtonText}>IMPRIMIR ETIQUETAS</Text>
         </TouchableOpacity>
       </View>
-      {/* </SafeAreaView> */}
     </LinearGradient>
   )
 }
@@ -266,6 +263,13 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 20,
     fontFamily: 'Inter_700Bold'
+  },
+  barcodeContainer: {
+    position: 'absolute',
+    left: -9999, // Fuera de la pantalla pero renderizado
+    width: 300, // Ancho fijo
+    height: 500, // Alto fijo
+    backgroundColor: 'white'
   }
 })
 

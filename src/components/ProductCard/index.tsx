@@ -9,7 +9,7 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
-  const isFullPicked = OrderStateEnum.COMPLETED && product.quantity_picked === product?.quantity_picked
+  const isFullPicked = OrderStateEnum.FINISHED && product.quantity_picked === product?.quantity_picked
 
   return (
     <View style={styles.cardContainer}>

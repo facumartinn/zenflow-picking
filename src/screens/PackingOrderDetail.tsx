@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { AntDesign } from '@expo/vector-icons'
@@ -6,51 +6,21 @@ import Colors from '../constants/Colors'
 import { DefaultHeader } from '../components/DefaultHeader'
 import { LinearGradient } from 'expo-linear-gradient'
 import { BarcodeScannerSvg } from '../components/svg/BarcodeScanner'
-import { useAtom } from 'jotai'
-import { basketsByOrderAtom, packingOrdersAtom, warehousesAtom } from '../store'
-import { PackingOrder, PrintStatusEnum } from '../types/flow'
+import { usePackingOrderDetail } from '../hooks/usePackingOrderDetail'
 
 const PackingOrderDetailScreen = () => {
   const router = useRouter()
-  const [warehouseConfig] = useAtom(warehousesAtom)
-  const [basketsByOrder] = useAtom(basketsByOrderAtom)
-  const [packingOrderDetail, setPackingOrderDetail] = useAtom(packingOrdersAtom)
-  const resourceList: PackingOrder['resources'] = warehouseConfig.use_resources!.resources!.map(resource => ({
-    resource_id: resource.id,
-    resource_name: resource.name,
-    barcodes: []
-  }))
   const { orderId } = useLocalSearchParams<{ orderId: string }>()
-  const [drawerNumber, setDrawerNumber] = useState(basketsByOrder[parseInt(orderId as string)])
-  const [packagingItems, setPackagingItems] = useState<PackingOrder['resources']>(resourceList)
+  const { drawerNumber, resourceList, availableResources, incrementResource, decrementResource, clearDrawer, handleConfirm } = usePackingOrderDetail({
+    orderId: parseInt(orderId as string, 10)
+  })
 
-  const handleQuantityChange = (index: number, increment: boolean) => {
-    setPackagingItems(items =>
-      items.map((item, i) =>
-        i === index
-          ? {
-              ...item,
-              barcodes: increment
-                ? [...item.barcodes, Date.now()] // Añadimos un número único como código de barras
-                : item.barcodes.slice(0, -1) // Eliminamos el último código de barras
-            }
-          : item
-      )
-    )
-  }
-  console.log(packagingItems)
-
-  const handleConfirm = () => {
-    setPackingOrderDetail({
-      ...packingOrderDetail,
-      [orderId as string]: {
-        print_status: PrintStatusEnum.NOT_PRINTED,
-        resources: packagingItems
-      }
-    })
+  const onConfirm = () => {
+    handleConfirm()
     router.push({ pathname: '/packing-order-overview', params: { orderId } })
   }
-  console.log(packingOrderDetail, 'packingOrderDetail')
+
+  const getCountForResource = (resourceId: number) => resourceList.filter(item => item.resource_id === resourceId).length
 
   return (
     <LinearGradient
@@ -81,33 +51,37 @@ const PackingOrderDetailScreen = () => {
         <View style={styles.drawerSection}>
           <Text style={styles.drawerLabel}>Cajón</Text>
           <View style={styles.drawerInfo}>
-            <Text style={styles.drawerNumber}>{drawerNumber}</Text>
-            <TouchableOpacity onPress={() => setDrawerNumber([])}>
+            <Text style={styles.drawerNumber}>{drawerNumber.join(', ')}</Text>
+            <TouchableOpacity onPress={clearDrawer}>
               <AntDesign name="delete" size={24} color={Colors.red} />
             </TouchableOpacity>
           </View>
         </View>
-        {packagingItems.map((item, index) => (
-          <View key={item.resource_name} style={styles.itemRow}>
-            <Text style={styles.itemName}>{item.resource_name}</Text>
-            <View style={styles.quantityControl}>
-              <TouchableOpacity
-                style={[styles.quantityButton, item.barcodes.length === 0 && styles.quantityButtonDisabled]}
-                onPress={() => handleQuantityChange(index, false)}
-                disabled={item.barcodes.length === 0}
-              >
-                <AntDesign name="minus" size={20} color={item.barcodes.length > 0 ? Colors.mainBlue : Colors.grey3} />
-              </TouchableOpacity>
-              <Text style={styles.quantity}>{item.barcodes.length}</Text>
-              <TouchableOpacity style={styles.quantityButton} onPress={() => handleQuantityChange(index, true)}>
-                <AntDesign name="plus" size={20} color={Colors.mainBlue} />
-              </TouchableOpacity>
+
+        {availableResources.map(resource => {
+          const count = getCountForResource(resource.resource_id)
+          return (
+            <View key={resource.resource_id} style={styles.itemRow}>
+              <Text style={styles.itemName}>{resource.resource_name}</Text>
+              <View style={styles.quantityControl}>
+                <TouchableOpacity
+                  style={[styles.quantityButton, count === 0 && styles.quantityButtonDisabled]}
+                  onPress={() => decrementResource(resource.resource_id)}
+                  disabled={count === 0}
+                >
+                  <AntDesign name="minus" size={20} color={count > 0 ? Colors.mainBlue : Colors.grey3} />
+                </TouchableOpacity>
+                <Text style={styles.quantity}>{count}</Text>
+                <TouchableOpacity style={styles.quantityButton} onPress={() => incrementResource(resource.resource_id)}>
+                  <AntDesign name="plus" size={20} color={Colors.mainBlue} />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        ))}
+          )
+        })}
       </ScrollView>
       <View style={styles.continueButtonContainer}>
-        <TouchableOpacity style={styles.continueButton} onPress={() => handleConfirm()}>
+        <TouchableOpacity style={styles.continueButton} onPress={onConfirm}>
           <Text style={styles.continueButtonText}>CONTINUAR</Text>
         </TouchableOpacity>
       </View>
@@ -117,16 +91,8 @@ const PackingOrderDetailScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    // paddingTop: 20,
     flex: 1,
     backgroundColor: Colors.background
-  },
-  backButton: {
-    marginRight: 16
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold'
   },
   content: {
     flex: 1,

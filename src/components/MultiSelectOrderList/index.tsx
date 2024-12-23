@@ -17,7 +17,7 @@ const MultiSelectOrdersList: React.FC<MultiSelectOrdersListProps> = ({ selectedT
   const [selectedOrders, setSelectedOrders] = useState<number[]>([])
   const [refreshing, setRefreshing] = useState(false) // Estado para controlar el refresh
 
-  const stateId = selectedTab === 'pending' ? OrderStateEnum.READY_TO_PICK : OrderStateEnum.COMPLETED
+  const stateId = selectedTab === 'pending' ? OrderStateEnum.READY_TO_PICK : OrderStateEnum.FINISHED
 
   const {
     data: orders = [],

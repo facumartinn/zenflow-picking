@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import api from './api'
-import { FilterParamTypes, Order, OrderDetails } from '../types/order'
+import { FilterParamTypes, Order, OrderDetails, OrderResourcesPayload, OrderResourceResponse } from '../types/order'
 import { QueryParams, objectToQueryString } from '../utils/queryParams'
 
 // Obtener todos los pedidos
@@ -84,6 +84,36 @@ export const updateOrderStatus = async (stateId: number, statusData: any): Promi
     await api.post(`/orders/update-status/${stateId}`, statusData)
   } catch (error) {
     console.error(`Error updating order status with state ID ${stateId}:`, error)
+    throw error
+  }
+}
+
+// Actualizar los detalles de un pedido
+export const updateOrders = async (data: { orders: Array<{ id: number; data: Partial<Order> }> }): Promise<void> => {
+  try {
+    await api.put('/orders/batch-update', data)
+  } catch (error) {
+    console.error('Error updating order details:', error)
+    throw error
+  }
+}
+
+// Registrar recursos utilizados en los pedidos
+export const registerOrderResources = async (payload: OrderResourcesPayload): Promise<void> => {
+  try {
+    await api.post('/orders/resources', payload)
+  } catch (error) {
+    console.error('Error registering order resources:', error)
+    throw error
+  }
+}
+
+export const getResources = async (orderId: number): Promise<OrderResourceResponse> => {
+  try {
+    const response = await api.get(`/orders/resources/${orderId}`)
+    return response.data.data
+  } catch (error) {
+    console.error('Error fetching resources:', error)
     throw error
   }
 }

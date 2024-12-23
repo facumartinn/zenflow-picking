@@ -119,7 +119,6 @@ export const usePickingLogic = () => {
     if (selectedProductIndex === -1) return // Si no encuentra el producto, no hace nada
 
     const selectedProduct = flowOrderDetails[selectedProductIndex]
-    console.log(selectedProduct, 'dsds')
 
     // Validar que el código de barras coincida o que el producto sea pesable
     if (selectedProduct.product_barcode !== scannedBarcode && !selectedProduct.weighable) {
@@ -203,30 +202,6 @@ export const usePickingLogic = () => {
     }
   }
 
-  // const handleNextProduct = () => {
-  //   if (currentProductIndex < flowOrderDetails.length - 1) {
-  //     const nextProductIndex = currentProductIndex + 1
-
-  //     const updatedFlowOrderDetails = flowOrderDetails.map((detail, index) => {
-  //       if (index === currentProductIndex) {
-  //         return { ...detail, state_picking_details_id: PickingDetailEnum.COMPLETED }
-  //       }
-  //       if (
-  //         index === nextProductIndex &&
-  //         detail.state_picking_details_id !== PickingDetailEnum.COMPLETED &&
-  //         detail.state_picking_details_id !== PickingDetailEnum.INCOMPLETE
-  //       ) {
-  //         return { ...detail, state_picking_details_id: PickingDetailEnum.IN_PROGRESS }
-  //       }
-  //       return detail
-  //     })
-
-  //     setFlowOrderDetails(updatedFlowOrderDetails)
-  //     setCurrentProductIndex(nextProductIndex)
-  //   } else {
-  //     console.log('Picking process completed')
-  //   }
-  // }
   const handleNextProduct = () => {
     // Encontrar el siguiente producto en estado PENDING después del índice actual
     const nextPendingIndex = flowOrderDetails.findIndex(

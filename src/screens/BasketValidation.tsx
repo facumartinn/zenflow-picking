@@ -4,8 +4,8 @@ import { useRouter } from 'expo-router'
 import Colors from '../constants/Colors'
 import { AntDesign } from '@expo/vector-icons'
 import { DefaultHeader } from '../components/DefaultHeader'
-import { basketsByOrderAtom, flowOrderDetailsAtom, currentProductAtom, currentProductIndexAtom, flowAtom } from '../store'
-import { OrderDetails, OrderStateEnum, PickingDetailEnum, PickingStateEnum, PickingUpdate } from '../types/order'
+import { basketsByOrderAtom, flowOrderDetailsAtom, currentProductAtom, currentProductIndexAtom } from '../store'
+import { OrderDetails, PickingDetailEnum, PickingUpdate } from '../types/order'
 import { useAtom } from 'jotai'
 import { LinearGradient } from 'expo-linear-gradient'
 import { BarcodeScannerSvg } from '../components/svg/BarcodeScanner'
@@ -16,8 +16,8 @@ import { useToast } from '../context/toast'
 import { WarningSvg } from '../components/svg/Warning'
 import LoadingPackingScreen from '../components/LoadingPackingScreen'
 import { updateOrderDetails } from '../services/orderDetail'
-import { updateOrderStatus } from '../services/order'
-import { groupOrderDetailsByOrderId } from '../helpers/groupOrders'
+import { updateOrders } from '../services/order'
+import { calculateOrdersPickingState, groupOrderDetailsByOrderId } from '../helpers/groupOrders'
 
 const BasketValidationScreen = () => {
   const [flowOrderDetails, setFlowOrderDetails] = useAtom(flowOrderDetailsAtom)
@@ -28,6 +28,7 @@ const BasketValidationScreen = () => {
   const router = useRouter()
   const [modalVisible, setModalVisible] = useState(false)
   const [modalIncompleteVisible, setModalIncompleteVisible] = useState(false)
+  const [modalSkipBasketVisible, setModalSkipBasketVisible] = useState(false)
   const [scannedBasketCode, setScannedBasketCode] = useState<number | undefined>(undefined)
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<TextInput>(null)
@@ -67,8 +68,7 @@ const BasketValidationScreen = () => {
 
   const baskets = basketsByOrder[currentProduct!.order_id]?.join(', ') || 'N/A'
 
-  const handleBasketValidation = async () => {
-    console.log(scannedBasketCode, 'basketsByOrder')
+  const handleBasket = () => {
     if (!basketsByOrder[currentProduct.order_id]?.includes(scannedBasketCode as number)) {
       // Mostrar modal de error si el canasto no coincide
       setModalVisible(true)
@@ -76,7 +76,10 @@ const BasketValidationScreen = () => {
       setScannedBasketCode(undefined)
       return
     }
+    handleBasketValidation()
+  }
 
+  const handleBasketValidation = async () => {
     const updatedFlowOrderDetails = flowOrderDetails.map((detail, index) => {
       if (index === currentProductIndex) {
         // Verificar si la cantidad es incompleta
@@ -100,9 +103,7 @@ const BasketValidationScreen = () => {
       setCurrentProductIndex(currentProductIndex + 1)
       router.replace('/picking')
     } else {
-      console.log('Picking process completed.')
       // Aca habria que pegarle a la api para guardar el resultado del picking
-      console.log(flowOrderDetails)
       // Función de utilidad para transformar los datos
       const transformOrderDetailsForUpdate = (details: OrderDetails[]): PickingUpdate[] => {
         return details.map(detail => ({
@@ -114,12 +115,20 @@ const BasketValidationScreen = () => {
           state_picking_details_id: detail.state_picking_details_id!
         }))
       }
-      const groupedOrders = groupOrderDetailsByOrderId(flowOrderDetails)
-
+      const groupedOrders = Object.fromEntries(groupOrderDetailsByOrderId(flowOrderDetails).map(group => [group.order_id, group.details]))
+      const ordersPickingState = calculateOrdersPickingState(groupedOrders)
       try {
-        console.log(groupedOrders)
         await updateOrderDetails(transformOrderDetailsForUpdate(flowOrderDetails))
-        // await updateOrderStatus(currentProduct.order_id, PickingStateEnum.COMPLETE)
+        // Se va a actualizar el estado de picking de los pedidos.
+        // Hay que calcular el estado final de picking de cada pedido utilizando PickingStateEnum.
+        // Tenemos que recorrer cada pedido y validar si los productos tienen el estado PickingDetailEnum.COMPLETED
+        // Si todos los productos de un pedido tienen el estado PickingDetailEnum.COMPLETED entonces el estado final de picking del pedido es PickingStateEnum.COMPLETE
+        // Si algun producto de un pedido tiene el estado PickingDetailEnum.INCOMPLETE entonces el estado final de picking del pedido es PickingStateEnum.INCOMPLETE
+        // const ordersToUpdate = ordersPickingState.map(order => {
+        //   // Si TODOS los productos del pedido tienen el estado PickingDetailEnum.COMPLETED entonces el estado final de picking del pedido es PickingStateEnum.COMPLETE
+        //   if (order.details.every(detail => detail.state_picking_details_id === PickingDetailEnum.COMPLETED)) {
+        // })
+        await updateOrders({ orders: ordersPickingState })
       } catch (error) {
         console.error('Error updating order details:', error)
         throw error
@@ -138,6 +147,9 @@ const BasketValidationScreen = () => {
   //     setScannedBasketCode(parseInt(text))
   //   }
 
+  const handleSkipBasket = () => {
+    handleBasketValidation()
+  }
   return (
     <LinearGradient
       colors={[Colors.lightOrange, Colors.grey1]}
@@ -180,7 +192,7 @@ const BasketValidationScreen = () => {
             <Text style={styles.orderBoxValue}>{baskets}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.scanContainer} onPress={handleBasketValidation}>
+        <TouchableOpacity style={styles.scanContainer} onPress={handleBasket}>
           <BarcodeScannerSvg width={40} height={40} color={Colors.black} />
           <Text style={styles.scanText}>Escaneá el cajón</Text>
         </TouchableOpacity>
@@ -189,18 +201,20 @@ const BasketValidationScreen = () => {
           style={styles.invisibleInput}
           value={scannedBasketCode?.toString()}
           onChangeText={text => setScannedBasketCode(Number(text))}
-          onSubmitEditing={handleBasketValidation}
+          onSubmitEditing={handleBasket}
           autoFocus={true}
         />
       </View>
-      <TouchableOpacity style={styles.skipButton} onPress={() => console.log('Omitir')}>
+      <TouchableOpacity style={styles.skipButton} onPress={() => setModalSkipBasketVisible(true)}>
         <Text style={styles.skipText}>Omitir</Text>
       </TouchableOpacity>
 
       <DefaultModal
         visible={modalVisible}
-        title="Producto equivocado"
+        title="Cajón equivocado"
         description={`Cajón/es correcto/s: ${baskets}`}
+        icon={<WarningSvg width={40} height={41} color={Colors.red} />}
+        iconBackgroundColor={Colors.lightRed}
         primaryButtonText="ATRÁS"
         primaryButtonAction={() => setModalVisible(false)}
         primaryButtonColor={Colors.mainBlue}
@@ -211,12 +225,28 @@ const BasketValidationScreen = () => {
         title="¡Pedidos incompetos!"
         description={'Algunos de los pedidos le falta algún articulo'}
         icon={<WarningSvg width={40} height={41} color={Colors.red} />}
+        iconBackgroundColor={Colors.lightRed}
         primaryButtonText="VER PEDIDOS"
         primaryButtonAction={() => router.replace('/picking-orders')}
         primaryButtonColor={Colors.mainBlue}
         primaryButtonTextColor={Colors.white}
         secondaryButtonText="SEGUIR SIN COMPLETAR"
         secondaryButtonAction={() => setLoading(true)}
+        secondaryButtonColor={Colors.white}
+        secondaryButtonTextColor={Colors.red}
+      />
+      <DefaultModal
+        visible={modalSkipBasketVisible}
+        title="¡Ciudado!"
+        description={'Escanear el cajón donde se colocan los artículos reduce las posibilidades de mezclar los pedidos.'}
+        icon={<WarningSvg width={40} height={41} color={Colors.red} />}
+        iconBackgroundColor={Colors.lightRed}
+        primaryButtonText="SEGUIR SIN ESCANEAR"
+        primaryButtonAction={handleSkipBasket}
+        primaryButtonColor={Colors.mainBlue}
+        primaryButtonTextColor={Colors.white}
+        secondaryButtonText="ATRÁS"
+        secondaryButtonAction={() => setModalSkipBasketVisible(false)}
         secondaryButtonColor={Colors.white}
         secondaryButtonTextColor={Colors.red}
       />

@@ -17,7 +17,7 @@ const CELL_COUNT = 4
 
 const PickerLoginScreen = () => {
   const [fontsLoaded] = useFonts({ Inter_700Bold, Inter_500Medium })
-  const [, setPickerUser] = useAtom(userAtom)
+  const [user, setPickerUser] = useAtom(userAtom)
   const [, setIsAdminLoggedIn] = useAtom(isAdminLoggedInAtom)
   const [, setIsPickerLoggedIn] = useAtom(isPickerLoggedInAtom)
   const [, setWarehouseConfig] = useAtom(warehousesAtom)
@@ -94,31 +94,34 @@ const PickerLoginScreen = () => {
           />
         }
       />
-      <Image source={{ uri: 'https://i.pinimg.com/564x/63/73/a2/6373a27fc967248faf8ba9ac82041a97.jpg' }} style={styles.logo} />
-      <Text style={styles.title}>Código de empleado</Text>
-      <CodeField
-        ref={ref}
-        {...props}
-        value={value}
-        onChangeText={setValue}
-        cellCount={CELL_COUNT}
-        rootStyle={styles.codeFieldRoot}
-        keyboardType="numeric"
-        textContentType="oneTimeCode"
-        testID="my-code-input"
-        renderCell={({ index, symbol, isFocused }) => (
-          <Text key={index} style={[styles.cell, isFocused && styles.focusCell]} onLayout={getCellOnLayoutHandler(index)}>
-            {symbol || (isFocused ? <Cursor /> : null)}
-          </Text>
-        )}
-      />
-      <Text style={styles.subtitle}>Ingrese tu código de 4 dígitos</Text>
+      <View style={styles.codeContainer}>
+        <Image source={{ uri: user?.Tenants.logo }} style={styles.logo} />
+        <Text style={styles.title}>Código de empleado</Text>
+        <CodeField
+          ref={ref}
+          {...props}
+          value={value}
+          onChangeText={setValue}
+          cellCount={CELL_COUNT}
+          rootStyle={styles.codeFieldRoot}
+          keyboardType="numeric"
+          textContentType="oneTimeCode"
+          testID="my-code-input"
+          renderCell={({ index, symbol, isFocused }) => (
+            <Text key={index} style={[styles.cell, isFocused && styles.focusCell]} onLayout={getCellOnLayoutHandler(index)}>
+              {symbol || (isFocused ? <Cursor /> : null)}
+            </Text>
+          )}
+        />
+        <Text style={styles.subtitle}>Ingrese tu código de 4 dígitos</Text>
+      </View>
       {/* <Button title="INGRESAR" onPress={handleLogin} />
         <Button title="SALIR" onPress={handleLogout} /> */}
       <DefaultModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         icon={<WarningSvg width={40} height={41} color={Colors.red} />}
+        iconBackgroundColor={Colors.lightRed}
         title="¿Salir de sistema?"
         description="Si salís del sistema solo el administrador podrá volver a iniciar sesión."
         primaryButtonText="CERRAR SESIÓN"
@@ -136,10 +139,14 @@ export default PickerLoginScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // paddingTop: 20,
     justifyContent: 'flex-start',
     alignItems: 'center',
     backgroundColor: Colors.grey1
+  },
+  codeContainer: {
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginTop: 50
   },
   logo: {
     width: 80,
@@ -181,15 +188,15 @@ const styles = StyleSheet.create({
     marginTop: 20
   },
   cell: {
-    width: 40,
-    height: 48,
+    width: 42,
+    height: 54,
     lineHeight: 45,
     fontSize: 24,
     borderWidth: 2,
     borderColor: '#B7B7B7',
     textAlign: 'center',
     marginRight: 10,
-    borderRadius: 10,
+    borderRadius: 8,
     fontFamily: 'Inter_400Regular'
   },
   focusCell: {

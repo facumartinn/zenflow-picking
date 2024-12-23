@@ -8,6 +8,7 @@ interface DefaultModalProps {
   visible: boolean
   onClose?: () => void
   icon?: React.ReactNode
+  iconBackgroundColor?: string
   title?: string
   description?: string
   subDescription?: string
@@ -25,6 +26,7 @@ export const DefaultModal: React.FC<DefaultModalProps> = ({
   visible,
   //   onClose,
   icon,
+  iconBackgroundColor = Colors.mainLightBlue2,
   title,
   description,
   subDescription,
@@ -41,7 +43,7 @@ export const DefaultModal: React.FC<DefaultModalProps> = ({
     <Modal visible={visible} transparent={true} animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
-          {icon && <View style={styles.iconContainer}>{icon}</View>}
+          {icon && <View style={[styles.iconContainer, { backgroundColor: iconBackgroundColor }]}>{icon}</View>}
           {title && <Text style={styles.title}>{title}</Text>}
           {description && <Text style={styles.description}>{description}</Text>}
           {subDescription && <Text style={styles.subDescription}>{subDescription}</Text>}

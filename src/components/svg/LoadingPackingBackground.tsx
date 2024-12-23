@@ -9,7 +9,7 @@ interface LoadingPackingBackgroundSvgProps {
 
 export const LoadingPackingBackgroundSvg = ({ width, height, color }: LoadingPackingBackgroundSvgProps) => {
   return (
-    <Svg width={width} height={height} viewBox="0 0 360 276" fill="none">
+    <Svg width={width} height={height} viewBox="0 0 360 276" fill="none" style={{ position: 'absolute', bottom: 0 }}>
       <G opacity="0.7" clip-path="url(#clip0_137_2481)">
         <Path
           opacity="0.35"

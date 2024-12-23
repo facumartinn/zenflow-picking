@@ -5,6 +5,7 @@ const Colors = {
   mainBlue: '#2D41FC',
   mainLightBlue: '#A0AAFF',
   mainLightBlue2: '#A0AAFF4D',
+  darkBlue: '#000000',
 
   // Neutros
   black: '#000000',
