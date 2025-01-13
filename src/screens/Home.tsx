@@ -1,18 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react'
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native'
+import { View, Text, Image, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAtom } from 'jotai'
-import { isAdminLoggedInAtom, userAtom } from '../store'
+import { isAdminLoggedInAtom, tenantLogoAtom } from '../store'
 import { DefaultHeader } from '../components/DefaultHeader'
 import TabSelector from '../components/HomeTabSelector'
 import OrdersList from '../components/OrderList'
 import Colors from '../constants/Colors'
 import { router } from 'expo-router'
+import { DefaultButton } from '../components/DefaultButton'
 
 const HomeScreen = () => {
   const [, setIsAdminLoggedIn] = useAtom(isAdminLoggedInAtom)
-  const [user] = useAtom(userAtom)
+  const [tenantLogo] = useAtom(tenantLogoAtom)
   const [selectedTab, setSelectedTab] = useState<'pending' | 'completed'>('pending')
 
   const handleLogout = async () => {
@@ -33,37 +34,37 @@ const HomeScreen = () => {
   return (
     <>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <DefaultHeader
-            title={
-              <Text style={styles.companyName} onPress={handleLogout}>
-                Pedidos
-              </Text>
-            }
-            leftIcon={
-              <Image
-                source={{
-                  uri: user?.Tenants.logo
-                }}
-                style={styles.logo}
-              />
-            }
-            rightIcon={
-              <Image
-                source={{
-                  uri: 'https://t4.ftcdn.net/jpg/03/64/21/11/360_F_364211147_1qgLVxv1Tcq0Ohz3FawUfrtONzz8nq3e.jpg'
-                }}
-                style={styles.profilePicture}
-              />
-            }
-            rightAction={() => router.navigate('/profile')}
-          />
+        <DefaultHeader
+          title={
+            <Text style={styles.companyName} onPress={handleLogout}>
+              Inicio
+            </Text>
+          }
+          leftIcon={
+            <Image
+              source={{
+                uri: tenantLogo ?? '#'
+              }}
+              style={styles.logo}
+            />
+          }
+          rightIcon={
+            <Image
+              source={{
+                uri: 'https://t4.ftcdn.net/jpg/03/64/21/11/360_F_364211147_1qgLVxv1Tcq0Ohz3FawUfrtONzz8nq3e.jpg'
+              }}
+              style={styles.profilePicture}
+            />
+          }
+          rightAction={() => router.navigate('/profile')}
+        />
+        <View style={styles.bodyContainer}>
+          <TabSelector selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+          <View style={styles.multiPickingButtonContainer}>
+            {selectedTab === 'pending' && <DefaultButton type="primary" label="PICKING MÚLTIPLE" onPress={handleMultiPicking} />}
+          </View>
+          <OrdersList selectedTab={selectedTab} />
         </View>
-        <TabSelector selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
-        <TouchableOpacity onPress={handleMultiPicking}>
-          <Text style={styles.sectionTitle}>SELECCIÓN MÚLTIPLE</Text>
-        </TouchableOpacity>
-        <OrdersList selectedTab={selectedTab} />
       </View>
     </>
   )
@@ -74,8 +75,11 @@ export default HomeScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.background
+  },
+  bodyContainer: {
+    flex: 1,
     backgroundColor: Colors.background,
-    // paddingTop: 30,
     paddingHorizontal: 16
   },
   header: {
@@ -176,12 +180,15 @@ const styles = StyleSheet.create({
   },
   companyName: {
     fontSize: 18,
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'Inter_400Regular',
     color: Colors.black
   },
   profilePicture: {
     width: 40,
     height: 40,
     borderRadius: 20
+  },
+  multiPickingButtonContainer: {
+    marginBottom: 16
   }
 })

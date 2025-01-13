@@ -29,5 +29,8 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
     fontFamily: 'Inter_700Bold'
+  },
+  loading: {
+    opacity: 0.5
   }
 })

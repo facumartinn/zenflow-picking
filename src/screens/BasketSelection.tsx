@@ -73,7 +73,7 @@ const BasketSelectionScreen = () => {
   return (
     <View style={styles.container}>
       <DefaultHeader
-        title={<Text style={styles.headerTitle}>Selección múltiple</Text>}
+        title={<Text style={styles.headerTitle}>Picking múltiple</Text>}
         leftIcon={
           <View style={{ borderRadius: 100, backgroundColor: 'white', marginLeft: 10 }}>
             <AntDesign name="arrowleft" size={24} color="black" style={{ padding: 8 }} />
@@ -84,6 +84,7 @@ const BasketSelectionScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.bodyContainer}>
           <Text style={styles.screenTitle}>Asignación de cajones</Text>
+          <Text style={styles.screenSubtitle}>Asigna 1 ó más cajones para cada pedido.</Text>
           {groupedOrders.map(order => {
             const isOrderReady = basketsByOrder[order.order_id]?.length > 0
             return (
@@ -145,8 +146,14 @@ const styles = StyleSheet.create({
     color: Colors.black
   },
   screenTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: 'Inter_700Bold',
+    color: Colors.black,
+    marginBottom: 8
+  },
+  screenSubtitle: {
+    fontSize: 16,
+    fontFamily: 'Inter_400Regular',
     color: Colors.black,
     marginBottom: 16
   }

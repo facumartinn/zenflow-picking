@@ -7,19 +7,20 @@ export const styles = StyleSheet.create({
     height: 130,
     flexDirection: 'row',
     backgroundColor: 'white',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 10,
-    marginVertical: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2
+    marginVertical: 5
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 4,
+    // elevation: 2
   },
   productImage: {
+    backgroundColor: 'transparent',
     width: 110,
     height: 110,
-    borderRadius: 8
+    borderRadius: 12
   },
   productDetails: {
     flex: 1,
@@ -27,7 +28,8 @@ export const styles = StyleSheet.create({
   },
   productName: {
     height: 44,
-    fontSize: 18
+    fontSize: 18,
+    fontFamily: 'Inter_400Regular'
   },
   productInfo: {
     flexDirection: 'row',
@@ -36,6 +38,7 @@ export const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 16,
+    fontFamily: 'Inter_400Regular',
     color: Colors.grey5
   },
   infoValue: {
@@ -43,8 +46,8 @@ export const styles = StyleSheet.create({
     fontSize: 18
   },
   barcodeContainer: {
-    width: '75%',
-    padding: 5,
+    width: '73%',
+    padding: 8,
     backgroundColor: Colors.grey1,
     borderRadius: 10
   },
@@ -54,14 +57,14 @@ export const styles = StyleSheet.create({
     width: '20%',
     padding: 5,
     backgroundColor: Colors.grey1,
-    borderRadius: 10
+    borderRadius: 12
   },
 
   orderQuantityIncompleteBox: {
     backgroundColor: Colors.red,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 10,
+    borderRadius: 12,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'
@@ -73,6 +76,7 @@ export const styles = StyleSheet.create({
   },
   orderTotalQuantityIncomplete: {
     fontSize: 16,
+    fontFamily: 'Inter_400Regular',
     color: Colors.white
   },
   incompleteQuantityNumber: {
@@ -87,7 +91,7 @@ export const styles = StyleSheet.create({
     backgroundColor: Colors.grey1,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 10,
+    borderRadius: 12,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'
@@ -99,12 +103,14 @@ export const styles = StyleSheet.create({
   },
   orderText: {
     fontSize: 18,
+    fontFamily: 'Inter_400Regular',
     marginBottom: 4,
     color: Colors.grey5
   },
   orderTextIncomplete: {
     fontSize: 18,
     marginBottom: 4,
-    color: Colors.white
+    color: Colors.white,
+    fontFamily: 'Inter_400Regular'
   }
 })

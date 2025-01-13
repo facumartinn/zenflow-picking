@@ -5,10 +5,12 @@ export interface Order {
   amount: number
   user_id: number | null
   assembly_date: Date | null
+  assembly_schedule: number | null
   tenant_id: number
   warehouse_id: number
   updated_at: string | null
   created_at: string | null
+  positions: string | null
   OrderDetails?: OrderDetails[]
   OrderPositions: OrderPosition[]
 }

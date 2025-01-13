@@ -42,7 +42,7 @@ const MultiOrderSelectionScreen = () => {
   return (
     <View style={styles.container}>
       <DefaultHeader
-        title={<Text style={styles.headerTitle}>Selección múltiple</Text>}
+        title={<Text style={styles.headerTitle}>Picking múltiple</Text>}
         leftIcon={
           <View style={{ borderRadius: 100, backgroundColor: 'white', marginLeft: 10 }}>
             <AntDesign name="arrowleft" size={24} color="black" style={{ padding: 8 }} />
@@ -51,10 +51,9 @@ const MultiOrderSelectionScreen = () => {
         leftAction={() => router.navigate('/home')}
       />
       <View style={styles.bodyContainer}>
-        <Text style={styles.screenTitle}>Pedidos pendientes</Text>
         <MultiSelectOrdersList selectedTab={'pending'} onSelectionChange={handleSelectionChange} />
       </View>
-      {selectedOrders.length > 0 && <BottomButton text="SIGUIENTE" onPress={handleNext} />}
+      {selectedOrders.length > 0 && <BottomButton text="CONTINUAR" onPress={handleNext} />}
     </View>
   )
 }

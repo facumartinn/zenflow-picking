@@ -3,24 +3,28 @@ import Colors from '../../../constants/Colors'
 
 export const styles = StyleSheet.create({
   orderItem: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     padding: 16,
-    borderRadius: 18,
+    borderRadius: 12,
     marginBottom: 12,
     backgroundColor: Colors.white
   },
+  selectedOrderItem: {
+    borderColor: Colors.green,
+    borderWidth: 1.5
+  },
   orderItemIncomplete: {
-    height: 120,
-    borderColor: Colors.lightOrange2,
+    borderColor: Colors.orange,
     borderWidth: 1
   },
   orderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     flex: 1,
-    gap: 16
+    gap: 12
   },
   orderBox: {
     borderRadius: 12,
@@ -42,13 +46,6 @@ export const styles = StyleSheet.create({
     color: Colors.black,
     fontFamily: 'Inter_700Bold'
   },
-  positionContainer: {
-    alignItems: 'flex-end',
-    backgroundColor: Colors.grey2,
-    borderRadius: 12,
-    flex: 1,
-    width: '50%'
-  },
   positionText: {
     fontSize: 16,
     color: Colors.black,
@@ -58,11 +55,11 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 4
+    marginTop: 8
   },
   warningText: {
-    fontSize: 12,
-    color: Colors.lightOrange2,
-    fontFamily: 'Inter_700Bold'
+    fontSize: 14,
+    color: Colors.orange,
+    fontFamily: 'Inter_400Regular'
   }
 })

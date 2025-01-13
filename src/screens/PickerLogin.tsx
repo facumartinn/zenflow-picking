@@ -4,7 +4,7 @@ import Feather from '@expo/vector-icons/Feather'
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from 'react-native-confirmation-code-field'
 import { DefaultHeader } from '../components/DefaultHeader'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { isAdminLoggedInAtom, isPickerLoggedInAtom, userAtom, warehousesAtom } from '../store'
+import { isAdminLoggedInAtom, isPickerLoggedInAtom, tenantLogoAtom, userAtom, warehousesAtom } from '../store'
 import { useAtom } from 'jotai'
 import { loginPickingUser } from '../services/auth'
 import { DefaultModal } from '../components/DefaultModal'
@@ -17,12 +17,14 @@ const CELL_COUNT = 4
 
 const PickerLoginScreen = () => {
   const [fontsLoaded] = useFonts({ Inter_700Bold, Inter_500Medium })
-  const [user, setPickerUser] = useAtom(userAtom)
+  const [, setPickerUser] = useAtom(userAtom)
+  const [tenantLogo] = useAtom(tenantLogoAtom)
   const [, setIsAdminLoggedIn] = useAtom(isAdminLoggedInAtom)
   const [, setIsPickerLoggedIn] = useAtom(isPickerLoggedInAtom)
   const [, setWarehouseConfig] = useAtom(warehousesAtom)
-  const [modalVisible, setModalVisible] = useState(false)
+  const [modalVisible, setModalVisible] = useState<boolean>(false)
   const [value, setValue] = useState('')
+  const [isCodeCorrect, setIsCodeCorrect] = useState<boolean | null>(null)
   const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT })
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
     value,
@@ -37,20 +39,28 @@ const PickerLoginScreen = () => {
   useEffect(() => {
     if (value.length === CELL_COUNT) {
       handleLogin()
+    } else if (value.length < CELL_COUNT) {
+      // Resetear el estado cuando el usuario comienza a ingresar un nuevo código
+      setIsCodeCorrect(null)
     }
   }, [value])
 
   const handleLogin = async () => {
     try {
       const response = await loginPickingUser(Number(value))
-      setPickerUser(response.data.user)
+      setIsCodeCorrect(true)
       setWarehouseConfig(JSON.parse(response.data.user.Warehouses.custom_attributes as string) as WarehouseConfig)
-
+      setPickerUser(response.data.user)
       await AsyncStorage.setItem('authPickerToken', response.data.token)
       await AsyncStorage.setItem('pickerId', response.data.user.id.toString())
-      router.navigate('/home')
-      setIsPickerLoggedIn(true)
+
+      setTimeout(() => {
+        router.navigate('/home')
+        setIsPickerLoggedIn(true)
+      }, 1000)
     } catch (error) {
+      setIsCodeCorrect(false)
+      // setValue('')
       console.log('Error:', error)
     }
   }
@@ -95,7 +105,7 @@ const PickerLoginScreen = () => {
         }
       />
       <View style={styles.codeContainer}>
-        <Image source={{ uri: user?.Tenants.logo }} style={styles.logo} />
+        <Image source={{ uri: tenantLogo ?? '#' }} style={styles.logo} />
         <Text style={styles.title}>Código de empleado</Text>
         <CodeField
           ref={ref}
@@ -108,12 +118,26 @@ const PickerLoginScreen = () => {
           textContentType="oneTimeCode"
           testID="my-code-input"
           renderCell={({ index, symbol, isFocused }) => (
-            <Text key={index} style={[styles.cell, isFocused && styles.focusCell]} onLayout={getCellOnLayoutHandler(index)}>
+            <Text
+              key={index}
+              style={[
+                styles.cell,
+                isFocused && styles.focusCell,
+                isCodeCorrect === true && styles.cellSuccess,
+                isCodeCorrect === false && styles.cellError,
+                {
+                  color: isCodeCorrect === true ? Colors.green : isCodeCorrect === false ? Colors.red : Colors.black
+                }
+              ]}
+              onLayout={getCellOnLayoutHandler(index)}
+            >
               {symbol || (isFocused ? <Cursor /> : null)}
             </Text>
           )}
         />
-        <Text style={styles.subtitle}>Ingrese tu código de 4 dígitos</Text>
+        {isCodeCorrect === true && <Text style={[styles.subtitle, { color: Colors.green }]}>Código correcto</Text>}
+        {isCodeCorrect === false && <Text style={[styles.subtitle, { color: Colors.red }]}>Código incorrecto</Text>}
+        {isCodeCorrect === null && <Text style={styles.subtitle}>Ingrese tu código de 4 dígitos</Text>}
       </View>
       {/* <Button title="INGRESAR" onPress={handleLogin} />
         <Button title="SALIR" onPress={handleLogout} /> */}
@@ -163,7 +187,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 12,
     marginVertical: 20,
-    color: '#4A4D4F',
     fontFamily: 'Inter_400Regular'
   },
   input: {
@@ -185,7 +208,16 @@ const styles = StyleSheet.create({
     padding: 20
   },
   codeFieldRoot: {
-    marginTop: 20
+    marginTop: 20,
+    borderColor: Colors.grey3
+  },
+  codeFieldRootSuccess: {
+    marginTop: 20,
+    borderColor: Colors.green
+  },
+  codeFieldRootError: {
+    marginTop: 20,
+    borderColor: Colors.red
   },
   cell: {
     width: 42,
@@ -199,8 +231,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     fontFamily: 'Inter_400Regular'
   },
+  cellSuccess: {
+    borderColor: Colors.green
+  },
+  cellError: {
+    borderColor: Colors.red
+  },
   focusCell: {
-    borderColor: '#2D41FC',
+    borderColor: '#2D41FC'
+  },
+  focusCellError: {
+    borderColor: Colors.red,
+    fontFamily: 'Inter_400Regular'
+  },
+  focusCellSuccess: {
+    borderColor: Colors.green,
     fontFamily: 'Inter_400Regular'
   }
 })

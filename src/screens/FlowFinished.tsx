@@ -17,41 +17,6 @@ const FlowFinishedScreen: React.FC = () => {
   const router = useRouter()
   const [, setResetFlow] = useAtom(resetAllFlowAtoms)
 
-  //   const handleDownloadDetail = async () => {
-  //     try {
-  //       // Simulación de espera (opcional)
-  //       await new Promise(resolve => setTimeout(resolve, 500))
-
-  //       const viewRef = invoiceGeneratorRef.current
-  //       console.log('viewRef', viewRef)
-  //       if (!viewRef) {
-  //         throw new Error('No se pudo acceder al generador de facturas')
-  //       }
-
-  //       const filePath = await viewRef.generateInvoice()
-  //       if (!filePath) {
-  //         throw new Error('No se pudo generar el PDF del recibo/factura')
-  //       }
-
-  //       setPdfPath(filePath)
-  //       console.log('PDF del recibo/factura generado en:', filePath)
-
-  //       const canShare = await Sharing.isAvailableAsync()
-  //       if (canShare) {
-  //         await Sharing.shareAsync(filePath, {
-  //           mimeType: 'application/pdf',
-  //           dialogTitle: 'Compartir Recibo/Factura',
-  //           UTI: 'com.adobe.pdf' // Solo para iOS
-  //         })
-  //       } else {
-  //         Alert.alert('Error', 'No se puede compartir en este dispositivo')
-  //       }
-  //     } catch (error) {
-  //       console.error('Error al generar el recibo/factura:', error)
-  //       Alert.alert('Error', 'Ocurrió un error al intentar generar el recibo/factura. Por favor, intenta nuevamente.')
-  //     }
-  //   }
-
   const handleGoHome = () => {
     setResetFlow()
     router.push('/home')

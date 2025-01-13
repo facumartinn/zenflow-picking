@@ -6,50 +6,43 @@ export const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16
-  },
-  tabInsideContainer: {
-    backgroundColor: Colors.mainLightBlue2,
-    padding: 10,
-    borderRadius: 36,
-    width: '100%',
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.grey2
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 4,
-    borderRadius: 30,
-    borderWidth: 1,
-    backgroundColor: Colors.white,
-    borderColor: Colors.white
+    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent'
   },
   activeTab: {
-    backgroundColor: Colors.mainBlue,
-    borderColor: Colors.mainBlue
+    borderBottomColor: Colors.mainBlue,
+    fontFamily: 'Inter_700Bold'
   },
   tabText: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Inter_400Regular',
     color: Colors.grey3
   },
   tabTextActive: {
-    fontSize: 18,
-    fontFamily: 'Inter_400Regular',
-    color: Colors.white
+    fontSize: 16,
+    fontFamily: 'Inter_700Bold',
+    color: Colors.mainBlue
   },
   tabTextAmount: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Inter_700Bold',
     color: Colors.grey3
   },
   tabTextAmountActive: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Inter_700Bold',
-    color: Colors.white
+    color: Colors.mainBlue
   }
 })

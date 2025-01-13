@@ -1,22 +1,21 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 import React, { useEffect, useState } from 'react'
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native'
+import { View, Text, Alert, StyleSheet } from 'react-native'
 import { DefaultHeader } from '../components/DefaultHeader'
 import { AntDesign } from '@expo/vector-icons'
 import { OrderDetailLoader } from '../store/OrderLoader'
 import Colors from '../constants/Colors'
 import { useAtom } from 'jotai'
-import { orderDetailsAtom } from '../store'
+import { orderDetailsAtom, warehousesAtom } from '../store'
 import PositionsList from '../components/PositionCard'
 import * as FileSystem from 'expo-file-system'
 import { router, useLocalSearchParams } from 'expo-router'
-import { BoxDetailSvg } from '../components/svg/BoxDetail'
-import { CartSvg } from '../components/svg/Cart'
-import { WatchSvg } from '../components/svg/Watch'
 import { usePdfGenerator, usePdfViewer } from '../hooks/usePdfGenerator'
 import { OrderDetailTemplate } from '../templates/OrderDetailTemplate'
 import { getResources } from '../services/order'
 import { OrderResourceItem } from '../types/order'
+import { DefaultButton } from '../components/DefaultButton'
+import { format } from 'date-fns'
 
 type LocalSearchParams = {
   orderId: number
@@ -31,6 +30,9 @@ const CompletedOrderDetail = () => {
   const { showPdf } = usePdfViewer()
   const [resources, setResources] = useState<OrderResourceItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [warehouseConfig] = useAtom(warehousesAtom)
+  const shift = warehouseConfig?.use_shifts?.shifts?.find(shift => shift.id === orderDetails[0]?.Orders?.assembly_schedule)
+  const totalQuantity = orderDetails.reduce((acc, product) => acc + product.quantity, 0)
 
   useEffect(() => {
     const fetchResources = async () => {
@@ -148,31 +150,36 @@ const CompletedOrderDetail = () => {
       />
       <View style={styles.bodyContainer}>
         <View style={styles.titleBox}>
-          <BoxDetailSvg width={25} height={25} color={Colors.grey5} />
-          <Text style={styles.title}>Nro Pedido </Text>
-          <Text style={styles.value}>{orderId}</Text>
+          <Text style={styles.title}>Número de pedido</Text>
+          <Text style={styles.value}>0000{orderId}</Text>
         </View>
-        <View style={styles.titleBox}>
-          <CartSvg width={25} height={25} color={Colors.grey5} />
-          <Text style={styles.title}>Cantidad </Text>
-          <Text style={styles.value}>{quantity}</Text>
+        <View style={styles.infoBox}>
+          <View style={styles.titleBox}>
+            <Text style={styles.title}>Día</Text>
+            <Text style={styles.value}>
+              {orderDetails[0]?.Orders?.assembly_date ? format(new Date(orderDetails[0]?.Orders?.assembly_date), 'dd/MM/yyyy') : ''}
+            </Text>
+          </View>
+          <View style={styles.titleBox}>
+            <Text style={styles.title}>Turno</Text>
+            <Text style={styles.value}>{shift?.name}</Text>
+          </View>
         </View>
-        <View style={styles.titleBox}>
-          <WatchSvg width={25} height={25} color={Colors.grey5} />
-          <Text style={styles.title}>Inicio </Text>
-          <Text style={styles.value}>{'12:02'}</Text>
-          <Text style={styles.title}>Fin </Text>
-          <Text style={styles.value}>{'12:12'}</Text>
+        <View style={styles.infoBox}>
+          <View style={styles.titleBox}>
+            <Text style={styles.title}>Picker</Text>
+            <Text style={styles.value}>{orderDetails[0]?.Orders?.user_id}</Text>
+          </View>
+          <View style={styles.titleBox}>
+            <Text style={styles.title}>Cantidad</Text>
+            <Text style={styles.value}>{totalQuantity}</Text>
+          </View>
         </View>
         <PositionsList positions={transformedPositions} isLoading={isLoading} />
       </View>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.enterDetailScreen} onPress={handleOrderDetailNavigation}>
-          <Text style={styles.startPickingText}>VER DETALLE</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.downloadDetailScreen} onPress={generatePDF}>
-          <Text style={styles.downloadDetailText}>DESCARGAR DETALLE</Text>
-        </TouchableOpacity>
+        <DefaultButton label="VER DETALLE" backgroundColor={Colors.mainBlue} color={Colors.white} onPress={handleOrderDetailNavigation} />
+        <DefaultButton label="DESCARGAR DETALLE" backgroundColor="transparent" color={Colors.black} onPress={generatePDF} />
       </View>
     </View>
   )
@@ -194,20 +201,18 @@ const styles = StyleSheet.create({
     color: Colors.black
   },
   titleBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     marginVertical: 5,
     marginHorizontal: 10
   },
   title: {
     fontSize: 16,
-    marginLeft: 15,
-    color: Colors.grey5,
+    color: Colors.black,
     fontFamily: 'Inter_400Regular'
   },
   value: {
     fontSize: 18,
-    marginLeft: 15,
     fontFamily: 'Inter_700Bold',
     color: Colors.black
   },
@@ -240,5 +245,10 @@ const styles = StyleSheet.create({
     color: Colors.black,
     fontFamily: 'Inter_700Bold',
     fontSize: 16
+  },
+  infoBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginRight: 40
   }
 })

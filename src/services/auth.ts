@@ -26,7 +26,6 @@ export const loginAdmin = async (userEmail: string, password: string): Promise<{
   try {
     const response = await api.post('/auth/admin/login', { userEmail, password })
     const { token } = response.data.data
-
     await AsyncStorage.setItem('authToken', token)
 
     return response.data.data

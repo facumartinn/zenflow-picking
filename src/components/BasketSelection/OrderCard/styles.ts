@@ -3,24 +3,33 @@ import Colors from '../../../constants/Colors'
 
 export const styles = StyleSheet.create({
   orderItem: {
+    height: 100,
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     padding: 16,
-    borderRadius: 18,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.lightOrange,
     marginBottom: 12,
     backgroundColor: Colors.white
   },
-  orderItemIncomplete: {
-    height: 120,
-    borderColor: Colors.lightOrange2,
-    borderWidth: 1
+  orderItemReady: {
+    height: 120
+  },
+  incompleteOrder: {
+    borderColor: '#FFCC33',
+    height: 120
+  },
+  readyOrder: {
+    borderColor: Colors.green,
+    height: 120
   },
   orderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    gap: 16
+    justifyContent: 'space-between',
+    gap: 12
   },
   orderBox: {
     borderRadius: 12,
@@ -29,6 +38,7 @@ export const styles = StyleSheet.create({
     backgroundColor: Colors.grey1,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
     flex: 1
   },
   orderLabel: {
@@ -42,27 +52,21 @@ export const styles = StyleSheet.create({
     color: Colors.black,
     fontFamily: 'Inter_700Bold'
   },
-  positionContainer: {
-    alignItems: 'flex-end',
-    backgroundColor: Colors.grey2,
-    borderRadius: 12,
-    flex: 1,
-    width: '50%'
-  },
-  positionText: {
-    fontSize: 16,
-    color: Colors.black,
-    fontFamily: 'Inter_700Bold'
-  },
-  warningContainer: {
+  statusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 4
+    marginTop: 8
   },
-  warningText: {
+  statusText: {
     fontSize: 12,
-    color: Colors.lightOrange2,
-    fontFamily: 'Inter_700Bold'
+    fontFamily: 'Inter_700Bold',
+    textAlign: 'center'
+  },
+  readyStatusText: {
+    color: Colors.green
+  },
+  pendingStatusText: {
+    color: Colors.orange
   }
 })

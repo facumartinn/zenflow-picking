@@ -33,6 +33,7 @@
     "axios": "^1.7.2",
     "base-64": "^1.0.0",
     "bwip-js": "^2.0.8",
+    "date-fns": "^4.1.0",
     "expo": "^52.0.6",
     "expo-barcode-generator": "^3.0.2",
     "expo-constants": "~17.0.3",

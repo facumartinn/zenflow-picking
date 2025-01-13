@@ -6,7 +6,7 @@ import { TokenPayload } from '../types/auth'
 // Crear una instancia de axios
 const api = axios.create({
   // baseURL: 'https://zenflow-api-daq3y.ondigitalocean.app', // Reemplaza con la URL base de tu API
-  baseURL: 'http://192.168.0.22:4000', // Reemplaza con la URL base de tu API
+  baseURL: 'http://192.168.68.56:4000', // Reemplaza con la URL base de tu API
   timeout: 100000 // Opcional: establecer un tiempo de espera
 })
 
@@ -20,8 +20,8 @@ api.interceptors.request.use(
 
       // Decodificar el token para obtener tenant_id y warehouse_id
       const decoded: TokenPayload = jwtDecode(token)
-      config.headers['x-tenant-id'] = decoded.tenant_id.toString()
-      config.headers['x-warehouse-id'] = decoded.warehouse_id.toString()
+      config.headers['x-tenant-id'] = decoded.tenant_id?.toString()
+      config.headers['x-warehouse-id'] = decoded.warehouse_id?.toString()
     }
     return config
   },

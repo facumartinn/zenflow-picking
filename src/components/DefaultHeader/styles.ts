@@ -3,9 +3,9 @@ import Colors from '../../constants/Colors'
 
 export const styles = StyleSheet.create({
   container: {
-    height: 70,
+    height: 80,
     width: '100%',
-    paddingTop: 30,
+    backgroundColor: Colors.white,
     paddingHorizontal: 10,
     display: 'flex',
     flexDirection: 'row',

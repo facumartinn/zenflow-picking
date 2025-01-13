@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native'
 import { DefaultHeader } from '../components/DefaultHeader'
 import { AntDesign } from '@expo/vector-icons'
-import Ionicons from '@expo/vector-icons/Ionicons'
 import Colors from '../constants/Colors'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { useAtom } from 'jotai'
@@ -61,6 +60,8 @@ const BasketAssignmentScreen = () => {
 
   const filteredOrderDetails: OrderDetails[] = orderDetails.filter(detail => detail.order_id == orderId)
 
+  const totalQuantity = filteredOrderDetails.reduce((acc, detail) => acc + detail.quantity, 0)
+
   return (
     <View style={styles.container}>
       <DefaultHeader
@@ -74,36 +75,46 @@ const BasketAssignmentScreen = () => {
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.bodyContainer}>
-          <Text style={styles.screenTitle}>Cajones estimados: {Math.ceil(filteredOrderDetails.reduce((acc, detail) => acc + detail.quantity, 0) / 20)}</Text>
-          {baskets.length === 0 ? (
-            <View style={styles.scanBox}>
-              <BarcodeScannerSvg width={38} height={38} color={Colors.black} />
-              <Text style={styles.scanText} onPress={() => handleAddBasket('1234')}>
-                Escaneá los canastos
-              </Text>
+          <View style={styles.orderInfo}>
+            <View>
+              <Text style={styles.orderLabel}>Número de pedido</Text>
+              <Text style={styles.orderNumber}>000{orderId}</Text>
             </View>
-          ) : (
-            <View style={styles.basketsContainer}>
-              {baskets.map(basketId => (
-                <View key={basketId} style={styles.basketTag}>
-                  <View style={styles.basketTop}>
-                    <Ionicons name="basket-outline" size={20} color={Colors.black} />
-                    <Text style={styles.basketText}>Cajón</Text>
-                    <TouchableOpacity onPress={() => handleRemoveBasket(basketId)}>
-                      <AntDesign name="close" size={16} color={Colors.black} />
-                    </TouchableOpacity>
+            <View>
+              <Text style={styles.orderLabel}>Cantidad</Text>
+              <Text style={styles.orderNumber}>{totalQuantity}</Text>
+            </View>
+          </View>
+          <View style={styles.scanBox}>
+            {baskets.length === 0 ? (
+              <View style={styles.scanBox}>
+                <BarcodeScannerSvg width={38} height={38} color={Colors.black} />
+                <Text style={styles.scanText} onPress={() => handleAddBasket('1234')}>
+                  Escaneá los canastos
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.basketsContainer}>
+                {baskets.map(basketId => (
+                  <View key={basketId} style={styles.basketTag}>
+                    <View style={styles.basketTop}>
+                      <Text style={styles.basketText}>Cajón</Text>
+                      <TouchableOpacity onPress={() => handleRemoveBasket(basketId)}>
+                        <AntDesign name="close" size={18} color={Colors.black} />
+                      </TouchableOpacity>
+                    </View>
+                    <Text style={styles.basketCode}>{basketId}</Text>
                   </View>
-                  <Text style={styles.basketCode}>{basketId}</Text>
-                </View>
-              ))}
-            </View>
-          )}
+                ))}
+              </View>
+            )}
+          </View>
+          {/* <Text style={styles.screenTitle}>Cajones estimados: {Math.ceil(totalQuantity / 20)}</Text> */}
           <TextInput ref={inputRef} style={styles.hiddenInput} onSubmitEditing={e => handleAddBasket(e.nativeEvent.text)} blurOnSubmit={false} />
           <View style={styles.orderDetailsBox}>
             <TouchableOpacity onPress={() => handleAddBasket('1234')}>
               <Text style={styles.orderDetailsTitle}>Detalle del pedido</Text>
             </TouchableOpacity>
-            <Text style={styles.orderDetailsQuantity}>Cantidad {filteredOrderDetails.reduce((acc, detail) => acc + detail.quantity, 0)}</Text>
             {filteredOrderDetails.map(detail => (
               <ProductCard key={detail.id} product={detail} />
             ))}
@@ -137,11 +148,41 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.grey1
   },
   scrollContainer: {
-    paddingBottom: 80
+    paddingBottom: 100
   },
   bodyContainer: {
     paddingTop: 30,
+    paddingBottom: 20,
     flex: 1
+  },
+  scanBox: {
+    padding: 8,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    gap: 16,
+    height: '30%',
+    width: '100%'
+  },
+  orderInfo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 16,
+    gap: 24
+    // marginBottom: 16
+  },
+  orderLabel: {
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+    color: Colors.black,
+    marginBottom: 8
+  },
+  orderNumber: {
+    fontSize: 18,
+    fontFamily: 'Inter_700Bold',
+    color: Colors.black,
+    marginBottom: 16
   },
   headerTitle: {
     fontSize: 16,
@@ -154,14 +195,6 @@ const styles = StyleSheet.create({
     color: Colors.black,
     marginBottom: 16,
     paddingHorizontal: 16
-  },
-  scanBox: {
-    margin: 25,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16
   },
   scanText: {
     fontSize: 16,
@@ -176,13 +209,17 @@ const styles = StyleSheet.create({
   basketsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 16
+    marginBottom: 16,
+    backgroundColor: '#DDEBF9',
+    borderRadius: 16
+    // padding: 8
   },
   basketTag: {
     flexDirection: 'column',
-    alignItems: 'center',
-    backgroundColor: Colors.lightOrange,
-    borderRadius: 20,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    backgroundColor: '#DDEBF9',
+    borderRadius: 16,
     paddingHorizontal: 18,
     paddingVertical: 10,
     margin: 4
@@ -190,11 +227,11 @@ const styles = StyleSheet.create({
   basketTop: {
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'flex-start',
+    gap: 8
   },
   basketText: {
     fontSize: 16,
-    marginLeft: 8,
     marginRight: 20,
     color: Colors.black
   },
@@ -204,7 +241,9 @@ const styles = StyleSheet.create({
   },
   orderDetailsBox: {
     backgroundColor: Colors.grey2,
-    borderRadius: 25
+    borderRadius: 25,
+    // marginHorizontal: 16,
+    marginBottom: 16
   },
   orderDetailsTitle: {
     fontSize: 18,

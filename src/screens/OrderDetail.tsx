@@ -2,13 +2,11 @@ import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native'
 import { DefaultHeader } from '../components/DefaultHeader'
 import AntDesign from '@expo/vector-icons/AntDesign'
-import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons'
-import Feather from '@expo/vector-icons/Feather'
 import Colors from '../constants/Colors'
 import ProductCard from '../components/ProductCard'
 import { OrderStateEnum } from '../types/order'
 import { OrderDetailLoader } from '../store/OrderLoader'
-import { orderDetailsAtom } from '../store'
+import { orderDetailsAtom, warehousesAtom } from '../store'
 import { useAtom } from 'jotai'
 import { router, useLocalSearchParams } from 'expo-router'
 
@@ -21,14 +19,19 @@ type LocalSearchParams = {
 const OrderDetailScreen = () => {
   const { orderId, stateId, quantity }: Partial<LocalSearchParams> = useLocalSearchParams()
   const [orderDetails] = useAtom(orderDetailsAtom)
-  const orderDetailsArray = Array.isArray(orderDetails[0]) ? orderDetails[0] : []
+  const [warehouseConfig] = useAtom(warehousesAtom)
+  const orderDetailsArray = Array.isArray(orderDetails) ? orderDetails : []
 
   const handleBack = () => {
     // setOrderDetails([])
-    return stateId == OrderStateEnum.READY_TO_PICK
+    return [OrderStateEnum.NEW, OrderStateEnum.READY_TO_PICK, OrderStateEnum.SCHEDULED].includes(Number(stateId) as OrderStateEnum)
       ? router.navigate('/home')
       : router.navigate({ pathname: '/completed-order-detail', params: { orderId, stateId, quantity } })
   }
+  // obtener la cantidad total de productos
+  const totalQuantity = orderDetails.reduce((acc, product) => acc + product.quantity, 0)
+
+  const shift = warehouseConfig?.use_shifts?.shifts?.find(shift => shift.id === orderDetails[0]?.Orders?.assembly_schedule)
 
   return (
     <View style={{ flex: 1 }}>
@@ -44,14 +47,18 @@ const OrderDetailScreen = () => {
       />
       <View style={styles.container}>
         <View style={styles.titleBox}>
-          <SimpleLineIcons name="social-dropbox" size={24} color={Colors.grey5} />
-          <Text style={styles.title}>Nro Pedido </Text>
+          <Text style={styles.title}>Número de pedido</Text>
           <Text style={styles.value}>0000{orderId}</Text>
         </View>
-        <View style={styles.titleBox}>
-          <Feather name="shopping-cart" size={24} color={Colors.grey5} />
-          <Text style={styles.title}>Cantidad </Text>
-          <Text style={styles.value}>{quantity}</Text>
+        <View style={styles.infoBox}>
+          <View style={styles.titleBox}>
+            <Text style={styles.title}>Cantidad</Text>
+            <Text style={styles.value}>{totalQuantity}</Text>
+          </View>
+          <View style={styles.titleBox}>
+            <Text style={styles.title}>Turno</Text>
+            <Text style={styles.value}>{shift?.name}</Text>
+          </View>
         </View>
       </View>
       {/* <Text>{JSON.stringify(orderDetails)}</Text> */}
@@ -78,13 +85,14 @@ const styles = StyleSheet.create({
     color: Colors.black
   },
   titleBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     marginBottom: 10
   },
   title: {
-    fontSize: 16,
+    fontSize: 14,
     marginLeft: 15,
+    marginBottom: 8,
     color: Colors.grey5,
     fontFamily: 'Inter_400Regular'
   },
@@ -104,5 +112,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontFamily: 'Inter_700Bold',
     fontSize: 16
+  },
+  infoBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginRight: 40
   }
 })
