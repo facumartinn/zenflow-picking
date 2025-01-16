@@ -23,16 +23,12 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.INTERNET"
-      ]
+      "permissions": ["android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.INTERNET"]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/adaptive-icon.png"
     },
     "plugins": [
       "expo-router",
@@ -40,9 +36,7 @@
       [
         "expo-font",
         {
-          "fonts": [
-            "node_modules/@expo-google-fonts/inter/Inter_900Black.ttf"
-          ]
+          "fonts": ["node_modules/@expo-google-fonts/inter/Inter_900Black.ttf"]
         }
       ]
     ],
