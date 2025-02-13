@@ -5,10 +5,13 @@ import { getFilteredOrders } from '../../services/order'
 import OrderItem from './OrderItem'
 import { Order, OrderStateEnum } from '../../types/order'
 import { useAtom } from 'jotai'
-import { orderTotalsAtom, userAtom, warehousesAtom } from '../../store'
+import { orderTotalsAtom, warehousesAtom } from '../../store'
 import { styles } from './styles'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import EmptyState from '../EmptyState'
+import OrderListSkeleton from '../OrderListSkeleton'
+import { useAuth } from '../../context/auth'
 
 interface OrdersListProps {
   selectedTab: 'pending' | 'completed'
@@ -23,7 +26,7 @@ interface GroupedOrders {
 }
 
 const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
-  const [pickerUser] = useAtom(userAtom)
+  const { pickerUser } = useAuth()
   const [warehouseConfig] = useAtom(warehousesAtom)
   const [, setOrderTotals] = useAtom(orderTotalsAtom)
   const [refreshing, setRefreshing] = useState(false)
@@ -38,7 +41,11 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
   } = useQuery<Order[]>({
     queryKey: ['orders', stateId],
     queryFn: async () => {
-      const orders = await getFilteredOrders({ stateId: stateId, userId: pickerUser?.id, includeDetails: true })
+      const filters = {
+        stateId,
+        ...(pickerUser?.id ? { userId: pickerUser.id } : {})
+      }
+      const orders = await getFilteredOrders(filters)
       setOrderTotals(prev => ({
         ...prev,
         [selectedTab]: orders.length
@@ -51,7 +58,11 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
     const grouped = orders.reduce((acc: { [key: string]: { [key: number]: Order[] } }, order) => {
       if (!order.assembly_date) return acc
 
-      const date = format(new Date(order.assembly_date), 'yyyy-MM-dd')
+      const orderDate = new Date(order.assembly_date)
+      const year = orderDate.getUTCFullYear()
+      const month = String(orderDate.getUTCMonth() + 1).padStart(2, '0')
+      const day = String(orderDate.getUTCDate()).padStart(2, '0')
+      const date = `${year}-${month}-${day}`
       const schedule = order.assembly_schedule || 1
 
       if (!acc[date]) {
@@ -101,7 +112,9 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
   }
 
   const renderDateSection = ({ item }: { item: GroupedOrders }) => {
-    const formattedDate = format(new Date(item.date), "EEEE, d 'de' MMMM", { locale: es })
+    const [year, month, day] = item.date.split('-').map(Number)
+    const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
+    const formattedDate = format(date, "EEEE, d 'de' MMMM", { locale: es })
     const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1)
 
     return (
@@ -110,8 +123,8 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
         {item.schedules.map(schedule => (
           <View key={schedule.schedule}>
             <Text style={styles.scheduleTitle}>{formatSchedule(schedule.schedule)}</Text>
-            {schedule.orders.map(order => (
-              <OrderItem key={order.id} item={order} selectedTab={selectedTab} />
+            {schedule.orders.map((order, index) => (
+              <OrderItem key={`${order.id}-${index}`} item={order} selectedTab={selectedTab} />
             ))}
           </View>
         ))}
@@ -126,11 +139,15 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
   }
 
   if (isLoading && !refreshing) {
-    return <Text>Loading...</Text>
+    return <OrderListSkeleton />
   }
 
   if (error) {
     return <Text>Error fetching orders</Text>
+  }
+
+  if (orders.length === 0) {
+    return <EmptyState />
   }
 
   return (

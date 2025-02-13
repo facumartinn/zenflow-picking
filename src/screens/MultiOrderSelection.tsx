@@ -1,19 +1,19 @@
 import React, { useState } from 'react'
-import { View, Text, StyleSheet, Alert } from 'react-native'
+import { View, StyleSheet, Alert } from 'react-native'
 import { DefaultHeader } from '../components/DefaultHeader'
-import { AntDesign } from '@expo/vector-icons'
 import Colors from '../constants/Colors'
 import { router } from 'expo-router'
 import MultiSelectOrdersList from '../components/MultiSelectOrderList'
 import BottomButton from '../components/BottomButton'
 import { createFlow } from '../services/flow'
 import { useAtom } from 'jotai'
-import { flowAtom, flowOrderDetailsAtom, userAtom } from '../store'
+import { flowAtom, flowOrderDetailsAtom } from '../store'
 import { FlowData, FlowResponse, FlowTypeEnum } from '../types/flow'
-
+import { useAuth } from '../context/auth'
+import { BackSvg } from '../components/svg/BackSvg'
 const MultiOrderSelectionScreen = () => {
   const [selectedOrders, setSelectedOrders] = useState<number[]>([])
-  const [pickerUser] = useAtom(userAtom)
+  const { pickerUser } = useAuth()
   const [, setFlow] = useAtom(flowAtom)
   const [, setFlowOrderDetails] = useAtom(flowOrderDetailsAtom)
   const handleSelectionChange = (selectedOrders: number[]) => {
@@ -41,15 +41,7 @@ const MultiOrderSelectionScreen = () => {
 
   return (
     <View style={styles.container}>
-      <DefaultHeader
-        title={<Text style={styles.headerTitle}>Picking múltiple</Text>}
-        leftIcon={
-          <View style={{ borderRadius: 100, backgroundColor: 'white', marginLeft: 10 }}>
-            <AntDesign name="arrowleft" size={24} color="black" style={{ padding: 8 }} />
-          </View>
-        }
-        leftAction={() => router.navigate('/home')}
-      />
+      <DefaultHeader title="Picking múltiple" leftIcon={<BackSvg width={30} height={30} color="black" />} leftAction={() => router.navigate('/home')} />
       <View style={styles.bodyContainer}>
         <MultiSelectOrdersList selectedTab={'pending'} onSelectionChange={handleSelectionChange} />
       </View>

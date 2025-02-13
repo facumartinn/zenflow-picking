@@ -10,6 +10,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 50,
     backgroundColor: Colors.mainBlue,
+    minWidth: 200,
     color: Colors.white,
     fontSize: 16,
     fontFamily: 'Inter_700Bold'
@@ -20,6 +21,7 @@ export const styles = StyleSheet.create({
     borderRadius: 50,
     borderWidth: 2,
     backgroundColor: Colors.white,
+    minWidth: 200,
     color: Colors.mainBlue,
     fontSize: 16,
     fontFamily: 'Inter_400Regular'
@@ -28,9 +30,15 @@ export const styles = StyleSheet.create({
     color: Colors.white,
     textAlign: 'center',
     fontSize: 16,
-    fontFamily: 'Inter_700Bold'
+    fontFamily: 'Inter_700Bold',
+    width: '100%'
   },
   loading: {
     opacity: 0.5
+  },
+  buttonContent: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center'
   }
 })

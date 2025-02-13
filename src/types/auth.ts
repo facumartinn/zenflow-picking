@@ -3,6 +3,7 @@ import { Tenant } from './tenant'
 // src/types/auth.ts
 export interface User {
   id: number
+  barcode: number
   name: string
   user_email: string
   role_id: number
@@ -24,4 +25,11 @@ export interface TokenPayload {
   warehouse_id: number
   aud?: string
   exp?: number
+}
+
+export interface AuthResponse {
+  data: {
+    token: string
+    user: User
+  }
 }

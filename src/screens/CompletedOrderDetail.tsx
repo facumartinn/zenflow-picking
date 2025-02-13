@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react'
 import { View, Text, Alert, StyleSheet } from 'react-native'
 import { DefaultHeader } from '../components/DefaultHeader'
-import { AntDesign } from '@expo/vector-icons'
 import { OrderDetailLoader } from '../store/OrderLoader'
 import Colors from '../constants/Colors'
 import { useAtom } from 'jotai'
@@ -16,6 +15,7 @@ import { getResources } from '../services/order'
 import { OrderResourceItem } from '../types/order'
 import { DefaultButton } from '../components/DefaultButton'
 import { format } from 'date-fns'
+import { BackSvg } from '../components/svg/BackSvg'
 
 type LocalSearchParams = {
   orderId: number
@@ -139,15 +139,7 @@ const CompletedOrderDetail = () => {
   return (
     <View style={styles.container}>
       <OrderDetailLoader orderId={orderId!} />
-      <DefaultHeader
-        title={<Text style={styles.headerTitle}>Detalle pedido</Text>}
-        leftIcon={
-          <View style={{ borderRadius: 100, backgroundColor: 'white', marginLeft: 10 }}>
-            <AntDesign name="arrowleft" size={24} color="black" style={{ padding: 8 }} />
-          </View>
-        }
-        leftAction={handleBack}
-      />
+      <DefaultHeader title="Detalle pedido" leftIcon={<BackSvg width={30} height={30} color="black" />} leftAction={handleBack} />
       <View style={styles.bodyContainer}>
         <View style={styles.titleBox}>
           <Text style={styles.title}>Número de pedido</Text>

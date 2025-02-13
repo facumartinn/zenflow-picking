@@ -5,7 +5,7 @@ import Colors from '../constants/Colors'
 import { PickingHeader } from '../components/PickingHeader'
 import { ManualPickingModal } from '../components/ManualPickingModal'
 import { DefaultModal } from '../components/DefaultModal'
-import { usePickingLogic } from '../hooks/usePickingLogic'
+import { usePickingLogicV2 } from '../hooks/usePickingLogicV2'
 import ProductInfo from '../components/PickingProduct'
 import { WarningSvg } from '../components/svg/Warning'
 import { router } from 'expo-router'
@@ -19,11 +19,12 @@ const PickingScreen = () => {
     setIncompleteModalVisible,
     errorModalVisible,
     setErrorModalVisible,
-    simulateScan,
+    handleScan,
+    handleManualPicking,
+    handleIncompleteConfirm,
     handleRestartQuantity,
-    handleConfirmQuantity,
-    handleIncompleteConfirm
-  } = usePickingLogic()
+    isCompleted
+  } = usePickingLogicV2()
 
   return (
     <LinearGradient
@@ -34,14 +35,18 @@ const PickingScreen = () => {
       locations={[0.35, 0.35]}
     >
       <View style={styles.topBodyContainer}>
-        <PickingHeader title="Escanear artículo" leftAction={() => simulateScan('123456789')} rightAction={() => router.navigate('/picking-orders')} />
+        <PickingHeader
+          title="Escanear artículo"
+          leftAction={() => handleScan(currentProduct?.weighable ? `${currentProduct.product_barcode}000500` : currentProduct?.product_barcode ?? '')}
+          rightAction={() => router.navigate('/picking-orders')}
+        />
       </View>
       <View style={styles.bodyContainer}>
         {currentProduct ? (
           <View style={styles.productBox}>
-            <ProductInfo item={currentProduct} onRestartQuantity={handleRestartQuantity} />
+            <ProductInfo item={currentProduct} onRestartQuantity={handleRestartQuantity} isCompleted={isCompleted} />
             <TouchableOpacity onPress={() => setModalVisible(true)}>
-              <Text style={styles.sectionTitle}>CONTINUAR</Text>
+              <Text style={styles.sectionTitle}>CONTINUAR MANUAL</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -56,7 +61,7 @@ const PickingScreen = () => {
             visible={modalVisible}
             quantityPicked={0}
             maxQuantity={currentProduct.quantity}
-            onConfirm={handleConfirmQuantity}
+            onConfirm={handleManualPicking}
             onClose={() => setModalVisible(false)}
           />
           <DefaultModal

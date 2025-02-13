@@ -1,15 +1,16 @@
 // ProductCard.tsx
-import React from 'react'
+import React, { memo } from 'react'
 import { View, Text, Image } from 'react-native'
 import { styles } from './styles'
-import { OrderDetails, OrderStateEnum } from '../../types/order'
+import { OrderDetails, OrderStateEnum, PickingDetailEnum } from '../../types/order'
 
 interface ProductCardProps {
   product: OrderDetails
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
-  const isFullPicked = OrderStateEnum.FINISHED && product.quantity_picked === product?.quantity_picked
+  const isFullPicked =
+    OrderStateEnum.FINISHED && product.state_picking_details_id === PickingDetailEnum.COMPLETED && product.quantity_picked === product?.quantity_picked
 
   return (
     <View style={styles.cardContainer}>
@@ -45,4 +46,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
   )
 }
 
-export default ProductCard
+export default memo(ProductCard, (prevProps, nextProps) => {
+  // Solo re-renderizar si cambian los datos relevantes del producto
+  return (
+    prevProps.product.product_name === nextProps.product.product_name &&
+    prevProps.product.product_barcode === nextProps.product.product_barcode &&
+    prevProps.product.quantity === nextProps.product.quantity &&
+    prevProps.product.quantity_picked === nextProps.product.quantity_picked
+  )
+})

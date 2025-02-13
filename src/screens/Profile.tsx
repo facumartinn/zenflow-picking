@@ -1,17 +1,15 @@
 import React, { useState } from 'react'
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native'
-import AntDesign from '@expo/vector-icons/AntDesign'
 import { DefaultHeader } from '../components/DefaultHeader'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { DefaultModal } from '../components/DefaultModal'
 import Colors from '../constants/Colors'
-import { useAtom } from 'jotai'
-import { userAtom } from '../store'
-import { Feather } from '@expo/vector-icons'
 import { router } from 'expo-router'
-
+import { LogOutSvg } from '../components/svg/LogOut'
+import { useAuth } from '../context/auth'
+import { BackSvg } from '../components/svg/BackSvg'
 const ProfileScreen = () => {
-  const [pickerUser] = useAtom(userAtom)
+  const { pickerUser } = useAuth()
 
   const [modalVisible, setModalVisible] = useState(false)
 
@@ -29,15 +27,7 @@ const ProfileScreen = () => {
   return (
     <View style={styles.container}>
       <View>
-        <DefaultHeader
-          title={<Text style={styles.headerTitle}>Perfil</Text>}
-          leftIcon={
-            <View style={{ borderRadius: 100, backgroundColor: 'white', marginLeft: 10 }}>
-              <AntDesign name="arrowleft" size={24} color="black" style={{ padding: 8 }} />
-            </View>
-          }
-          leftAction={() => router.navigate('/home')}
-        />
+        <DefaultHeader title="Perfil" leftIcon={<BackSvg width={30} height={30} color="black" />} leftAction={() => router.back()} />
       </View>
       <View style={{ marginTop: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Image
@@ -63,7 +53,7 @@ const ProfileScreen = () => {
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}
           onPress={() => setModalVisible(true)}
         >
-          <Feather name="log-out" size={24} color="black" />
+          <LogOutSvg width={24} height={24} color="black" />
           <Text style={{ fontSize: 16, marginLeft: 10 }}>Cerrar sesion</Text>
         </TouchableOpacity>
       </View>

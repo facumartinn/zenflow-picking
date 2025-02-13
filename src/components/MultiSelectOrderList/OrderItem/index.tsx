@@ -27,7 +27,7 @@ const MultiSelectOrderItem: React.FC<MultiSelectOrderItemProps> = ({ item, selec
         <View style={styles.orderBox}>
           <View>
             <Text style={styles.orderLabel}>Nro pedido</Text>
-            <Text style={styles.orderNumber}>000{item.id}</Text>
+            <Text style={styles.orderNumber}>{item.order_tenant_id}</Text>
           </View>
         </View>
         <View style={styles.orderBox}>

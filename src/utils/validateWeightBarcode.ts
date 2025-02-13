@@ -4,32 +4,50 @@ export interface BarcodeStructure {
   productCodeEnd: number
   weightStart: number
   weightEnd: number
-  productDecimals?: number // Si aplica
-  weightDecimals?: number
-  priceDecimals?: number
-  isWeightBased?: boolean // Define si se basa en peso o en precio
+  productDecimals?: number
+  weightDecimals: number
+  priceDecimals: number
+  isWeightBased: boolean
 }
 
 export const validateWeightBarcode = (barcode: string, structure: BarcodeStructure) => {
-  if (barcode.length !== structure.totalLength) {
-    throw new Error(`Código de barras inválido: se esperaba una longitud de ${structure.totalLength} dígitos.`)
+  // Validación básica de longitud
+  if (!barcode || typeof barcode !== 'string') {
+    throw new Error('El código de barras debe ser una cadena válida')
   }
 
-  // Extracción del código del producto
-  const productCode = barcode.substring(structure.productCodeStart, structure.productCodeEnd)
+  if (barcode.length !== structure.totalLength) {
+    throw new Error(`Longitud del código de barras inválida. Se esperaban ${structure.totalLength} dígitos pero se recibieron ${barcode.length}`)
+  }
 
-  // Extracción del peso o precio bruto
-  const rawWeightOrPrice = barcode.substring(structure.weightStart, structure.weightEnd)
-  // Decodificación del peso o precio considerando decimales
+  // Extraer el código del producto usando los índices de la configuración
+  const productCode = barcode.substring(structure.productCodeStart - 1, structure.productCodeEnd)
+  const numericProductCode = parseInt(productCode)
+
+  if (isNaN(numericProductCode)) {
+    throw new Error(`Código de producto inválido: ${productCode}. Debe ser un número válido`)
+  }
+
+  // Extraer el peso/precio usando los índices de la configuración
+  const rawWeightOrPrice = barcode.substring(structure.weightStart - 1, structure.weightEnd)
+  const numericWeightOrPrice = parseInt(rawWeightOrPrice)
+
+  if (isNaN(numericWeightOrPrice)) {
+    throw new Error('Peso o precio inválido en el código de barras')
+  }
+
+  // Aplicar decimales según configuración
   let weightOrPrice: number
   if (structure.isWeightBased) {
-    weightOrPrice = parseFloat(rawWeightOrPrice) / Math.pow(10, structure.weightDecimals || 0)
+    weightOrPrice = numericWeightOrPrice / Math.pow(10, structure.weightDecimals)
   } else {
-    weightOrPrice = parseFloat(rawWeightOrPrice) / Math.pow(10, structure.priceDecimals || 0)
+    weightOrPrice = numericWeightOrPrice / Math.pow(10, structure.priceDecimals)
   }
 
   return {
-    productCode,
-    weightOrPrice
+    productCode: numericProductCode,
+    weightOrPrice,
+    rawProductCode: productCode,
+    rawWeightOrPrice
   }
 }

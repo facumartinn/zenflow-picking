@@ -7,7 +7,7 @@ import { BarcodeStructure, validateWeightBarcode } from '../utils/validateWeight
 import { useToast } from '../context/toast'
 import Colors from '../constants/Colors'
 
-export const usePickingLogic = () => {
+export const usePickingProductDetailLogic = () => {
   const [flowOrderDetails, setFlowOrderDetails] = useAtom(flowOrderDetailsAtom)
   const [warehouseConfig] = useAtom(warehousesAtom)
   const [currentProductIndex, setCurrentProductIndex] = useAtom(currentProductIndexAtom)

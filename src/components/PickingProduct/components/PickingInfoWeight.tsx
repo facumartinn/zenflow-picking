@@ -1,15 +1,52 @@
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { ProgressBar } from 'react-native-paper'
 import Colors from '../../../constants/Colors'
 import { OrderDetails } from '../../../types/order'
 import { RestartSvg } from '../../svg/Restart'
 
 interface PickingInfoWeightProps {
   item: OrderDetails
-  onRestartQuantity: (productId: number, orderId: number) => void // Nueva prop para manejar el reinicio
+  onRestartQuantity: (productId: number, orderId: number) => void
+  isCompleted?: boolean
 }
 
-const PickingInfoWeight = ({ item, onRestartQuantity }: PickingInfoWeightProps) => {
+const ensureNumber = (value: number | undefined | null): number => {
+  const num = Number(value)
+  return isNaN(num) ? 0 : num
+}
+
+const formatWeight = (weightInGrams: number | undefined | null): { value: string; unit: string } => {
+  const grams = ensureNumber(weightInGrams)
+
+  // Si el peso es mayor o igual a 1kg (1000g), mostrar en kg
+  if (grams >= 1000) {
+    return {
+      value: (grams / 1000).toFixed(3), // 3 decimales para kg
+      unit: 'kg'
+    }
+  } else {
+    return {
+      value: grams.toFixed(0), // Sin decimales para gramos
+      unit: 'gr'
+    }
+  }
+}
+
+const PickingInfoWeight = ({ item, onRestartQuantity, isCompleted }: PickingInfoWeightProps) => {
+  // Todos los cálculos internos en gramos
+  const weightPerUnit = ensureNumber(item.sales_unit) * 1000 // Convertir la unidad base (kg) a gramos
+  const totalRequiredWeight = ensureNumber(item.quantity) * weightPerUnit
+  const currentWeight = ensureNumber(item.final_weight)
+  // Asegurar que el progreso sea un número entre 0 y 1 con máximo 2 decimales
+  const progress = totalRequiredWeight > 0 ? Math.min(Math.round((currentWeight / totalRequiredWeight) * 100) / 100, 1) : 0
+  const quantityPicked = ensureNumber(item.quantity_picked)
+
+  // Formatear los pesos para mostrar
+  const formattedRequired = formatWeight(totalRequiredWeight)
+  const formattedCurrent = formatWeight(currentWeight)
+  const formattedPerUnit = formatWeight(weightPerUnit)
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
@@ -20,16 +57,32 @@ const PickingInfoWeight = ({ item, onRestartQuantity }: PickingInfoWeightProps) 
           <RestartSvg width={30} height={30} color={Colors.grey3} />
         </TouchableOpacity>
       </View>
-      <View style={styles.weightContainer}>
-        <View style={styles.weightBox}>
-          <Text style={styles.weightTitle}>Peso</Text>
-          <Text style={styles.weightValue}>{item.quantity * item.sales_unit! * 1000} gr</Text>
+
+      <View style={styles.progressContainer}>
+        <View style={styles.quantityInfo}>
+          <Text style={styles.quantityLabel}>{isCompleted ? 'Productos levantados' : `Unidades (${formattedPerUnit.value} ${formattedPerUnit.unit} c/u)`}</Text>
+          <View style={styles.quantityValues}>
+            <Text style={[styles.currentValue, isCompleted && { color: Colors.green }]}>{quantityPicked}</Text>
+            <Text style={styles.separator}>/</Text>
+            <Text style={styles.totalValue}>{item.quantity}</Text>
+          </View>
         </View>
-        <View style={item.final_weight! > 0 ? { ...styles.realWeightBoxWithWeight } : { ...styles.realWeightBox }}>
-          <Text style={item.final_weight! > 0 ? { ...styles.realWeightTitleWithWeight } : { ...styles.realWeightTitle }}>Peso real</Text>
-          <Text style={item.final_weight! > 0 ? { ...styles.realWeightValueWithWeight } : { ...styles.realWeightValue }}>
-            {item.final_weight ? `${item.final_weight} gr` : '-- gr'}
-          </Text>
+
+        <ProgressBar progress={progress} color={isCompleted ? Colors.green : Colors.mainBlue} style={styles.progressBar} />
+
+        <View style={styles.weightContainer}>
+          <View style={styles.weightBox}>
+            <Text style={styles.weightTitle}>Peso objetivo</Text>
+            <Text style={styles.weightValue}>
+              {formattedRequired.value} {formattedRequired.unit}
+            </Text>
+          </View>
+          <View style={styles.weightBox}>
+            <Text style={styles.weightTitle}>Peso actual</Text>
+            <Text style={[styles.weightValue, { color: isCompleted ? Colors.green : currentWeight >= totalRequiredWeight ? Colors.green : Colors.mainBlue }]}>
+              {formattedCurrent.value} {formattedCurrent.unit}
+            </Text>
+          </View>
         </View>
       </View>
     </View>
@@ -44,81 +97,86 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: Colors.white
   },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20
+  },
   positionText: {
     fontSize: 20,
-    marginBottom: 15
+    fontFamily: 'Inter_400Regular'
   },
   boldText: {
     fontSize: 24,
-    fontWeight: 'bold'
+    fontFamily: 'Inter_700Bold'
+  },
+  progressContainer: {
+    width: '100%'
+  },
+  quantityInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  quantityLabel: {
+    fontSize: 16,
+    color: Colors.grey5,
+    fontFamily: 'Inter_400Regular'
+  },
+  quantityValues: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  currentValue: {
+    fontSize: 20,
+    color: Colors.mainBlue,
+    fontFamily: 'Inter_700Bold'
+  },
+  separator: {
+    fontSize: 20,
+    color: Colors.grey3,
+    marginHorizontal: 5,
+    fontFamily: 'Inter_400Regular'
+  },
+  totalValue: {
+    fontSize: 20,
+    color: Colors.grey3,
+    fontFamily: 'Inter_700Bold'
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.mainLightBlue2,
+    marginBottom: 15
   },
   weightContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%'
+    marginTop: 10
   },
   weightBox: {
     flex: 1,
-    backgroundColor: Colors.mainBlue,
-    paddingVertical: 15,
-    borderRadius: 20,
-    marginRight: 5,
-    alignItems: 'center'
-  },
-  realWeightBox: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderWidth: 2,
-    borderColor: Colors.grey4,
-    paddingVertical: 15,
-    borderRadius: 20,
-    marginLeft: 5,
-    alignItems: 'center'
-  },
-  realWeightBoxWithWeight: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderWidth: 2,
-    borderColor: Colors.mainBlue,
-    paddingVertical: 15,
-    borderRadius: 20,
-    marginLeft: 5,
-    alignItems: 'center'
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: Colors.mainLightBlue2,
+    borderRadius: 10,
+    marginHorizontal: 5
   },
   weightTitle: {
-    color: Colors.white,
-    fontSize: 14
-  },
-  realWeightTitle: {
-    color: Colors.grey4,
-    fontSize: 14
-  },
-  realWeightTitleWithWeight: {
-    color: Colors.mainBlue,
-    fontSize: 14
+    fontSize: 14,
+    color: Colors.grey5,
+    marginBottom: 5,
+    fontFamily: 'Inter_400Regular'
   },
   weightValue: {
-    fontSize: 24,
-    color: Colors.white,
-    fontWeight: 'bold'
-  },
-  realWeightValue: {
-    fontSize: 24,
-    color: Colors.grey4,
-    fontWeight: 'bold'
-  },
-  realWeightValueWithWeight: {
-    fontSize: 24,
+    fontSize: 20,
     color: Colors.mainBlue,
-    fontWeight: 'bold'
+    fontFamily: 'Inter_700Bold'
   },
   restartButton: {
-    // marginLeft: 10
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
+    padding: 5
   }
 })
 

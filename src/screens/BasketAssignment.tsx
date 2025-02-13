@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native'
 import { DefaultHeader } from '../components/DefaultHeader'
-import { AntDesign } from '@expo/vector-icons'
 import Colors from '../constants/Colors'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { useAtom } from 'jotai'
@@ -13,6 +12,8 @@ import { basketsByOrderAtom, flowOrderDetailsAtom } from '../store'
 import { BarcodeScannerSvg } from '../components/svg/BarcodeScanner'
 import { DefaultModal } from '../components/DefaultModal'
 import { WarningSvg } from '../components/svg/Warning'
+import { BackSvg } from '../components/svg/BackSvg'
+import { CrossSvg } from '../components/svg/CrossSvg'
 
 type LocalSearchParams = {
   orderId: number
@@ -26,6 +27,8 @@ const BasketAssignmentScreen = () => {
   const [baskets, setBaskets] = useState<number[]>([])
   const inputRef = useRef<TextInput>(null)
   const router = useRouter()
+  const [modalTitle, setModalTitle] = useState('Ya usaste este cajón')
+  const [modalDescription, setModalDescription] = useState('Probá con otro.')
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -39,6 +42,23 @@ const BasketAssignmentScreen = () => {
 
   const handleAddBasket = (barcode: string) => {
     const basketId = parseInt(barcode, 10)
+
+    // Verificar si el canasto ya está siendo usado en algún otro pedido
+    const isBasketUsedInOtherOrder = Object.entries(basketsByOrder).some(([currentOrderId, baskets]) => {
+      // Convertir a número para comparar correctamente
+      const numericOrderId = parseInt(currentOrderId, 10)
+      // Verificar si el canasto está en otro pedido (no en el actual)
+      return numericOrderId !== orderId && baskets.includes(basketId)
+    })
+
+    if (isBasketUsedInOtherOrder) {
+      setModalTitle('Cajón en uso')
+      setModalDescription('Este cajón está siendo utilizado en otro pedido.')
+      setModalVisible(true)
+      return
+    }
+
+    // Verificar si el canasto ya está en el pedido actual
     if (!baskets.includes(basketId)) {
       const updatedBaskets = [...baskets, basketId]
       setBaskets(updatedBaskets)
@@ -65,12 +85,8 @@ const BasketAssignmentScreen = () => {
   return (
     <View style={styles.container}>
       <DefaultHeader
-        title={<Text style={styles.headerTitle}>Selección múltiple</Text>}
-        leftIcon={
-          <View style={{ borderRadius: 100, backgroundColor: 'white', marginLeft: 10 }}>
-            <AntDesign name="arrowleft" size={24} color="black" style={{ padding: 8 }} />
-          </View>
-        }
+        title="Selección múltiple"
+        leftIcon={<BackSvg width={30} height={30} color="black" />}
         leftAction={() => router.navigate('/basket-selection')}
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -78,41 +94,36 @@ const BasketAssignmentScreen = () => {
           <View style={styles.orderInfo}>
             <View>
               <Text style={styles.orderLabel}>Número de pedido</Text>
-              <Text style={styles.orderNumber}>000{orderId}</Text>
+              <Text style={styles.orderNumber}>{orderId}</Text>
             </View>
             <View>
               <Text style={styles.orderLabel}>Cantidad</Text>
               <Text style={styles.orderNumber}>{totalQuantity}</Text>
             </View>
           </View>
-          <View style={styles.scanBox}>
-            {baskets.length === 0 ? (
-              <View style={styles.scanBox}>
-                <BarcodeScannerSvg width={38} height={38} color={Colors.black} />
-                <Text style={styles.scanText} onPress={() => handleAddBasket('1234')}>
-                  Escaneá los canastos
-                </Text>
+          <View style={styles.basketsContainer}>
+            {baskets.map(basketId => (
+              <View key={basketId} style={styles.basketTag}>
+                <View style={styles.basketTop}>
+                  <Text style={styles.basketText}>Cajón</Text>
+                  <TouchableOpacity onPress={() => handleRemoveBasket(basketId)}>
+                    <CrossSvg width={18} height={18} color={Colors.black} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.basketCode}>{basketId}</Text>
               </View>
-            ) : (
-              <View style={styles.basketsContainer}>
-                {baskets.map(basketId => (
-                  <View key={basketId} style={styles.basketTag}>
-                    <View style={styles.basketTop}>
-                      <Text style={styles.basketText}>Cajón</Text>
-                      <TouchableOpacity onPress={() => handleRemoveBasket(basketId)}>
-                        <AntDesign name="close" size={18} color={Colors.black} />
-                      </TouchableOpacity>
-                    </View>
-                    <Text style={styles.basketCode}>{basketId}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
+            ))}
+          </View>
+          <View style={styles.scanBoxTitle}>
+            <BarcodeScannerSvg width={38} height={38} color={Colors.black} />
+            <Text style={styles.scanText} onPress={() => handleAddBasket('1236')}>
+              Escaneá los canastos
+            </Text>
           </View>
           {/* <Text style={styles.screenTitle}>Cajones estimados: {Math.ceil(totalQuantity / 20)}</Text> */}
           <TextInput ref={inputRef} style={styles.hiddenInput} onSubmitEditing={e => handleAddBasket(e.nativeEvent.text)} blurOnSubmit={false} />
           <View style={styles.orderDetailsBox}>
-            <TouchableOpacity onPress={() => handleAddBasket('1234')}>
+            <TouchableOpacity onPress={() => handleAddBasket('1235')}>
               <Text style={styles.orderDetailsTitle}>Detalle del pedido</Text>
             </TouchableOpacity>
             {filteredOrderDetails.map(detail => (
@@ -130,8 +141,8 @@ const BasketAssignmentScreen = () => {
         visible={modalVisible}
         icon={<WarningSvg width={40} height={41} color={Colors.red} />}
         iconBackgroundColor={Colors.lightRed}
-        title="Ya usaste este cajón"
-        description="Probá con otro."
+        title={modalTitle}
+        description={modalDescription}
         primaryButtonText="VOLVER"
         primaryButtonColor={Colors.mainBlue}
         primaryButtonAction={() => setModalVisible(false)}
@@ -157,12 +168,20 @@ const styles = StyleSheet.create({
   },
   scanBox: {
     padding: 8,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
     gap: 16,
-    height: '30%',
+    height: 250,
     width: '100%'
+  },
+  scanBoxTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    gap: 24,
+    marginBottom: 16
   },
   orderInfo: {
     flexDirection: 'row',
@@ -209,10 +228,7 @@ const styles = StyleSheet.create({
   basketsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 16,
-    backgroundColor: '#DDEBF9',
-    borderRadius: 16
-    // padding: 8
+    marginBottom: 16
   },
   basketTag: {
     flexDirection: 'column',

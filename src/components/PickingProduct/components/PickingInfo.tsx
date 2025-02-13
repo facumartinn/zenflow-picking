@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { ProgressBar } from 'react-native-paper'
 import { RestartSvg } from '../../svg/Restart'
 import Colors from '../../../constants/Colors'
+import { CheckSvg } from '../../svg/Check'
 
 interface PickingInfoProps {
   productId: number
@@ -11,10 +12,13 @@ interface PickingInfoProps {
   quantityPicked: number
   warehouseOrder: number
   onRestartQuantity: (productId: number, orderId: number) => void // Nueva prop para manejar el reinicio
+  isCompleted?: boolean
 }
 
-const PickingInfo: React.FC<PickingInfoProps> = ({ productId, orderId, quantity, quantityPicked, warehouseOrder, onRestartQuantity }) => {
-  const progress = Math.round((quantityPicked / quantity) * 100) / 100
+const PickingInfo: React.FC<PickingInfoProps> = ({ productId, orderId, quantity, quantityPicked, warehouseOrder, onRestartQuantity, isCompleted }) => {
+  // Asegurar que el progreso sea un número entre 0 y 1 con máximo 2 decimales
+  const progress = quantity > 0 ? Math.min(Math.round((quantityPicked / quantity) * 100) / 100, 1) : 0
+
   return (
     <View style={styles.quantityBox}>
       <View style={styles.quantityContainer}>
@@ -24,14 +28,21 @@ const PickingInfo: React.FC<PickingInfoProps> = ({ productId, orderId, quantity,
       <View style={styles.orderProgressContainer}>
         <View style={styles.orderInfoContainer}>
           <Text style={styles.positionInfo}>Posición</Text>
-          <Text style={styles.positionValue}>00{warehouseOrder}</Text>
+          <Text style={styles.positionValue}>{warehouseOrder}</Text>
         </View>
         <View>
-          <ProgressBar progress={progress} color={Colors.mainBlue} indeterminate={false} style={styles.progressBar} />
-          <View style={styles.quantityTotals}>
-            <Text>{quantityPicked}</Text>
-            <Text>{quantity}</Text>
-          </View>
+          <ProgressBar progress={progress} color={isCompleted ? Colors.green : Colors.mainBlue} indeterminate={false} style={styles.progressBar} />
+          {!isCompleted ? (
+            <View style={styles.quantityTotals}>
+              <Text style={isCompleted ? { color: Colors.green } : undefined}>{quantityPicked}</Text>
+              <Text>{quantity}</Text>
+            </View>
+          ) : (
+            <View style={styles.completedContainer}>
+              <CheckSvg width={24} height={24} color={Colors.green} />
+              <Text style={{ color: Colors.green, marginLeft: 5, fontSize: 12, fontFamily: 'Inter_700Bold' }}>Productos levantados</Text>
+            </View>
+          )}
         </View>
       </View>
       <TouchableOpacity style={styles.restartButton} onPress={() => onRestartQuantity(productId, orderId)}>
@@ -106,5 +117,11 @@ const styles = StyleSheet.create({
     marginTop: 5,
     flexDirection: 'row',
     justifyContent: 'space-between'
+  },
+  completedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 5
   }
 })

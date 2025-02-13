@@ -1,5 +1,8 @@
 export interface Order {
   id: number
+  order_tenant_id: number
+  customer_email?: string
+  total_products?: number
   state_id: number | null
   state_picking_id: number | null
   amount: number
@@ -57,7 +60,7 @@ export interface OrderState {
 export interface FilterParamTypes {
   stateId?: number[]
   orderId?: number
-  userId?: number
+  userId?: number | null
   shiftId?: number
   assemblyDate?: string
   startDate?: Date

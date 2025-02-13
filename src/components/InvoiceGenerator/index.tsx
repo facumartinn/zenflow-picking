@@ -24,7 +24,7 @@ const InvoiceGenerator = forwardRef(({ order }: InvoiceGeneratorProps, ref) => {
 
         // Mover el archivo a la ubicación final
         const pdfDirectory = `${FileSystem.documentDirectory}invoices`
-        const filePath = `${pdfDirectory}/invoice_${order.id}.pdf`
+        const filePath = `${pdfDirectory}/invoice_${order.order_tenant_id}.pdf`
 
         const directoryInfo = await FileSystem.getInfoAsync(pdfDirectory)
         if (!directoryInfo.exists) {

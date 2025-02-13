@@ -1,39 +1,37 @@
-import React, { useCallback, useState } from 'react'
-import { SplashScreen, router } from 'expo-router'
+import React, { useCallback, useState, useRef } from 'react'
+import { SplashScreen } from 'expo-router'
 import { View, TextInput, Text, StyleSheet } from 'react-native'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { loginAdmin } from '../services/auth'
-import { isAdminLoggedInAtom, tenantLogoAtom } from '../store/authAtoms'
-import { useAtom } from 'jotai'
 import { DefaultButton } from '../components/DefaultButton'
 import Colors from '../constants/Colors'
 import { useFonts, Inter_700Bold, Inter_500Medium } from '@expo-google-fonts/inter'
+import { useKeyboard } from '../hooks/useKeyboard'
+import { useAuth } from '../context/auth'
 
 SplashScreen.preventAutoHideAsync()
 
 const AdminLoginScreen = () => {
   const [fontsLoaded] = useFonts({ Inter_700Bold, Inter_500Medium })
-  const [, setIsAdminLoggedIn] = useAtom(isAdminLoggedInAtom)
-  const [, setTenantLogo] = useAtom(tenantLogoAtom)
+  const { loginAdmin, error: authError } = useAuth()
   const [userEmail, setUserEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const emailInputRef = useRef<TextInput>(null)
+
+  // Inicializar el teclado en modo manual permanente
+  useKeyboard({ alwaysManual: true, inputRef: emailInputRef })
 
   const handleLogin = async () => {
-    try {
-      const { token, user } = await loginAdmin(userEmail, password)
-      // Guardar el token, tenantId y warehouseId en AsyncStorage
-      await AsyncStorage.setItem('authToken', token)
-      await AsyncStorage.setItem('tenantId', user.tenant_id?.toString())
-      await AsyncStorage.setItem('warehouseId', user.warehouse_id?.toString())
-      setTenantLogo(user?.Tenants?.logo)
+    if (isSubmitting) return
 
-      // Actualizar el átomo de autenticación
-      setIsAdminLoggedIn(true)
-      // Redirigir al usuario a la pantalla principal
-      router.navigate('/picker-login')
+    try {
+      setIsSubmitting(true)
+      setError('')
+      await loginAdmin(userEmail, password)
     } catch (err) {
-      setError('Ocurrió un error, por favor intente nuevamente.')
+      setError(authError || 'Ocurrió un error, por favor intente nuevamente.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -54,10 +52,25 @@ const AdminLoginScreen = () => {
         <Text style={styles.subtitle}>Consultá al administrador para iniciar sesión.</Text>
       </View>
       <Text style={styles.inputTitle}>Correo electrónico</Text>
-      <TextInput placeholder="Correo electrónico" value={userEmail} onChangeText={setUserEmail} style={styles.input} />
+      <TextInput
+        ref={emailInputRef}
+        placeholder="Correo electrónico"
+        value={userEmail}
+        onChangeText={setUserEmail}
+        style={styles.input}
+        autoCapitalize="none"
+        keyboardType="email-address"
+        editable={!isSubmitting}
+      />
       <Text style={styles.inputTitle}>Contraseña</Text>
-      <TextInput placeholder="Contraseña" value={password} secureTextEntry onChangeText={setPassword} style={styles.input} />
-      <DefaultButton label="INICIAR SESIÓN" onPress={handleLogin} />
+      <TextInput placeholder="Contraseña" value={password} secureTextEntry onChangeText={setPassword} style={styles.input} editable={!isSubmitting} />
+      <DefaultButton
+        label="INICIAR SESIÓN"
+        onPress={handleLogin}
+        withAsyncLoading
+        isLoading={isSubmitting}
+        disabled={isSubmitting || !userEmail || !password}
+      />
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   )
@@ -99,12 +112,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     fontSize: 16,
     fontFamily: 'Inter_400Regular'
-  },
-  button: {
-    marginTop: 20,
-    backgroundColor: Colors.mainBlue,
-    borderRadius: 5,
-    fontFamily: 'Inter_500Medium'
   },
   error: {
     color: Colors.red,

@@ -2,7 +2,16 @@
 export interface Tenant {
   id: number
   name: string
-  logo: string
+  logo: string | null
+}
+
+export interface TenantConfig {
+  [key: string]: unknown
+}
+
+export interface TenantData {
+  logo: string | null
+  name: string
 }
 
 export interface SubstitutionPreference {

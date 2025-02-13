@@ -1,112 +1,85 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { View, Text, Image, StyleSheet } from 'react-native'
-import Feather from '@expo/vector-icons/Feather'
+import React, { useState, useEffect } from 'react'
+import { View, Text, Image, StyleSheet, TouchableOpacity, Keyboard } from 'react-native'
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from 'react-native-confirmation-code-field'
+import { useKeyboard } from '../hooks/useKeyboard'
 import { DefaultHeader } from '../components/DefaultHeader'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { isAdminLoggedInAtom, isPickerLoggedInAtom, tenantLogoAtom, userAtom, warehousesAtom } from '../store'
-import { useAtom } from 'jotai'
-import { loginPickingUser } from '../services/auth'
 import { DefaultModal } from '../components/DefaultModal'
 import Colors from '../constants/Colors'
-import { SplashScreen, router } from 'expo-router'
+import { router } from 'expo-router'
 import { Inter_500Medium, Inter_700Bold, useFonts } from '@expo-google-fonts/inter'
-import { WarehouseConfig } from '../types/warehouse'
 import { WarningSvg } from '../components/svg/Warning'
+import { CheckSvg } from '../components/svg/Check'
+import { LogOutSvg } from '../components/svg/LogOut'
+import { useAuth } from '../context/auth'
+
 const CELL_COUNT = 4
 
 const PickerLoginScreen = () => {
   const [fontsLoaded] = useFonts({ Inter_700Bold, Inter_500Medium })
-  const [, setPickerUser] = useAtom(userAtom)
-  const [tenantLogo] = useAtom(tenantLogoAtom)
-  const [, setIsAdminLoggedIn] = useAtom(isAdminLoggedInAtom)
-  const [, setIsPickerLoggedIn] = useAtom(isPickerLoggedInAtom)
-  const [, setWarehouseConfig] = useAtom(warehousesAtom)
-  const [modalVisible, setModalVisible] = useState<boolean>(false)
+  const { tenantLogo, logoutAdmin, loginPicker, error: authError } = useAuth()
+
+  // Estados esenciales
+  const [modalVisible, setModalVisible] = useState(false)
   const [value, setValue] = useState('')
   const [isCodeCorrect, setIsCodeCorrect] = useState<boolean | null>(null)
+  const [logoError, setLogoError] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const keyboard = useKeyboard()
   const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT })
-  const [props, getCellOnLayoutHandler] = useClearByFocusCell({
-    value,
-    setValue
-  })
+  const [props, getCellOnLayoutHandler] = useClearByFocusCell({ value, setValue })
 
-  const handleSecondaryAction = () => {
-    // Acción del botón secundario
-    setModalVisible(false)
-  }
-
-  useEffect(() => {
-    if (value.length === CELL_COUNT) {
-      handleLogin()
-    } else if (value.length < CELL_COUNT) {
-      // Resetear el estado cuando el usuario comienza a ingresar un nuevo código
-      setIsCodeCorrect(null)
-    }
-  }, [value])
-
-  const handleLogin = async () => {
+  const handleCodeSubmit = async (code: string) => {
     try {
-      const response = await loginPickingUser(Number(value))
+      setIsSubmitting(true)
+      setIsCodeCorrect(null)
+      await loginPicker(code)
       setIsCodeCorrect(true)
-      setWarehouseConfig(JSON.parse(response.data.user.Warehouses.custom_attributes as string) as WarehouseConfig)
-      setPickerUser(response.data.user)
-      await AsyncStorage.setItem('authPickerToken', response.data.token)
-      await AsyncStorage.setItem('pickerId', response.data.user.id.toString())
 
+      // Pequeño delay para mostrar el feedback de éxito
       setTimeout(() => {
-        router.navigate('/home')
-        setIsPickerLoggedIn(true)
+        setValue('')
+        router.replace('/home')
       }, 1000)
     } catch (error) {
       setIsCodeCorrect(false)
-      // setValue('')
-      console.log('Error:', error)
+
+      setTimeout(() => {
+        setIsCodeCorrect(null)
+        setValue('')
+      }, 2000)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const handleAdminLogout = async () => {
-    await AsyncStorage.removeItem('authToken')
-    await AsyncStorage.removeItem('tenantId')
-    await AsyncStorage.removeItem('warehouseId')
-    await AsyncStorage.removeItem('authPickerToken')
-    await AsyncStorage.removeItem('pickerId')
-
-    // Actualizar el átomo de autenticación
-    setIsAdminLoggedIn(false)
-    setValue('')
-    // Redirigir al usuario a la pantalla de login
-    router.navigate('/admin-login')
+    await logoutAdmin()
   }
 
-  const onLayoutRootView = useCallback(async () => {
-    if (fontsLoaded) {
-      await SplashScreen.hideAsync()
+  useEffect(() => {
+    if (value.length === CELL_COUNT && isCodeCorrect === null && !isSubmitting) {
+      handleCodeSubmit(value)
     }
-  }, [fontsLoaded])
+  }, [value, isCodeCorrect, isSubmitting])
 
-  if (!fontsLoaded) {
-    return null
-  }
+  if (!fontsLoaded) return null
 
   return (
-    // <>
-    <View style={styles.container} onLayout={onLayoutRootView}>
-      {/* <Feather name="log-out" size={24} color="black" /> */}
+    <View style={styles.container}>
       <DefaultHeader
         rightIcon={
-          <Feather
-            name="log-out"
-            size={24}
-            color="black"
-            style={{ transform: 'rotate(180deg)', cursor: 'pointer', marginRight: 10, fontFamily: 'Inter_200ExtraLight' }}
-            onPress={() => setModalVisible(true)}
-          />
+          <TouchableOpacity onPress={() => setModalVisible(true)} disabled={isSubmitting}>
+            <LogOutSvg width={24} height={24} color="black" />
+          </TouchableOpacity>
         }
       />
+
       <View style={styles.codeContainer}>
-        <Image source={{ uri: tenantLogo ?? '#' }} style={styles.logo} />
+        <Image source={{ uri: logoError ? '' : tenantLogo ?? '#' }} style={styles.logo} onError={() => setLogoError(true)} />
+
         <Text style={styles.title}>Código de empleado</Text>
+
         <CodeField
           ref={ref}
           {...props}
@@ -116,31 +89,34 @@ const PickerLoginScreen = () => {
           rootStyle={styles.codeFieldRoot}
           keyboardType="numeric"
           textContentType="oneTimeCode"
-          testID="my-code-input"
+          editable={!isSubmitting}
           renderCell={({ index, symbol, isFocused }) => (
             <Text
               key={index}
-              style={[
-                styles.cell,
-                isFocused && styles.focusCell,
-                isCodeCorrect === true && styles.cellSuccess,
-                isCodeCorrect === false && styles.cellError,
-                {
-                  color: isCodeCorrect === true ? Colors.green : isCodeCorrect === false ? Colors.red : Colors.black
-                }
-              ]}
+              style={[styles.cell, isFocused && styles.focusCell, isCodeCorrect === true && styles.cellSuccess, isCodeCorrect === false && styles.cellError]}
               onLayout={getCellOnLayoutHandler(index)}
             >
               {symbol || (isFocused ? <Cursor /> : null)}
             </Text>
           )}
         />
-        {isCodeCorrect === true && <Text style={[styles.subtitle, { color: Colors.green }]}>Código correcto</Text>}
-        {isCodeCorrect === false && <Text style={[styles.subtitle, { color: Colors.red }]}>Código incorrecto</Text>}
-        {isCodeCorrect === null && <Text style={styles.subtitle}>Ingrese tu código de 4 dígitos</Text>}
+
+        <View style={styles.feedbackContainer}>
+          {isCodeCorrect === true && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <CheckSvg width={20} height={20} color={Colors.green} />
+              <Text style={[styles.subtitle, { color: Colors.green, marginVertical: 0 }]}>Código correcto</Text>
+            </View>
+          )}
+          {isCodeCorrect === false && <Text style={[styles.subtitle, { color: Colors.red, marginVertical: 0 }]}>{authError || 'Código incorrecto'}</Text>}
+          {isCodeCorrect === null && <Text style={[styles.subtitle, { marginVertical: 0 }]}>Ingrese tu código de 4 dígitos</Text>}
+        </View>
+
+        <TouchableOpacity onPress={() => Keyboard.dismiss()} style={styles.manualButton} disabled={isSubmitting}>
+          <Text style={styles.manualButtonText}>{keyboard.keyboardShown ? 'Ocultar teclado' : 'Ingresar manualmente'}</Text>
+        </TouchableOpacity>
       </View>
-      {/* <Button title="INGRESAR" onPress={handleLogin} />
-        <Button title="SALIR" onPress={handleLogout} /> */}
+
       <DefaultModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
@@ -151,14 +127,11 @@ const PickerLoginScreen = () => {
         primaryButtonText="CERRAR SESIÓN"
         primaryButtonAction={handleAdminLogout}
         secondaryButtonText="ATRÁS"
-        secondaryButtonAction={handleSecondaryAction}
+        secondaryButtonAction={() => setModalVisible(false)}
       />
     </View>
-    // </>
   )
 }
-
-export default PickerLoginScreen
 
 const styles = StyleSheet.create({
   container: {
@@ -187,37 +160,12 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 12,
     marginVertical: 20,
-    fontFamily: 'Inter_400Regular'
-  },
-  input: {
-    borderColor: Colors.grey3,
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 10,
-    width: '80%',
-    marginBottom: 20,
     fontFamily: 'Inter_400Regular',
-    textAlign: 'center'
-  },
-  button: {
-    backgroundColor: Colors.mainBlue,
-    borderRadius: 5
-  },
-  root: {
-    flex: 1,
-    padding: 20
+    color: Colors.black
   },
   codeFieldRoot: {
     marginTop: 20,
     borderColor: Colors.grey3
-  },
-  codeFieldRootSuccess: {
-    marginTop: 20,
-    borderColor: Colors.green
-  },
-  codeFieldRootError: {
-    marginTop: 20,
-    borderColor: Colors.red
   },
   cell: {
     width: 42,
@@ -240,12 +188,20 @@ const styles = StyleSheet.create({
   focusCell: {
     borderColor: '#2D41FC'
   },
-  focusCellError: {
-    borderColor: Colors.red,
-    fontFamily: 'Inter_400Regular'
+  manualButton: {
+    padding: 10,
+    borderRadius: 8
   },
-  focusCellSuccess: {
-    borderColor: Colors.green,
-    fontFamily: 'Inter_400Regular'
+  manualButtonText: {
+    color: Colors.mainBlue,
+    fontFamily: 'Inter_500Medium',
+    fontSize: 14
+  },
+  feedbackContainer: {
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center'
   }
 })
+
+export default PickerLoginScreen

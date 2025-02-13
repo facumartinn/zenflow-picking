@@ -2,12 +2,12 @@
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
-import { AntDesign } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import Colors from '../constants/Colors'
 import { useAtom } from 'jotai'
 import { packingOrdersAtom } from '../store'
 import { DefaultHeader } from '../components/DefaultHeader'
+import { BackSvg } from '../components/svg/BackSvg'
 
 const PackingOrderCompletedScreen = () => {
   const router = useRouter()
@@ -33,15 +33,7 @@ const PackingOrderCompletedScreen = () => {
       end={{ x: 0.5, y: 1 }}
       locations={[0.35, 0.35]}
     >
-      <DefaultHeader
-        title="Empaquetado"
-        leftIcon={
-          <View style={{ borderRadius: 50, backgroundColor: Colors.lightGreen, marginLeft: 10 }}>
-            <AntDesign name="arrowleft" size={25} color="black" style={{ padding: 8 }} />
-          </View>
-        }
-        leftAction={() => router.navigate('/packing-orders')}
-      />
+      <DefaultHeader title="Empaquetado" leftIcon={<BackSvg width={30} height={30} color="black" />} leftAction={() => router.navigate('/packing-orders')} />
 
       <ScrollView style={styles.content}>
         <View style={styles.orderInfo}>

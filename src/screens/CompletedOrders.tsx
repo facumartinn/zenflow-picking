@@ -39,7 +39,7 @@ const CompletedOrdersScreen = () => {
         data={orders}
         renderItem={({ item }) => (
           <View>
-            <Text>{item?.id}</Text>
+            <Text>{item?.order_tenant_id}</Text>
             <Text>{item?.amount}</Text>
             <Button title="Detalles" onPress={() => router.navigate({ pathname: '/order-detail', params: { orderId: item.id } })} />
           </View>

@@ -15,7 +15,9 @@ export const styles = StyleSheet.create({
   leftColumn: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    borderRadius: 100,
+    backgroundColor: 'white'
   },
   middleColumn: {
     flex: 6,
@@ -28,8 +30,8 @@ export const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   title: {
-    fontSize: 18,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
     color: Colors.black
   }
 })

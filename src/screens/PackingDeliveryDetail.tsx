@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
-import { AntDesign } from '@expo/vector-icons'
 import Colors from '../constants/Colors'
 import { DefaultHeader } from '../components/DefaultHeader'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -11,6 +10,7 @@ import PositionScanner from '../components/PackingPositionCard'
 import { usePackingDeliveryDetail } from '../hooks/usePackingDeliveryDetail'
 import BottomButton from '../components/BottomButton'
 import { DefaultInputModal } from '../components/DefaultInputModal'
+import { BackSvg } from '../components/svg/BackSvg'
 
 const PackingDeliveryDetail = () => {
   const router = useRouter()
@@ -46,15 +46,7 @@ const PackingDeliveryDetail = () => {
       end={{ x: 0.2, y: 1 }}
       locations={[0.25, 0.25]}
     >
-      <DefaultHeader
-        title="Entrega"
-        leftIcon={
-          <View style={styles.backButton}>
-            <AntDesign name="arrowleft" size={24} color={Colors.black} style={{ padding: 8 }} />
-          </View>
-        }
-        leftAction={() => router.back()}
-      />
+      <DefaultHeader title="Entrega" leftIcon={<BackSvg width={30} height={30} color="black" />} leftAction={() => router.back()} />
       <ScrollView style={styles.content}>
         <View style={styles.orderInfoContainer}>
           <View style={styles.orderInfo}>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
 import Colors from '../constants/Colors'
@@ -7,8 +7,6 @@ import { useAtom } from 'jotai'
 import { PackingOrderCard } from '../components/PackingOrderCard'
 import { groupOrderDetailsByOrderId } from '../helpers/groupOrders'
 import { PrintStatusEnum } from '../types/flow'
-// import { transformPackingOrdersToPayload } from '../helpers/packingOrdersTransform'
-// import { registerOrderResources } from '../services/order'
 import LoadingPackingScreen from '../components/LoadingPackingScreen'
 import { OrderStateEnum } from '../types/order'
 import { updateOrderStatus } from '../services/order'
@@ -20,15 +18,6 @@ const PackingOrdersScreen = () => {
   const router = useRouter()
   const groupedOrders = groupOrderDetailsByOrderId(flowOrderDetails)
   const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        router.push('/packing-delivery') // Navega a la pantalla de picking
-      }, 3000) // 3 segundos de pantalla de carga
-      return () => clearTimeout(timer) // Limpia el timer si el componente se desmonta
-    }
-  }, [loading, router])
 
   const handleCardPress = (orderId: number) => {
     router.push({ pathname: '/packing-order-detail', params: { orderId } })
@@ -42,19 +31,18 @@ const PackingOrdersScreen = () => {
     return groupedOrders.every(order => getPrintStatus(order.order_id) === PrintStatusEnum.PRINTED)
   }, [groupedOrders, packingOrders])
 
-  // orderIds es un array de los ids de los pedidos que se van a actualizar
   const orderIds = Object.keys(basketsByOrder).map(Number)
 
   const handleContinue = async () => {
     try {
-      // const payload = transformPackingOrdersToPayload(packingOrders)
-      // await registerOrderResources(payload)
-      await updateOrderStatus(OrderStateEnum.DELIVERING, orderIds)
       setLoading(true)
-      // Aca ahora tenemos que mostrar la pantalla de carga y esperar 3 segundos y navegar a la pantalla de completado
-      // router.push('/packing-completed')
+      await updateOrderStatus(OrderStateEnum.DELIVERING, orderIds)
+      // Si todo se ejecutó correctamente, navegar a la siguiente pantalla
+      router.push('/packing-delivery')
     } catch (error) {
-      console.error('Error al registrar recursos:', error)
+      console.error('Error al actualizar el estado de los pedidos:', error)
+      setLoading(false)
+      // Aquí podrías mostrar un modal de error o un mensaje al usuario
     }
   }
 

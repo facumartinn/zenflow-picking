@@ -12,6 +12,7 @@ import { groupOrderDetailsByOrderId } from '../helpers/groupOrders'
 import { DefaultModal } from '../components/DefaultModal'
 import { WarningSvg } from '../components/svg/Warning'
 import { cancelFlow } from '../services/flow'
+import { BackSvg } from '../components/svg/BackSvg'
 
 export const PickingOrdersScreen = () => {
   const [flowOrderDetails] = useAtom(flowOrderDetailsAtom)
@@ -39,16 +40,7 @@ export const PickingOrdersScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.topBodyContainer}>
-        <DefaultHeader
-          title={<Text style={styles.headerTitle}>Pedidos</Text>}
-          leftIcon={
-            <View style={{ borderRadius: 100, backgroundColor: 'white', marginLeft: 10 }}>
-              <AntDesign name="arrowleft" size={24} color="black" style={{ padding: 8 }} />
-            </View>
-          }
-          leftAction={() => router.back()}
-          rightIcon={null}
-        />
+        <DefaultHeader title="Pedidos" leftIcon={<BackSvg width={30} height={30} color="black" />} leftAction={() => router.back()} />
       </View>
       <ScrollView style={styles.bodyContainer}>
         {groupedOrders.map((orderDetail, index) => {

@@ -15,9 +15,10 @@ const { width } = Dimensions.get('window')
 interface ProductInfoProps {
   item: OrderDetails
   onRestartQuantity: () => void
+  isCompleted?: boolean
 }
 
-const ProductInfo: React.FC<ProductInfoProps> = ({ item, onRestartQuantity }) => {
+const ProductInfo: React.FC<ProductInfoProps> = ({ item, onRestartQuantity, isCompleted }) => {
   const [basketsByOrder] = useAtom(basketsByOrderAtom)
   const baskets = basketsByOrder[item!.order_id]?.join(', ') || 'N/A'
   const basketTag = `Caj${basketsByOrder[item!.order_id].length > 1 ? 'ones' : 'ón'}`
@@ -26,7 +27,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ item, onRestartQuantity }) =>
     <View style={styles.card}>
       <ProductDetails productPhoto={item.product_photo!} productName={item.product_name} productBarcode={item.product_barcode!} />
       {item.weighable ? (
-        <PickingInfoWeight item={item} onRestartQuantity={onRestartQuantity} />
+        <PickingInfoWeight item={item} onRestartQuantity={onRestartQuantity} isCompleted={isCompleted} />
       ) : (
         <PickingInfo
           productId={item.id}
@@ -35,6 +36,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ item, onRestartQuantity }) =>
           quantityPicked={item.quantity_picked ?? 0}
           warehouseOrder={item.warehouse_order!}
           onRestartQuantity={onRestartQuantity}
+          isCompleted={isCompleted}
         />
       )}
       <View style={styles.flowInfo}>

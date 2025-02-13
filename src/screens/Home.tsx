@@ -1,71 +1,82 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react'
-import { View, Text, Image, StyleSheet } from 'react-native'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useAtom } from 'jotai'
-import { isAdminLoggedInAtom, tenantLogoAtom } from '../store'
+import React, { useCallback, useState } from 'react'
+import { View, Image, StyleSheet, TouchableOpacity } from 'react-native'
 import { DefaultHeader } from '../components/DefaultHeader'
 import TabSelector from '../components/HomeTabSelector'
 import OrdersList from '../components/OrderList'
 import Colors from '../constants/Colors'
 import { router } from 'expo-router'
 import { DefaultButton } from '../components/DefaultButton'
+import { LogOutSvg } from '../components/svg/LogOut'
+import { DefaultModal } from '../components/DefaultModal'
+import { useAuth } from '../context/auth'
 
 const HomeScreen = () => {
-  const [, setIsAdminLoggedIn] = useAtom(isAdminLoggedInAtom)
-  const [tenantLogo] = useAtom(tenantLogoAtom)
+  const { tenantLogo, logoutPicker } = useAuth()
   const [selectedTab, setSelectedTab] = useState<'pending' | 'completed'>('pending')
+  const [modalVisible, setModalVisible] = useState(false)
 
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem('authToken')
-    await AsyncStorage.removeItem('tenantId')
-    await AsyncStorage.removeItem('warehouseId')
+  const handleMultiPicking = useCallback(() => {
+    router.navigate('/multi-picking')
+  }, [])
 
-    // Actualizar el átomo de autenticación
-    setIsAdminLoggedIn(false)
-    // Redirigir al usuario a la pantalla de login
-    router.navigate('/admin-login')
+  const handleProfileNavigation = useCallback(() => {
+    router.navigate('/profile')
+  }, [])
+
+  const MultiPickingButton = useCallback(() => {
+    // Solo mostrar el botón si estamos en la pestaña pending y el usuario es un picker
+    if (selectedTab !== 'pending') return null
+
+    return (
+      <View style={styles.multiPickingButtonContainer}>
+        <DefaultButton type="primary" label="PICKING MÚLTIPLE" onPress={handleMultiPicking} />
+      </View>
+    )
+  }, [selectedTab, handleMultiPicking])
+
+  const handleSecondaryAction = () => {
+    setModalVisible(false)
   }
 
-  const handleMultiPicking = () => {
-    router.navigate('/multi-picking')
+  const handlePickerLogout = async () => {
+    try {
+      setModalVisible(false)
+      await logoutPicker()
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error)
+    }
   }
 
   return (
     <>
       <View style={styles.container}>
         <DefaultHeader
-          title={
-            <Text style={styles.companyName} onPress={handleLogout}>
-              Inicio
-            </Text>
-          }
-          leftIcon={
-            <Image
-              source={{
-                uri: tenantLogo ?? '#'
-              }}
-              style={styles.logo}
-            />
-          }
+          title="Inicio"
+          leftIcon={<Image source={{ uri: tenantLogo ?? '#' }} style={styles.logo} />}
           rightIcon={
-            <Image
-              source={{
-                uri: 'https://t4.ftcdn.net/jpg/03/64/21/11/360_F_364211147_1qgLVxv1Tcq0Ohz3FawUfrtONzz8nq3e.jpg'
-              }}
-              style={styles.profilePicture}
-            />
+            <TouchableOpacity onPress={() => setModalVisible(true)}>
+              <LogOutSvg width={24} height={24} color="black" />
+            </TouchableOpacity>
           }
-          rightAction={() => router.navigate('/profile')}
+          rightAction={handleProfileNavigation}
         />
         <View style={styles.bodyContainer}>
           <TabSelector selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
-          <View style={styles.multiPickingButtonContainer}>
-            {selectedTab === 'pending' && <DefaultButton type="primary" label="PICKING MÚLTIPLE" onPress={handleMultiPicking} />}
-          </View>
+          <MultiPickingButton />
           <OrdersList selectedTab={selectedTab} />
         </View>
       </View>
+      <DefaultModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        title="¿Cerrar sesión?"
+        primaryButtonText="CERRAR SESIÓN"
+        primaryButtonAction={handlePickerLogout}
+        secondaryButtonText="ATRÁS"
+        primaryButtonColor={Colors.mainBlue}
+        secondaryButtonAction={handleSecondaryAction}
+      />
     </>
   )
 }

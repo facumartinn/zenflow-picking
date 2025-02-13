@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native'
 import { useRouter } from 'expo-router'
 import Colors from '../constants/Colors'
-import { AntDesign } from '@expo/vector-icons'
 import { DefaultHeader } from '../components/DefaultHeader'
 import { basketsByOrderAtom, flowOrderDetailsAtom, currentProductAtom, currentProductIndexAtom } from '../store'
 import { OrderDetails, PickingDetailEnum, PickingUpdate } from '../types/order'
@@ -18,10 +17,10 @@ import LoadingPackingScreen from '../components/LoadingPackingScreen'
 import { updateOrderDetails } from '../services/orderDetail'
 import { updateOrders } from '../services/order'
 import { calculateOrdersPickingState, groupOrderDetailsByOrderId } from '../helpers/groupOrders'
+import { BackSvg } from '../components/svg/BackSvg'
 
 const BasketValidationScreen = () => {
   const [flowOrderDetails, setFlowOrderDetails] = useAtom(flowOrderDetailsAtom)
-  // const [flowOrder, setFlowOrder] = useAtom(flowAtom)
   const [basketsByOrder] = useAtom(basketsByOrderAtom)
   const [currentProduct] = useAtom(currentProductAtom)
   const [currentProductIndex, setCurrentProductIndex] = useAtom(currentProductIndexAtom)
@@ -42,14 +41,34 @@ const BasketValidationScreen = () => {
     }
   }, [])
 
-  useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        router.push('/packing-orders') // Navega a la pantalla de picking
-      }, 3000) // 3 segundos de pantalla de carga
-      return () => clearTimeout(timer) // Limpia el timer si el componente se desmonta
+  const handleFinishPicking = async () => {
+    try {
+      setLoading(true)
+      const transformOrderDetailsForUpdate = (details: OrderDetails[]): PickingUpdate[] => {
+        return details.map(detail => ({
+          order_id: detail.order_id,
+          product_id: detail.product_id,
+          quantity: detail.quantity,
+          quantity_picked: detail.quantity_picked!,
+          final_weight: detail.final_weight,
+          state_picking_details_id: detail.state_picking_details_id!
+        }))
+      }
+
+      const groupedOrders = Object.fromEntries(groupOrderDetailsByOrderId(flowOrderDetails).map(group => [group.order_id, group.details]))
+      const ordersPickingState = calculateOrdersPickingState(groupedOrders)
+
+      await updateOrderDetails(transformOrderDetailsForUpdate(flowOrderDetails))
+      await updateOrders({ orders: ordersPickingState })
+
+      // Navegar a la pantalla correspondiente después de que todo se complete exitosamente
+      router.push('/packing-orders')
+    } catch (error) {
+      console.error('Error al finalizar el picking:', error)
+      setLoading(false)
+      // Aquí podrías mostrar un modal de error o un mensaje al usuario
     }
-  }, [loading, router])
+  }
 
   if (loading) {
     return <LoadingPackingScreen title="PICKING FINALIZADO" message="INICIANDO EMPAQUETADO" color={Colors.green} />
@@ -82,7 +101,6 @@ const BasketValidationScreen = () => {
   const handleBasketValidation = async () => {
     const updatedFlowOrderDetails = flowOrderDetails.map((detail, index) => {
       if (index === currentProductIndex) {
-        // Verificar si la cantidad es incompleta
         if (detail.quantity_picked! < detail.quantity) {
           return { ...detail, state_picking_details_id: PickingDetailEnum.INCOMPLETE }
         } else {
@@ -98,54 +116,17 @@ const BasketValidationScreen = () => {
     setFlowOrderDetails(updatedFlowOrderDetails)
 
     if (currentProductIndex < flowOrderDetails.length - 1) {
-      // Navegar de vuelta al PickingScreen después de que el estado se actualice
       showToast(`${currentProduct.quantity_picked!} productos levantados`, currentProduct.order_id, Colors.green, Colors.white)
       setCurrentProductIndex(currentProductIndex + 1)
       router.replace('/picking')
     } else {
-      // Aca habria que pegarle a la api para guardar el resultado del picking
-      // Función de utilidad para transformar los datos
-      const transformOrderDetailsForUpdate = (details: OrderDetails[]): PickingUpdate[] => {
-        return details.map(detail => ({
-          order_id: detail.order_id,
-          product_id: detail.product_id,
-          quantity: detail.quantity,
-          quantity_picked: detail.quantity_picked!,
-          final_weight: detail.final_weight,
-          state_picking_details_id: detail.state_picking_details_id!
-        }))
-      }
-      const groupedOrders = Object.fromEntries(groupOrderDetailsByOrderId(flowOrderDetails).map(group => [group.order_id, group.details]))
-      const ordersPickingState = calculateOrdersPickingState(groupedOrders)
-      try {
-        await updateOrderDetails(transformOrderDetailsForUpdate(flowOrderDetails))
-        // Se va a actualizar el estado de picking de los pedidos.
-        // Hay que calcular el estado final de picking de cada pedido utilizando PickingStateEnum.
-        // Tenemos que recorrer cada pedido y validar si los productos tienen el estado PickingDetailEnum.COMPLETED
-        // Si todos los productos de un pedido tienen el estado PickingDetailEnum.COMPLETED entonces el estado final de picking del pedido es PickingStateEnum.COMPLETE
-        // Si algun producto de un pedido tiene el estado PickingDetailEnum.INCOMPLETE entonces el estado final de picking del pedido es PickingStateEnum.INCOMPLETE
-        // const ordersToUpdate = ordersPickingState.map(order => {
-        //   // Si TODOS los productos del pedido tienen el estado PickingDetailEnum.COMPLETED entonces el estado final de picking del pedido es PickingStateEnum.COMPLETE
-        //   if (order.details.every(detail => detail.state_picking_details_id === PickingDetailEnum.COMPLETED)) {
-        // })
-        await updateOrders({ orders: ordersPickingState })
-      } catch (error) {
-        console.error('Error updating order details:', error)
-        throw error
-      }
-      // Aca se va a mostrar un modal si hay pedidos incompletos
       if (isPickingIncomplete) {
         setModalIncompleteVisible(true)
         return
       }
-      setLoading(true)
-      // router.replace('/picking-completed') // Pantalla de proceso completado
+      handleFinishPicking()
     }
   }
-
-  //   const handleOnChangeText = (text: string) => {
-  //     setScannedBasketCode(parseInt(text))
-  //   }
 
   const handleSkipBasket = () => {
     handleBasketValidation()
@@ -159,16 +140,7 @@ const BasketValidationScreen = () => {
       locations={[0.35, 0.35]}
     >
       <View style={styles.topBodyContainer}>
-        <DefaultHeader
-          title={<Text style={styles.headerTitle}>Guardado</Text>}
-          leftIcon={
-            <View style={{ borderRadius: 100, backgroundColor: 'white', marginLeft: 10 }}>
-              <AntDesign name="arrowleft" size={24} color="black" style={{ padding: 8 }} />
-            </View>
-          }
-          leftAction={() => router.back()}
-          rightIcon={null}
-        />
+        <DefaultHeader title="Guardado" leftIcon={<BackSvg width={30} height={30} color="black" />} leftAction={() => router.back()} />
       </View>
       <View style={styles.contentContainer}>
         <Text style={styles.productName}>{currentProduct?.product_name}</Text>
@@ -231,7 +203,7 @@ const BasketValidationScreen = () => {
         primaryButtonColor={Colors.mainBlue}
         primaryButtonTextColor={Colors.white}
         secondaryButtonText="SEGUIR SIN COMPLETAR"
-        secondaryButtonAction={() => setLoading(true)}
+        secondaryButtonAction={handleFinishPicking}
         secondaryButtonColor={Colors.white}
         secondaryButtonTextColor={Colors.red}
       />

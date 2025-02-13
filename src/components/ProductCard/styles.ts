@@ -6,20 +6,16 @@ export const styles = StyleSheet.create({
     margin: 15,
     height: 130,
     flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 10,
     marginVertical: 5
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 4,
-    // elevation: 2
   },
   productImage: {
     backgroundColor: 'transparent',
-    width: 110,
-    height: 110,
+    width: 90,
+    height: 90,
     borderRadius: 12
   },
   productDetails: {
@@ -27,8 +23,8 @@ export const styles = StyleSheet.create({
     marginLeft: 10
   },
   productName: {
-    height: 44,
-    fontSize: 18,
+    height: 40,
+    fontSize: 14,
     fontFamily: 'Inter_400Regular'
   },
   productInfo: {
@@ -37,16 +33,16 @@ export const styles = StyleSheet.create({
     marginTop: 5
   },
   infoLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Inter_400Regular',
     color: Colors.grey5
   },
   infoValue: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 18
+    fontSize: 14
   },
   barcodeContainer: {
-    width: '73%',
+    width: '70%',
     padding: 8,
     backgroundColor: Colors.grey1,
     borderRadius: 10
@@ -59,33 +55,32 @@ export const styles = StyleSheet.create({
     backgroundColor: Colors.grey1,
     borderRadius: 12
   },
-
   orderQuantityIncompleteBox: {
-    backgroundColor: Colors.red,
+    backgroundColor: Colors.yellow,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 10,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'
   },
   orderQuantityIncomplete: {
-    fontSize: 18,
+    fontSize: 14,
     fontFamily: 'Inter_700Bold',
-    color: Colors.white
+    color: Colors.black
   },
   orderTotalQuantityIncomplete: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Inter_400Regular',
-    color: Colors.white
+    color: Colors.black
   },
   incompleteQuantityNumber: {
     display: 'flex',
     alignItems: 'center',
     flexDirection: 'row',
-    fontSize: 18,
+    fontSize: 14,
     fontFamily: 'Inter_700Bold',
-    color: Colors.white
+    color: Colors.black
   },
   orderQuantityBox: {
     backgroundColor: Colors.grey1,
@@ -97,20 +92,20 @@ export const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   orderQuantity: {
-    fontSize: 18,
+    fontSize: 14,
     fontFamily: 'Inter_700Bold',
     color: Colors.black
   },
   orderText: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Inter_400Regular',
     marginBottom: 4,
     color: Colors.grey5
   },
   orderTextIncomplete: {
-    fontSize: 18,
+    fontSize: 16,
     marginBottom: 4,
-    color: Colors.white,
+    color: Colors.black,
     fontFamily: 'Inter_400Regular'
   }
 })
