@@ -1,6 +1,7 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { jwtDecode } from 'jwt-decode'
+import * as SecureStore from 'expo-secure-store'
 import { TokenPayload } from '../types/auth'
 
 // Crear una instancia de axios
@@ -13,7 +14,7 @@ const api = axios.create({
 // Interceptor para agregar headers
 api.interceptors.request.use(
   async config => {
-    const token = await AsyncStorage.getItem('authToken')
+    const token = await SecureStore.getItemAsync('authToken')
 
     if (token) {
       config.headers.authorization = token

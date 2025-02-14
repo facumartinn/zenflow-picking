@@ -9,7 +9,7 @@ interface OrderItemSkeletonProps {
 }
 
 const OrderItemSkeleton = ({ animatedStyle }: OrderItemSkeletonProps) => (
-  <View style={[styles.orderItem, styles.selectedOrderItem]}>
+  <View style={styles.orderItem}>
     <View style={styles.orderContainer}>
       <View style={styles.orderBox}>
         <View>
@@ -24,6 +24,26 @@ const OrderItemSkeleton = ({ animatedStyle }: OrderItemSkeletonProps) => (
         </View>
       </View>
     </View>
+  </View>
+)
+
+const DateSectionSkeleton = ({ animatedStyle }: { animatedStyle: OrderItemSkeletonProps['animatedStyle'] }) => (
+  <View style={styles.dateSection}>
+    {/* Fecha */}
+    <Animated.View style={[styles.skeleton, animatedStyle, styles.dateTitle, { width: 200, height: 20 }]} />
+
+    {/* Turnos */}
+    {[1, 2].map(scheduleIndex => (
+      <View key={scheduleIndex} style={styles.scheduleSection}>
+        {/* Título del turno */}
+        <Animated.View style={[styles.skeleton, animatedStyle, styles.scheduleTitle, { width: 180, height: 16 }]} />
+
+        {/* Pedidos del turno */}
+        {[1, 2, 3].map(orderIndex => (
+          <OrderItemSkeleton key={orderIndex} animatedStyle={animatedStyle} />
+        ))}
+      </View>
+    ))}
   </View>
 )
 
@@ -60,8 +80,8 @@ const MultiSelectOrderListSkeleton = () => {
 
   return (
     <View style={styles.container}>
-      {[1, 2, 3, 4, 5, 6, 7, 8].map(item => (
-        <OrderItemSkeleton key={item} animatedStyle={animatedStyle} />
+      {[1, 2].map(sectionIndex => (
+        <DateSectionSkeleton key={sectionIndex} animatedStyle={animatedStyle} />
       ))}
     </View>
   )
@@ -76,16 +96,26 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     overflow: 'hidden'
   },
+  dateSection: {
+    marginBottom: 24
+  },
+  dateTitle: {
+    marginBottom: 16,
+    fontFamily: 'Inter_700Bold'
+  },
+  scheduleSection: {
+    marginBottom: 16
+  },
+  scheduleTitle: {
+    marginBottom: 12,
+    fontFamily: 'Inter_400Regular'
+  },
   orderItem: {
     backgroundColor: Colors.white,
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: Colors.grey2
-  },
-  selectedOrderItem: {
-    backgroundColor: Colors.white,
     borderColor: Colors.grey2
   },
   orderContainer: {

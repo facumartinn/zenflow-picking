@@ -14,7 +14,6 @@ interface MultiSelectOrderItemProps {
 
 const MultiSelectOrderItem: React.FC<MultiSelectOrderItemProps> = ({ item, selectedTab, isSelected, onSelect }) => {
   const isIncomplete = item.state_picking_id === PickingStateEnum.INCOMPLETE
-  const totalQuantity = item.OrderDetails?.reduce((acc, detail) => acc + (detail.quantity || 0), 0) || 0
 
   const truncateText = (text: string, maxLength: number = 20) => {
     if (!text) return '-'
@@ -34,7 +33,7 @@ const MultiSelectOrderItem: React.FC<MultiSelectOrderItemProps> = ({ item, selec
           <View>
             <Text style={styles.orderLabel}>{selectedTab === 'pending' ? 'Cantidad' : 'Posición'}</Text>
             <Text style={styles.positionText} numberOfLines={1}>
-              {selectedTab === 'pending' ? totalQuantity : truncateText(item.positions || '-', 25)}
+              {selectedTab === 'pending' ? item.total_products : truncateText(item.positions || '-', 25)}
             </Text>
           </View>
         </View>

@@ -1,4 +1,4 @@
-// screens/OrderDetailProductPicking.tsx
+// src/screens/PickingProductOrderDetail.tsx
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -11,27 +11,13 @@ import ProductInfo from '../components/PickingProduct'
 import { WarningSvg } from '../components/svg/Warning'
 import { router, useLocalSearchParams } from 'expo-router'
 
-type LocalSearchParams = {
-  productId: string
-}
-
 const PickingProductOrderDetail = () => {
-  const { productId } = useLocalSearchParams<LocalSearchParams>()
-  console.log(productId, 'productId')
+  const { productId } = useLocalSearchParams<{ productId: string }>()
 
-  const {
-    currentProduct,
-    modalVisible,
-    setModalVisible,
-    errorModalVisible,
-    setErrorModalVisible,
-    // handleScan,
-    // handleManualPicking,
-    // handleMarkAsIncomplete,
-    handleRestartQuantity
-  } = usePickingProductDetailLogic()
+  const { product, modalVisible, setModalVisible, errorModalVisible, setErrorModalVisible, handleScan, handleManualPicking, handleRestartQuantity } =
+    usePickingProductDetailLogic(productId)
 
-  if (!currentProduct) {
+  if (!product) {
     return (
       <View style={styles.emptyStateContainer}>
         <Text style={styles.emptyStateText}>Producto no encontrado</Text>
@@ -50,35 +36,32 @@ const PickingProductOrderDetail = () => {
       <View style={styles.topBodyContainer}>
         <PickingHeader
           title="Escanear artículo"
-          // leftAction={() => handleScan(currentProduct?.weighable ? `${currentProduct.product_barcode}000500` : currentProduct?.product_barcode ?? '')}
+          leftAction={() => handleScan(product.weighable ? `${product.product_barcode}000500` : product.product_barcode ?? '')}
           rightAction={() => router.back()}
         />
       </View>
       <View style={styles.bodyContainer}>
         <View style={styles.productBox}>
-          <ProductInfo item={currentProduct} onRestartQuantity={handleRestartQuantity} />
+          <ProductInfo item={product} onRestartQuantity={handleRestartQuantity} />
           <View style={styles.actionsContainer}>
             <TouchableOpacity onPress={() => setModalVisible(true)}>
               <Text style={styles.actionButton}>CONTINUAR MANUAL</Text>
             </TouchableOpacity>
-            {/* <TouchableOpacity onPress={handleMarkAsIncomplete}>
-              <Text style={[styles.actionButton, styles.incompleteButton]}>MARCAR INCOMPLETO</Text>
-            </TouchableOpacity> */}
           </View>
         </View>
       </View>
 
       <ManualPickingModal
         visible={modalVisible}
-        quantityPicked={0}
-        maxQuantity={currentProduct.quantity}
-        onConfirm={() => {}}
+        quantityPicked={product.quantity_picked ?? 0}
+        maxQuantity={product.quantity}
+        onConfirm={handleManualPicking}
         onClose={() => setModalVisible(false)}
       />
       <DefaultModal
         visible={errorModalVisible}
         title="Producto equivocado"
-        description={`Código del producto: ${currentProduct.product_barcode}`}
+        description={`Código del producto: ${product.product_barcode}`}
         primaryButtonText="ATRÁS"
         primaryButtonColor={Colors.mainBlue}
         primaryButtonAction={() => setErrorModalVisible(false)}

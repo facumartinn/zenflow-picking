@@ -123,6 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginPicker = async (code: string) => {
     try {
+      console.log('code', code)
       setError(null)
 
       const response = await loginPickingUser(Number(code))

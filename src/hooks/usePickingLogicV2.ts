@@ -1,235 +1,53 @@
-import { useState, useEffect } from 'react'
-import { useAtom } from 'jotai'
+// src/hooks/usePickingLogicV2.ts
+import { useEffect, useState } from 'react'
 import { useRouter } from 'expo-router'
-import { flowOrderDetailsAtom, warehousesAtom, currentProductIndexAtom, currentProductAtom } from '../store'
+import { usePickingState } from './usePickingState'
 import { PickingDetailEnum } from '../types/order'
-import { BarcodeStructure, validateWeightBarcode } from '../utils/validateWeightBarcode'
 import { useToast } from '../context/toast'
 import Colors from '../constants/Colors'
+import { validateWeightBarcode } from '../utils/validateWeightBarcode'
+import { useAtom } from 'jotai'
+import { warehousesAtom } from '../store'
 
-/**
- * Hook para manejar la lógica de picking
- * @returns {Object} Objeto con los métodos y estados necesarios para el picking
- */
 export const usePickingLogicV2 = () => {
-  // Átomos y estado global
-  const [flowOrderDetails, setFlowOrderDetails] = useAtom(flowOrderDetailsAtom)
+  const router = useRouter()
+  const { showToast } = useToast()
   const [warehouseConfig] = useAtom(warehousesAtom)
-  const [currentProductIndex, setCurrentProductIndex] = useAtom(currentProductIndexAtom)
-  const [currentProduct] = useAtom(currentProductAtom)
 
-  // Estado local
+  // Usamos el contexto 'main' ya que este es el flujo principal
+  const { flowOrderDetails, updateProductState, currentProduct, findNextValidProduct, isProductProcessed } = usePickingState('main')
+
   const [modalVisible, setModalVisible] = useState(false)
   const [incompleteModalVisible, setIncompleteModalVisible] = useState(false)
   const [errorModalVisible, setErrorModalVisible] = useState(false)
   const [isCompleted] = useState(false)
 
-  // Utilidades
-  const router = useRouter()
-  const toast = useToast()
-
-  /**
-   * Tipo para las actualizaciones de producto
-   */
-  type ProductUpdate = {
-    quantity_picked?: number
-    state_picking_details_id?: PickingDetailEnum
-    final_weight?: number
-  }
-
-  /**
-   * Efecto para inicializar el estado del picking
-   * Asegura que el primer producto esté en IN_PROGRESS y los demás en PENDING
-   * Solo inicializa si no hay productos en IN_PROGRESS
-   */
+  // Efecto para inicializar el primer producto si es necesario
   useEffect(() => {
-    // Si ya hay un producto en IN_PROGRESS, no hacemos nada
-    const hasInProgressProduct = flowOrderDetails.some(detail => detail.state_picking_details_id === PickingDetailEnum.IN_PROGRESS)
-    if (hasInProgressProduct) return
-
-    // Si no hay productos en IN_PROGRESS, buscamos el primer producto que no esté COMPLETED ni INCOMPLETE
-    const nextAvailableIndex = flowOrderDetails.findIndex(
-      detail => detail.state_picking_details_id !== PickingDetailEnum.COMPLETED && detail.state_picking_details_id !== PickingDetailEnum.INCOMPLETE
-    )
-
-    if (nextAvailableIndex !== -1) {
-      updateProductState(nextAvailableIndex, {
-        state_picking_details_id: PickingDetailEnum.IN_PROGRESS
-      })
-      setCurrentProductIndex(nextAvailableIndex)
-    }
-  }, []) // Solo se ejecuta al montar el componente
-
-  /**
-   * Actualiza el estado de un producto
-   */
-  const updateProductState = (productIndex: number, updates: ProductUpdate) => {
-    const updatedFlowOrderDetails = flowOrderDetails.map((detail, index) => (index === productIndex ? { ...detail, ...updates } : detail))
-    setFlowOrderDetails(updatedFlowOrderDetails)
-    return updatedFlowOrderDetails
-  }
-
-  /**
-   * Encuentra el siguiente producto pendiente
-   * @returns {number} Índice del siguiente producto pendiente o -1 si no hay más
-   */
-  const findNextPendingProduct = () => {
-    // Primero buscamos si hay algún producto en IN_PROGRESS
-    const inProgressIndex = flowOrderDetails.findIndex(detail => detail.state_picking_details_id === PickingDetailEnum.IN_PROGRESS)
-    if (inProgressIndex !== -1) return inProgressIndex
-
-    // Si no hay productos en IN_PROGRESS, buscamos el siguiente PENDING
-    // que no haya sido procesado aún
-    return flowOrderDetails.findIndex(detail => detail.state_picking_details_id === PickingDetailEnum.PENDING)
-  }
-
-  /**
-   * Verifica si un producto ya fue procesado
-   */
-  const isProductProcessed = (state: PickingDetailEnum | null): boolean => {
-    return state === PickingDetailEnum.COMPLETED || state === PickingDetailEnum.INCOMPLETE
-  }
-
-  /**
-   * Verifica si un producto está disponible para picking
-   */
-  const isProductAvailable = (state: PickingDetailEnum | null): boolean => {
-    return state === PickingDetailEnum.PENDING || state === PickingDetailEnum.IN_PROGRESS
-  }
-
-  /**
-   * Encuentra el siguiente producto disponible para picking
-   */
-  const findNextAvailableProduct = () => {
-    return flowOrderDetails.findIndex((detail, index) => {
-      // Si es el producto actual, verificamos si está disponible
-      if (index === currentProductIndex) {
-        return isProductAvailable(detail.state_picking_details_id)
-      }
-      // Si no es el actual, solo consideramos los PENDING
-      return detail.state_picking_details_id === PickingDetailEnum.PENDING
-    })
-  }
-
-  /**
-   * Efecto para verificar y actualizar el producto actual cuando volvemos a la pantalla
-   */
-  useEffect(() => {
-    // Si no hay producto actual o el actual ya fue procesado, buscamos el siguiente
     if (!currentProduct || isProductProcessed(currentProduct.state_picking_details_id)) {
-      const nextIndex = findNextAvailableProduct()
-
+      const nextIndex = findNextValidProduct()
       if (nextIndex !== -1) {
-        updateProductState(nextIndex, {
+        updateProductState(flowOrderDetails[nextIndex].id, {
           state_picking_details_id: PickingDetailEnum.IN_PROGRESS
         })
-        setCurrentProductIndex(nextIndex)
       }
     }
   }, [currentProduct?.state_picking_details_id])
 
-  /**
-   * Maneja la transición al siguiente producto
-   */
-  const handleProductTransition = (shouldNavigateToBaskets: boolean = false) => {
-    // Si el producto actual está procesado, buscamos el siguiente
-    if (currentProduct && isProductProcessed(currentProduct.state_picking_details_id)) {
-      const nextIndex = findNextAvailableProduct()
-
-      if (nextIndex !== -1) {
-        updateProductState(nextIndex, {
-          state_picking_details_id: PickingDetailEnum.IN_PROGRESS
-        })
-        setCurrentProductIndex(nextIndex)
-      }
-    }
-
-    if (shouldNavigateToBaskets && warehouseConfig.use_picking_baskets.status) {
-      router.push('/basket-validation')
-    }
-  }
-
-  /**
-   * Valida y obtiene la estructura del código de barras
-   * @returns {BarcodeStructure | null} Estructura del código de barras o null si la configuración es inválida
-   */
-  const getBarcodeStructure = (): BarcodeStructure | null => {
-    if (!warehouseConfig.use_weight) return null
-    const config = warehouseConfig.use_weight
-
-    // Validar que todos los campos requeridos existan y sean del tipo correcto
-    if (
-      typeof config.weightDecimals !== 'number' ||
-      typeof config.priceDecimals !== 'number' ||
-      typeof config.isWeightBased !== 'boolean' ||
-      typeof config.weightStart !== 'number' ||
-      typeof config.weightEnd !== 'number' ||
-      typeof config.productCodeStart !== 'number' ||
-      typeof config.productCodeEnd !== 'number'
-    ) {
-      return null
-    }
-
-    return {
-      totalLength: config.weightEnd,
-      productCodeStart: config.productCodeStart,
-      productCodeEnd: config.productCodeEnd,
-      weightStart: config.weightStart,
-      weightEnd: config.weightEnd,
-      weightDecimals: config.weightDecimals,
-      priceDecimals: config.priceDecimals,
-      isWeightBased: config.isWeightBased
-    }
-  }
-
-  /**
-   * Valida el código de barras escaneado
-   */
-  const validateBarcode = (scannedBarcode: string, product: typeof currentProduct) => {
-    if (!product) return false
-
-    if (product.weighable) {
-      try {
-        const structure = getBarcodeStructure()
-        if (!structure) {
-          console.error('Configuración de peso inválida')
-          return false
-        }
-
-        const { productCode } = validateWeightBarcode(scannedBarcode, structure)
-        return productCode.toString() === product.product_barcode
-      } catch {
-        return false
-      }
-    }
-
-    return scannedBarcode === product.product_barcode
-  }
-
-  /**
-   * Verifica si un producto está completo basado en sus cantidades
-   */
-  const isProductComplete = (quantityPicked: number, totalQuantity: number) => {
-    return quantityPicked >= totalQuantity
-  }
-
-  /**
-   * Procesa el escaneo de un producto
-   */
   const handleScan = (scannedBarcode: string) => {
-    if (!currentProduct || !warehouseConfig.use_weight) return
+    if (!currentProduct) return
 
-    if (!validateBarcode(scannedBarcode, currentProduct)) {
-      setErrorModalVisible(true)
-      return
-    }
-
-    try {
-      if (currentProduct.weighable) {
-        const structure = getBarcodeStructure()
-        if (!structure) {
-          setErrorModalVisible(true)
-          return
+    if (currentProduct.weighable) {
+      try {
+        const structure = {
+          totalLength: warehouseConfig.use_weight.weightEnd,
+          productCodeStart: warehouseConfig.use_weight.productCodeStart,
+          productCodeEnd: warehouseConfig.use_weight.productCodeEnd,
+          weightStart: warehouseConfig.use_weight.weightStart,
+          weightEnd: warehouseConfig.use_weight.weightEnd,
+          weightDecimals: warehouseConfig.use_weight.weightDecimals ?? 0,
+          priceDecimals: warehouseConfig.use_weight.priceDecimals ?? 0,
+          isWeightBased: warehouseConfig.use_weight.isWeightBased ?? true
         }
 
         const { weightOrPrice } = validateWeightBarcode(scannedBarcode, structure)
@@ -238,136 +56,88 @@ export const usePickingLogicV2 = () => {
         const totalWeightPicked = currentWeight + weightOrPrice * 1000
         const newQuantityPicked = currentQuantityPicked + 1
 
-        // Validar que no excedamos la cantidad máxima
         if (newQuantityPicked > currentProduct.quantity) {
-          toast.showToast('Cantidad máxima excedida', currentProduct.order_id, Colors.red, 'error')
+          showToast('Cantidad máxima excedida', currentProduct.order_id, Colors.red, 'error')
           return
         }
 
-        const productCompleted = isProductComplete(newQuantityPicked, currentProduct.quantity)
-
-        const updatedProduct = {
+        updateProductState(currentProduct.id, {
           final_weight: totalWeightPicked,
           quantity_picked: newQuantityPicked,
-          state_picking_details_id: productCompleted ? PickingDetailEnum.COMPLETED : PickingDetailEnum.IN_PROGRESS
+          state_picking_details_id: newQuantityPicked === currentProduct.quantity ? PickingDetailEnum.COMPLETED : PickingDetailEnum.IN_PROGRESS
+        })
+
+        if (newQuantityPicked === currentProduct.quantity) {
+          handleNextStep()
         }
-
-        updateProductState(currentProductIndex, updatedProduct)
-
-        if (productCompleted) {
-          //   toast.showToast('Producto completado', currentProduct.order_id, Colors.green, 'success')
-          handleProductTransition(true)
-          // } else {
-          //   toast.showToast(`Pickeo ${newQuantityPicked} de ${currentProduct.quantity}`, currentProduct.order_id, Colors.mainBlue, 'info')
-        }
-      } else {
-        const currentQuantityPicked = currentProduct.quantity_picked ?? 0
-        const newQuantityPicked = currentQuantityPicked + 1
-
-        // Validar que no excedamos la cantidad máxima
-        if (newQuantityPicked > currentProduct.quantity) {
-          toast.showToast('Cantidad máxima excedida', currentProduct.order_id, Colors.red, 'error')
-          return
-        }
-
-        const productCompleted = isProductComplete(newQuantityPicked, currentProduct.quantity)
-
-        const updatedProduct = {
-          quantity_picked: newQuantityPicked,
-          state_picking_details_id: productCompleted ? PickingDetailEnum.COMPLETED : PickingDetailEnum.IN_PROGRESS
-        }
-
-        updateProductState(currentProductIndex, updatedProduct)
-
-        if (productCompleted) {
-          //   toast.showToast('Producto completado', currentProduct.order_id, Colors.green, 'success')
-          handleProductTransition(true)
-          // } else {
-          //   toast.showToast(`Pickeo ${newQuantityPicked} de ${currentProduct.quantity}`, currentProduct.order_id, Colors.mainBlue, 'info')
-        }
+      } catch (error) {
+        setErrorModalVisible(true)
       }
-
-      // console.log(flowOrderDetails, 'flowOrderDetails123')
-    } catch (error) {
-      setErrorModalVisible(true)
-      console.error('Error al procesar el código de barras:', error)
-    }
-  }
-
-  /**
-   * Maneja el picking manual de un producto
-   */
-  const handleManualPicking = (quantity: number) => {
-    if (!currentProduct) return
-
-    try {
-      const currentQuantityPicked = currentProduct.quantity_picked ?? 0
-      const newQuantityPicked = currentQuantityPicked + quantity
-
-      // Validar que no excedamos la cantidad máxima
-      if (newQuantityPicked > currentProduct.quantity) {
-        toast.showToast('Cantidad máxima excedida', currentProduct.order_id, Colors.red, 'error')
+    } else {
+      if (currentProduct.product_barcode !== scannedBarcode) {
+        setErrorModalVisible(true)
         return
       }
 
-      const productCompleted = isProductComplete(newQuantityPicked, currentProduct.quantity)
+      const currentQuantityPicked = currentProduct.quantity_picked ?? 0
+      const newQuantityPicked = currentQuantityPicked + 1
 
-      const updatedProduct = {
+      if (newQuantityPicked > currentProduct.quantity) {
+        showToast('Cantidad máxima excedida', currentProduct.order_id, Colors.red, 'error')
+        return
+      }
+
+      updateProductState(currentProduct.id, {
         quantity_picked: newQuantityPicked,
-        final_weight: 0,
-        state_picking_details_id: productCompleted ? PickingDetailEnum.COMPLETED : PickingDetailEnum.IN_PROGRESS
-      }
+        state_picking_details_id: newQuantityPicked === currentProduct.quantity ? PickingDetailEnum.COMPLETED : PickingDetailEnum.IN_PROGRESS
+      })
 
-      if (currentProduct.weighable) {
-        // Para productos pesables, asumimos un peso promedio por unidad
-        const averageWeightPerUnit = 500 // 500g por unidad como ejemplo
-        updatedProduct.final_weight = (currentProduct.final_weight ?? 0) + quantity * averageWeightPerUnit
+      if (newQuantityPicked === currentProduct.quantity) {
+        handleNextStep()
       }
-
-      updateProductState(currentProductIndex, updatedProduct)
-      setModalVisible(false)
-
-      if (productCompleted) {
-        // toast.showToast('Producto completado', currentProduct.order_id, Colors.green, 'success')
-        handleProductTransition(true)
-      } else {
-        // toast.showToast(`Pickeo ${newQuantityPicked} de ${currentProduct.quantity}`, currentProduct.order_id, Colors.mainBlue, 'info')
-      }
-    } catch (error) {
-      console.error('Error en picking manual:', error)
-      toast.showToast('Error en picking manual', currentProduct.order_id, Colors.red, 'error')
     }
   }
 
-  /**
-   * Confirma un picking incompleto
-   */
-  const handleIncompleteConfirm = () => {
+  const handleManualPicking = (quantity: number) => {
     if (!currentProduct) return
 
-    updateProductState(currentProductIndex, {
-      quantity_picked: 0,
-      state_picking_details_id: PickingDetailEnum.INCOMPLETE
+    if (quantity > currentProduct.quantity) {
+      showToast('Cantidad máxima excedida', currentProduct.order_id, Colors.red, 'error')
+      return
+    }
+
+    updateProductState(currentProduct.id, {
+      quantity_picked: quantity,
+      state_picking_details_id:
+        quantity === currentProduct.quantity ? PickingDetailEnum.COMPLETED : quantity === 0 ? PickingDetailEnum.PENDING : PickingDetailEnum.INCOMPLETE
     })
 
     setModalVisible(false)
-    setIncompleteModalVisible(false)
-    handleProductTransition(true)
+
+    if (quantity === currentProduct.quantity) {
+      handleNextStep()
+    } else if (quantity > 0) {
+      setIncompleteModalVisible(true)
+    }
   }
 
-  /**
-   * Reinicia la cantidad pickeada de un producto
-   */
   const handleRestartQuantity = () => {
-    updateProductState(currentProductIndex, {
+    if (!currentProduct) return
+
+    updateProductState(currentProduct.id, {
       quantity_picked: 0,
       final_weight: 0,
       state_picking_details_id: PickingDetailEnum.IN_PROGRESS
     })
   }
 
+  const handleNextStep = () => {
+    if (warehouseConfig.use_picking_baskets.status) {
+      router.push('/basket-validation')
+    }
+  }
+
   return {
-    // Estado
     currentProduct,
     modalVisible,
     setModalVisible,
@@ -376,11 +146,8 @@ export const usePickingLogicV2 = () => {
     errorModalVisible,
     setErrorModalVisible,
     isCompleted,
-
-    // Métodos
     handleScan,
     handleManualPicking,
-    handleIncompleteConfirm,
     handleRestartQuantity
   }
 }

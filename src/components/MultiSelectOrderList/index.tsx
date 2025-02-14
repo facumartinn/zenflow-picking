@@ -9,6 +9,7 @@ import MultiSelectOrderItem from './OrderItem'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { styles } from '../OrderList/styles'
+import MultiSelectOrderListSkeleton from '../MultiSelectOrderListSkeleton'
 
 interface MultiSelectOrdersListProps {
   selectedTab: 'pending' | 'completed'
@@ -136,7 +137,7 @@ const MultiSelectOrdersList: React.FC<MultiSelectOrdersListProps> = ({ selectedT
   }
 
   if (isLoading && !refreshing) {
-    return <Text>Loading...</Text>
+    return <MultiSelectOrderListSkeleton />
   }
 
   if (error) {

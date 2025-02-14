@@ -11,6 +11,7 @@ import { flowAtom, flowOrderDetailsAtom } from '../store'
 import { FlowData, FlowResponse, FlowTypeEnum } from '../types/flow'
 import { useAuth } from '../context/auth'
 import { BackSvg } from '../components/svg/BackSvg'
+
 const MultiOrderSelectionScreen = () => {
   const [selectedOrders, setSelectedOrders] = useState<number[]>([])
   const { pickerUser } = useAuth()
@@ -41,7 +42,7 @@ const MultiOrderSelectionScreen = () => {
 
   return (
     <View style={styles.container}>
-      <DefaultHeader title="Picking múltiple" leftIcon={<BackSvg width={30} height={30} color="black" />} leftAction={() => router.navigate('/home')} />
+      <DefaultHeader title="Picking múltiple" leftIcon={<BackSvg width={30} height={30} color="black" />} leftAction={() => router.back()} />
       <View style={styles.bodyContainer}>
         <MultiSelectOrdersList selectedTab={'pending'} onSelectionChange={handleSelectionChange} />
       </View>
