@@ -6,8 +6,8 @@ import { TokenPayload } from '../types/auth'
 
 // Crear una instancia de axios
 const api = axios.create({
-  // baseURL: 'https://zenflow-api-daq3y.ondigitalocean.app', // Reemplaza con la URL base de tu API
-  baseURL: 'http://192.168.0.21:4000', // Reemplaza con la URL base de tu API
+  baseURL: 'https://api.zenflow.com.ar',
+  // baseURL: 'http://192.168.0.21:4000', // Reemplaza con la URL base de tu API
   timeout: 100000 // Opcional: establecer un tiempo de espera
 })
 

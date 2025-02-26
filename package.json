@@ -5,6 +5,8 @@
   "scripts": {
     "build:android": "npx eas-cli build --platform android",
     "build:ios": "npx eas-cli build --platform ios --local",
+    "build:android:prod": "npx eas-cli build --platform android --profile production",
+    "submit:android": "npx eas-cli submit --platform android --profile production",
     "dev": "npm run start",
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
