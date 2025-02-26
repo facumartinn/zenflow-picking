@@ -1,5 +1,5 @@
 // src/hooks/usePickingLogicV2.ts
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'expo-router'
 import { usePickingState } from './usePickingState'
 import { PickingDetailEnum } from '../types/order'
@@ -15,24 +15,42 @@ export const usePickingLogicV2 = () => {
   const [warehouseConfig] = useAtom(warehousesAtom)
 
   // Usamos el contexto 'main' ya que este es el flujo principal
-  const { flowOrderDetails, updateProductState, currentProduct, findNextValidProduct, isProductProcessed } = usePickingState('main')
+  const { flowOrderDetails, updateProductState, currentProduct, findNextValidProduct, isProductProcessed, setCurrentProductIndex } = usePickingState('main')
 
   const [modalVisible, setModalVisible] = useState(false)
   const [incompleteModalVisible, setIncompleteModalVisible] = useState(false)
   const [errorModalVisible, setErrorModalVisible] = useState(false)
-  const [isCompleted] = useState(false)
+  const [isCompleted, setIsCompleted] = useState(false)
 
-  // Efecto para inicializar el primer producto si es necesario
-  useEffect(() => {
-    if (!currentProduct || isProductProcessed(currentProduct.state_picking_details_id)) {
-      const nextIndex = findNextValidProduct()
-      if (nextIndex !== -1) {
-        updateProductState(flowOrderDetails[nextIndex].id, {
+  const checkAndUpdateCurrentProduct = useCallback(() => {
+    const nextIndex = findNextValidProduct()
+    if (nextIndex !== -1) {
+      const nextProduct = flowOrderDetails[nextIndex]
+      // Solo actualizamos a IN_PROGRESS si:
+      // 1. El producto no está completado
+      // 2. No tiene cantidad_picked igual a quantity
+      // 3. No está ya en IN_PROGRESS
+      if (nextProduct.quantity_picked !== nextProduct.quantity && nextProduct.state_picking_details_id !== PickingDetailEnum.COMPLETED) {
+        updateProductState(nextProduct.id, {
           state_picking_details_id: PickingDetailEnum.IN_PROGRESS
         })
       }
+      // Actualizamos el índice del producto actual
+      if (setCurrentProductIndex) {
+        setCurrentProductIndex(nextIndex)
+      }
     }
-  }, [currentProduct?.state_picking_details_id])
+  }, [flowOrderDetails, findNextValidProduct, updateProductState, setCurrentProductIndex])
+
+  // Efecto para inicializar el primer producto si es necesario
+  useEffect(() => {
+    if (
+      !currentProduct ||
+      (isProductProcessed(currentProduct.state_picking_details_id) && currentProduct.state_picking_details_id !== PickingDetailEnum.COMPLETED)
+    ) {
+      checkAndUpdateCurrentProduct()
+    }
+  }, [currentProduct?.state_picking_details_id, flowOrderDetails])
 
   const handleScan = (scannedBarcode: string) => {
     if (!currentProduct) return
@@ -61,14 +79,21 @@ export const usePickingLogicV2 = () => {
           return
         }
 
-        updateProductState(currentProduct.id, {
-          final_weight: totalWeightPicked,
-          quantity_picked: newQuantityPicked,
-          state_picking_details_id: newQuantityPicked === currentProduct.quantity ? PickingDetailEnum.COMPLETED : PickingDetailEnum.IN_PROGRESS
-        })
-
+        setIsCompleted(false)
         if (newQuantityPicked === currentProduct.quantity) {
+          setIsCompleted(true)
+          updateProductState(currentProduct.id, {
+            final_weight: totalWeightPicked,
+            quantity_picked: newQuantityPicked,
+            state_picking_details_id: PickingDetailEnum.IN_PROGRESS
+          })
           handleNextStep()
+        } else {
+          updateProductState(currentProduct.id, {
+            final_weight: totalWeightPicked,
+            quantity_picked: newQuantityPicked,
+            state_picking_details_id: PickingDetailEnum.IN_PROGRESS
+          })
         }
       } catch (error) {
         setErrorModalVisible(true)
@@ -87,13 +112,19 @@ export const usePickingLogicV2 = () => {
         return
       }
 
-      updateProductState(currentProduct.id, {
-        quantity_picked: newQuantityPicked,
-        state_picking_details_id: newQuantityPicked === currentProduct.quantity ? PickingDetailEnum.COMPLETED : PickingDetailEnum.IN_PROGRESS
-      })
-
+      setIsCompleted(false)
       if (newQuantityPicked === currentProduct.quantity) {
+        setIsCompleted(true)
+        updateProductState(currentProduct.id, {
+          quantity_picked: newQuantityPicked,
+          state_picking_details_id: PickingDetailEnum.IN_PROGRESS
+        })
         handleNextStep()
+      } else {
+        updateProductState(currentProduct.id, {
+          quantity_picked: newQuantityPicked,
+          state_picking_details_id: PickingDetailEnum.IN_PROGRESS
+        })
       }
     }
   }
@@ -106,24 +137,46 @@ export const usePickingLogicV2 = () => {
       return
     }
 
-    updateProductState(currentProduct.id, {
-      quantity_picked: quantity,
-      state_picking_details_id:
-        quantity === currentProduct.quantity ? PickingDetailEnum.COMPLETED : quantity === 0 ? PickingDetailEnum.PENDING : PickingDetailEnum.INCOMPLETE
-    })
-
-    setModalVisible(false)
-
+    setIsCompleted(false)
     if (quantity === currentProduct.quantity) {
+      setIsCompleted(true)
+      updateProductState(currentProduct.id, {
+        quantity_picked: quantity,
+        state_picking_details_id: PickingDetailEnum.IN_PROGRESS
+      })
+      setModalVisible(false)
       handleNextStep()
-    } else if (quantity > 0) {
-      setIncompleteModalVisible(true)
+    } else {
+      //   updateProductState(currentProduct.id, {
+      //     quantity_picked: quantity || 0,
+      //     state_picking_details_id: PickingDetailEnum.INCOMPLETE
+      //   })
+      //   setModalVisible(false)
+      if (quantity === 0) {
+        updateProductState(currentProduct.id, {
+          quantity_picked: quantity || 0,
+          state_picking_details_id: PickingDetailEnum.INCOMPLETE
+        })
+        setModalVisible(false)
+        // Si es 0, solo mostramos el modal de incompleto y dejamos que el useEffect se encargue del siguiente producto
+        setIncompleteModalVisible(false)
+      } else if (quantity > 0) {
+        updateProductState(currentProduct.id, {
+          quantity_picked: quantity || 0,
+          state_picking_details_id: PickingDetailEnum.IN_PROGRESS
+        })
+        setModalVisible(false)
+        handleNextStep()
+        // Si es mayor a 0 pero menor que quantity, vamos a basket-validation
+        // router.push('/basket-validation')
+      }
     }
   }
 
   const handleRestartQuantity = () => {
     if (!currentProduct) return
 
+    setIsCompleted(false)
     updateProductState(currentProduct.id, {
       quantity_picked: 0,
       final_weight: 0,
@@ -133,7 +186,15 @@ export const usePickingLogicV2 = () => {
 
   const handleNextStep = () => {
     if (warehouseConfig.use_picking_baskets.status) {
-      router.push('/basket-validation')
+      setTimeout(() => {
+        router.push('/basket-validation')
+        // Actualizamos el estado a COMPLETED después de la redirección
+        setTimeout(() => {
+          updateProductState(currentProduct!.id, {
+            state_picking_details_id: PickingDetailEnum.COMPLETED
+          })
+        }, 100)
+      }, 1000)
     }
   }
 
@@ -148,6 +209,8 @@ export const usePickingLogicV2 = () => {
     isCompleted,
     handleScan,
     handleManualPicking,
-    handleRestartQuantity
+    handleRestartQuantity,
+    checkAndUpdateCurrentProduct,
+    isProductProcessed
   }
 }

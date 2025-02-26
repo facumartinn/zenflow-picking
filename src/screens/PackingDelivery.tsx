@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, ScrollView } from 'react-native'
 import { useRouter } from 'expo-router'
 import Colors from '../constants/Colors'
 import { flowOrderDetailsAtom, packingOrdersAtom } from '../store'
@@ -9,12 +9,15 @@ import { groupOrderDetailsByOrderId } from '../helpers/groupOrders'
 import { transformPackingOrdersToPayload } from '../helpers/packingOrdersTransform'
 import { registerOrderResources, updateOrderStatus } from '../services/order'
 import { OrderStateEnum } from '../types/order'
+import { DefaultHeader } from '../components/DefaultHeader'
+import BottomButton from '../components/BottomButton'
 
 const PackingOrdersScreen = () => {
   const [flowOrderDetails] = useAtom(flowOrderDetailsAtom)
   const [packingOrders] = useAtom(packingOrdersAtom)
   const router = useRouter()
   const groupedOrders = groupOrderDetailsByOrderId(flowOrderDetails)
+
   const handleCardPress = (orderId: number) => {
     router.push({ pathname: '/packing-delivery-detail', params: { orderId } })
   }
@@ -35,18 +38,20 @@ const PackingOrdersScreen = () => {
 
   return (
     <View style={styles.container}>
+      <DefaultHeader title="Entrega" />
       <Text style={styles.title}>Elegí un pedido para entregar</Text>
-      <Text style={styles.subtitle}>Tendrás que indicar donde vas a dejar cada pedido.</Text>
+      <Text style={styles.subtitle}>Indicá donde vas a guardar los pedidos.</Text>
       <ScrollView style={styles.bodyContainer}>
-        {groupedOrders?.map((order, index) => <PackingDeliveryCard key={index} orderId={order.order_id} onPress={() => handleCardPress(order.order_id)} />)}
-        {allOrdersDelivered && (
-          <View style={styles.continueButtonContainer}>
-            <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-              <Text style={styles.continueButtonText}>FINALIZAR PICKING</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        {groupedOrders?.map((order, index) => (
+          <PackingDeliveryCard
+            key={index}
+            orderId={order.order_id}
+            tenantOrderId={order.order_tenant_id || order.order_id}
+            onPress={() => handleCardPress(order.order_id)}
+          />
+        ))}
       </ScrollView>
+      {allOrdersDelivered && <BottomButton text="FINALIZAR PICKING" onPress={handleContinue} />}
     </View>
   )
 }
@@ -54,10 +59,10 @@ const PackingOrdersScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
     backgroundColor: Colors.background
   },
   title: {
+    paddingTop: 20,
     fontSize: 20,
     marginHorizontal: 16,
     fontFamily: 'Inter_700Bold',

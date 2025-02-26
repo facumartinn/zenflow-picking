@@ -3,6 +3,7 @@ import { OrderDetails, OrderStateEnum, PickingDetailEnum, PickingStateEnum } fro
 
 export interface GroupedOrder {
   order_id: number
+  order_tenant_id: number
   total_quantity: number
   picked_quantity: number
   details: OrderDetails[]
@@ -14,6 +15,7 @@ export const groupOrderDetailsByOrderId = (orderDetails: OrderDetails[]): Groupe
     if (!acc[order_id]) {
       acc[order_id] = {
         order_id,
+        order_tenant_id: detail?.Orders?.order_tenant_id,
         total_quantity: 0,
         picked_quantity: 0,
         details: []

@@ -13,8 +13,8 @@ export const styles = StyleSheet.create({
   },
   orderItemIncomplete: {
     height: 120,
-    borderColor: Colors.lightOrange2,
-    borderWidth: 1
+    borderColor: Colors.mainOrange,
+    borderWidth: 1.5
   },
   orderContainer: {
     flexDirection: 'row',
@@ -58,7 +58,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 4
+    paddingVertical: 4
   },
   warningText: {
     fontSize: 12,

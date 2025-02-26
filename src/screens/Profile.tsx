@@ -21,7 +21,7 @@ const ProfileScreen = () => {
   const handlePickerLogout = async () => {
     await AsyncStorage.removeItem('authPickerToken')
     await AsyncStorage.removeItem('pickerId')
-    router.navigate('/picker-login')
+    router.push('/picker-login')
     setModalVisible(false)
   }
   return (

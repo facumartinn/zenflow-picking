@@ -53,12 +53,8 @@ export const loginAdmin = async (userEmail: string, password: string): Promise<{
 
 export const loginPickingUser = async (barcode: number): Promise<{ user: User; token: string; metadata: { code: number; message: string } }> => {
   try {
-    console.log('barcode', barcode)
     const response = await api.post('/auth/picker/login', { barcode })
 
-    console.log('response', response)
-
-    console.log('response.data.data', response.data.data)
     const { token } = response.data.data
 
     await SecureStore.setItemAsync('authToken', token)

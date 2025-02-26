@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
-import { SimpleLineIcons } from '@expo/vector-icons'
 import Colors from '../../../constants/Colors'
 import { packingOrdersAtom } from '../../../store/flowAtoms'
 import { useAtom } from 'jotai'
+import { TrashSvg } from '../../svg/Trash'
 
 interface PositionProps {
   position: string
@@ -45,7 +45,7 @@ const SavedPositionCard: React.FC<SavedPositionCardProps> = ({ position, orderId
             <Text style={styles.position}>{position.position}</Text>
           </View>
           <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-            <SimpleLineIcons name="trash" size={24} color={Colors.red} />
+            <TrashSvg width={32} height={32} color={Colors.red} />
           </TouchableOpacity>
         </View>
 

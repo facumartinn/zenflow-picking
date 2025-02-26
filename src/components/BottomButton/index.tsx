@@ -7,12 +7,18 @@ interface BottomButtonProps {
   onPress: () => void
   style?: ViewStyle
   disabled?: boolean
+  backgroundColor?: string
+  textColor?: string
 }
 
-const BottomButton: React.FC<BottomButtonProps> = ({ text, onPress, style, disabled = false }) => {
+const BottomButton: React.FC<BottomButtonProps> = ({ text, onPress, style, disabled = false, backgroundColor, textColor }) => {
   return (
-    <TouchableOpacity style={[styles.button, style, disabled && styles.disabledButton]} onPress={onPress} disabled={disabled}>
-      <Text style={styles.buttonText}>{text}</Text>
+    <TouchableOpacity
+      style={[styles.button, backgroundColor && { backgroundColor }, style, disabled && styles.disabledButton]}
+      onPress={onPress}
+      disabled={disabled}
+    >
+      <Text style={[styles.buttonText, textColor && { color: textColor }]}>{text}</Text>
     </TouchableOpacity>
   )
 }
@@ -23,7 +29,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: '100%',
     backgroundColor: Colors.mainBlue,
-    paddingVertical: 20,
+    paddingVertical: 30,
     alignItems: 'center',
     justifyContent: 'center'
   },

@@ -14,32 +14,33 @@ import { BackSvg } from '../components/svg/BackSvg'
 
 type LocalSearchParams = {
   orderId: number
-  orderNumber: string
+  tenantOrderId: number
   stateId: number
 }
 
 const OrderDetailScreen = () => {
-  const { orderId, orderNumber, stateId }: Partial<LocalSearchParams> = useLocalSearchParams()
+  const { orderId, tenantOrderId, stateId }: Partial<LocalSearchParams> = useLocalSearchParams()
   const [orderDetails, setOrderDetails] = useAtom(orderDetailsAtom)
   const [warehouseConfig] = useAtom(warehousesAtom)
   const [isLoading, setIsLoading] = useState(true)
+  const currentOrderId = useMemo(() => Number(orderId), [orderId])
 
-  // Limpiar el estado cuando cambia el orderId o cuando se desmonta el componente
+  // Efecto para limpiar y cargar datos cuando cambia el orderId
   useEffect(() => {
     setIsLoading(true)
-    setOrderDetails([])
+    const shouldResetDetails = !orderDetails.length || orderDetails[0]?.order_id !== currentOrderId
 
-    return () => {
+    if (shouldResetDetails) {
       setOrderDetails([])
     }
-  }, [orderId, setOrderDetails])
+  }, [currentOrderId, setOrderDetails])
 
   // Efecto para controlar cuando los datos están cargados
   useEffect(() => {
-    if (orderDetails.length > 0) {
+    if (orderDetails.length > 0 && orderDetails[0]?.order_id === currentOrderId) {
       setIsLoading(false)
     }
-  }, [orderDetails])
+  }, [orderDetails, currentOrderId])
 
   // Memorizar el array de orderDetails
   const orderDetailsArray = useMemo(() => {
@@ -57,9 +58,8 @@ const OrderDetailScreen = () => {
   }, [warehouseConfig?.use_shifts?.shifts, orderDetails])
 
   const handleBack = useCallback(() => {
-    setOrderDetails([]) // Limpiar el estado antes de navegar
     router.back()
-  }, [setOrderDetails])
+  }, [])
 
   const renderItem = useCallback(({ item }: { item: OrderDetails }) => {
     return <ProductCard product={item} />
@@ -88,7 +88,7 @@ const OrderDetailScreen = () => {
           <View style={styles.container}>
             <View style={styles.titleBox}>
               <Text style={styles.title}>Número de pedido</Text>
-              <Text style={styles.value}>{orderNumber}</Text>
+              <Text style={styles.value}>{tenantOrderId}</Text>
             </View>
             <View style={styles.infoBox}>
               <View style={styles.titleBox}>

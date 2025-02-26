@@ -5,23 +5,38 @@ import { DefaultHeader } from '../components/DefaultHeader'
 import TabSelector from '../components/HomeTabSelector'
 import OrdersList from '../components/OrderList'
 import Colors from '../constants/Colors'
-import { router } from 'expo-router'
+import { router, useFocusEffect } from 'expo-router'
 import { DefaultButton } from '../components/DefaultButton'
 import { LogOutSvg } from '../components/svg/LogOut'
 import { DefaultModal } from '../components/DefaultModal'
 import { useAuth } from '../context/auth'
+import { useAtom } from 'jotai'
+import { basketsByOrderAtom, packingOrdersAtom } from '../store'
 
 const HomeScreen = () => {
   const { tenantLogo, logoutPicker } = useAuth()
   const [selectedTab, setSelectedTab] = useState<'pending' | 'completed'>('pending')
   const [modalVisible, setModalVisible] = useState(false)
+  const [baskets] = useAtom(basketsByOrderAtom)
+  const [packingOrders] = useAtom(packingOrdersAtom)
+  const [shouldRefreshOrders, setShouldRefreshOrders] = useState(false)
+
+  useFocusEffect(
+    useCallback(() => {
+      setShouldRefreshOrders(true)
+      return () => {
+        setShouldRefreshOrders(false)
+      }
+    }, [])
+  )
 
   const handleMultiPicking = useCallback(() => {
-    router.navigate('/multi-picking')
-  }, [])
+    // Forzamos la navegación usando push en lugar de navigate
+    router.push('/multi-picking')
+  }, [packingOrders, baskets])
 
   const handleProfileNavigation = useCallback(() => {
-    router.navigate('/profile')
+    router.push('/profile')
   }, [])
 
   const MultiPickingButton = useCallback(() => {
@@ -64,7 +79,7 @@ const HomeScreen = () => {
         <View style={styles.bodyContainer}>
           <TabSelector selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
           <MultiPickingButton />
-          <OrdersList selectedTab={selectedTab} />
+          <OrdersList selectedTab={selectedTab} shouldRefreshOrders={shouldRefreshOrders} />
         </View>
       </View>
       <DefaultModal

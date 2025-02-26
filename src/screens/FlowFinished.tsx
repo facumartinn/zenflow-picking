@@ -1,33 +1,36 @@
-// src/screens/FlowFinishedScreen.tsx
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import Colors from '../constants/Colors'
 import { LoadingPackingBackgroundSvg } from '../components/svg/LoadingPackingBackground'
-import { CheckSvg } from '../components/svg/Check'
-import { DefaultButton } from '../components/DefaultButton'
+// import { DefaultButton } from '../components/DefaultButton'
 import { useRouter } from 'expo-router'
 import { resetAllFlowAtoms } from '../store'
 import { useAtom } from 'jotai'
-// import { packingOrdersAtom } from '../store' // Solo dejamos packingOrdersAtom, ya que lo usamos
-// import InvoiceGenerator from '../components/InvoiceGenerator'
-// import { Order } from '../types/order' // Asegúrate que Order esté bien definido en este archivo
-// import * as Sharing from 'expo-sharing'
+import { CheckSignSvg } from '../components/svg/CheckSign'
 
 const FlowFinishedScreen: React.FC = () => {
   const router = useRouter()
   const [, setResetFlow] = useAtom(resetAllFlowAtoms)
 
-  const handleGoHome = () => {
-    setResetFlow()
-    router.push('/home')
+  const handleGoHome = async () => {
+    try {
+      await Promise.resolve(setResetFlow())
+
+      // Esperamos un tick para asegurar que el estado se actualice
+      await new Promise(resolve => setTimeout(resolve, 0))
+
+      router.push('/home')
+    } catch (error) {
+      console.error('Error en handleGoHome:', error)
+    }
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.checkContainer}>
-        <CheckSvg width={80} height={80} color={Colors.green} />
-        <Text style={styles.title}>PICKING COMPLETADO CON ÉXITO</Text>
-        <DefaultButton label="DESCARGAR DETALLE" onPress={() => console.log('DESCARGAR DETALLE')} />
+        <CheckSignSvg width={80} height={80} color={Colors.green} />
+        <Text style={styles.title}>PICKING FINALIZADO</Text>
+        {/* <DefaultButton label="DESCARGAR DETALLE" onPress={() => console.log('DESCARGAR DETALLE')} /> */}
         <TouchableOpacity onPress={handleGoHome} style={styles.homeButton}>
           <Text style={styles.homeButtonText}>VOLVER AL INICIO</Text>
         </TouchableOpacity>
@@ -55,10 +58,11 @@ const styles = StyleSheet.create({
     position: 'absolute'
   },
   title: {
-    marginVertical: 24,
+    marginTop: 20,
+    marginBottom: 42,
     marginHorizontal: 40,
-    fontSize: 20,
-    fontFamily: 'Inter_400Regular',
+    fontSize: 24,
+    fontFamily: 'Inter_700Bold',
     textAlign: 'center',
     color: Colors.green
   },
@@ -68,7 +72,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16
   },
   homeButtonText: {
-    color: Colors.black,
+    color: Colors.mainBlue,
     fontSize: 18,
     fontFamily: 'Inter_700Bold'
   }

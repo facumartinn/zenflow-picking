@@ -17,8 +17,8 @@ export const DefaultInputModal: React.FC<DefaultInputModalProps> = ({
   visible,
   onClose,
   onConfirm,
-  title = 'Posición de entrega',
-  placeholder = 'Escribe la posición',
+  title = 'Ingresar posición',
+  placeholder = 'Posición',
   initialValue = '',
   confirmLabel = 'ACEPTAR',
   cancelLabel = 'ATRÁS'

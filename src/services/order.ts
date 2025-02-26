@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import api from './api'
-import { FilterParamTypes, Order, OrderDetails, OrderResourcesPayload, OrderResourceResponse } from '../types/order'
+import { FilterParamTypes, Order, OrderDetails, OrderResourcesPayload, OrderResourceResponse, FilteredOrdersResponse } from '../types/order'
 import { QueryParams, objectToQueryString } from '../utils/queryParams'
 
 // Obtener todos los pedidos
@@ -15,7 +15,7 @@ export const getAllOrders = async (): Promise<Order[]> => {
 }
 
 // Obtener pedidos con filtros
-export const getFilteredOrders = async (filters: FilterParamTypes): Promise<Order[]> => {
+export const getFilteredOrders = async (filters: FilterParamTypes): Promise<FilteredOrdersResponse> => {
   try {
     const response = await api.get(`/orders/filtered?${objectToQueryString(filters as QueryParams)}`)
     return response.data.data

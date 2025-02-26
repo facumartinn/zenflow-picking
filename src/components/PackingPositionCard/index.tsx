@@ -1,33 +1,46 @@
-import React, { useMemo } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
-import { SimpleLineIcons } from '@expo/vector-icons'
-import Colors from '../../constants/Colors'
+import React, { useMemo, useCallback, useRef, useEffect, useState } from 'react'
+import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native'
 import { BarcodeScannerSvg } from '../svg/BarcodeScanner'
+import Colors from '../../constants/Colors'
+import { TrashSvg } from '../svg/Trash'
 
 interface PositionScannerProps {
-  scannedPosition: {
-    position: string
-    barcode: string[]
-    status: number
-  }
-  savedPositions: { position: string; barcode: string[] }[]
+  scannedPosition: { position: string; barcode: string[]; status: number }
   orderId: number
-  resources: { resource_id: number; resource_name: string; barcode: number; position?: string }[]
+  resources: { resource_id: number; resource_name: string; barcode: string; position?: string }[]
+  savedPositions: { position: string; barcode: string[] }[]
   onDelete: () => void
   onSave?: () => void
   onPositionScanned: (barcode: string) => void
+  setActiveScanner?: (scanner: 'position' | 'resource' | null) => void
+  setIsScanning?: (isScanning: boolean) => void
 }
 
-const PositionScanner: React.FC<PositionScannerProps> = ({ scannedPosition, resources, onDelete, onSave, onPositionScanned }) => {
-  // Barcodes asignados a esta posición
-  const positionBarcodes = scannedPosition?.barcode
+const PositionScanner: React.FC<PositionScannerProps> = ({
+  scannedPosition,
+  resources,
+  onDelete,
+  onSave,
+  onPositionScanned,
+  setActiveScanner,
+  setIsScanning
+}) => {
+  const positionBarcodes = scannedPosition?.barcode || []
+  const [inputValue, setInputValue] = useState('')
+  const inputRef = useRef<TextInput>(null)
 
-  // Filtrar los recursos que coincidan con los barcodes asignados
+  // Activar el escáner de recursos cuando se monta el componente
+  useEffect(() => {
+    if (setActiveScanner) {
+      setActiveScanner('resource')
+    }
+    inputRef.current?.focus()
+  }, [setActiveScanner])
+
   const assignedResources = useMemo(() => {
-    return resources.filter(r => positionBarcodes.includes(r.barcode.toString()))
+    return resources.filter(r => positionBarcodes.includes(r.barcode))
   }, [positionBarcodes, resources])
 
-  // Agrupar por resource_name y contar cuántos hay de cada uno
   const groupedResources = useMemo(() => {
     const map = new Map<string, number>()
     assignedResources.forEach(res => {
@@ -36,11 +49,40 @@ const PositionScanner: React.FC<PositionScannerProps> = ({ scannedPosition, reso
     return Array.from(map.entries()).map(([name, count]) => ({ name, count }))
   }, [assignedResources])
 
-  const totalResources = groupedResources.length
+  const handleScanResource = useCallback(
+    (barcode: string) => {
+      if (onPositionScanned && barcode && barcode.trim() !== '') {
+        // Indicar que estamos escaneando
+        if (setIsScanning) {
+          setIsScanning(true)
+        }
 
-  const handleMockScanResource = (barcode: number) => {
-    onPositionScanned(barcode.toString())
-  }
+        onPositionScanned(barcode)
+
+        // Resetear el input después de escanear
+        setInputValue('')
+
+        // Mantener el foco en el input y restablecer el estado de escaneo
+        setTimeout(() => {
+          inputRef.current?.focus()
+          if (setIsScanning) {
+            setIsScanning(false)
+          }
+        }, 300)
+      }
+    },
+    [onPositionScanned, setIsScanning]
+  )
+
+  const handleSave = useCallback(() => {
+    if (onSave) {
+      onSave()
+      // Cambiar el escáner activo a posición después de guardar
+      if (setActiveScanner) {
+        setActiveScanner('position')
+      }
+    }
+  }, [onSave, setActiveScanner])
 
   return (
     <View style={styles.container}>
@@ -48,22 +90,54 @@ const PositionScanner: React.FC<PositionScannerProps> = ({ scannedPosition, reso
         <View style={styles.positionContainer}>
           <View style={styles.positionNumberContainer}>
             <Text style={styles.label}>Posición</Text>
-            <Text style={styles.position}>{scannedPosition?.position}</Text>
+            <Text style={styles.position}>{scannedPosition.position}</Text>
           </View>
-          <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-            <SimpleLineIcons name="trash" size={24} color={Colors.red} />
+          <TouchableOpacity
+            onPress={() => {
+              onDelete()
+              // Cambiar el escáner activo a posición después de eliminar
+              if (setActiveScanner) {
+                setActiveScanner('position')
+              }
+            }}
+            style={styles.deleteButton}
+          >
+            <TrashSvg width={32} height={32} color={Colors.red} />
           </TouchableOpacity>
         </View>
 
-        {/* Botón para simular escaneo de un recurso */}
-        {scannedPosition?.status === 0 && (
-          <TouchableOpacity style={styles.scanButton} onPress={() => handleMockScanResource(1734706902692)}>
-            <BarcodeScannerSvg width={28} height={28} color={Colors.black} />
-            <Text style={styles.scanText}>{totalResources === 0 ? 'Escaneá el packing' : 'Escaneá más recursos'}</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={styles.scanButton}
+          onPress={() => {
+            if (setIsScanning) {
+              setIsScanning(true)
+            }
+            handleScanResource('1739902121984')
+            setTimeout(() => {
+              if (setIsScanning) {
+                setIsScanning(false)
+              }
+            }, 300)
+          }}
+        >
+          <BarcodeScannerSvg width={30} height={30} color={Colors.black} />
+          <Text style={styles.scanText}>Escanear etiqueta</Text>
+        </TouchableOpacity>
 
-        {/* Lista de recursos agrupados por nombre y su cantidad */}
+        {/* Input oculto para escaneo de recursos */}
+        <TextInput
+          ref={inputRef}
+          style={styles.hiddenInput}
+          value={inputValue}
+          onChangeText={setInputValue}
+          onSubmitEditing={e => handleScanResource(e.nativeEvent.text)}
+          blurOnSubmit={false}
+          autoCapitalize="none"
+          keyboardType="default"
+          returnKeyType="done"
+        />
+
+        {groupedResources?.length > 0 && <View style={styles.divider}></View>}
         {groupedResources?.length > 0 && (
           <View style={styles.resourceList}>
             {groupedResources?.map((item, index) => (
@@ -75,9 +149,8 @@ const PositionScanner: React.FC<PositionScannerProps> = ({ scannedPosition, reso
           </View>
         )}
 
-        {/* Mostrar el botón GUARDAR sólo si hay al menos un recurso asignado */}
         {groupedResources?.length > 0 && onSave && (
-          <TouchableOpacity style={styles.saveButton} onPress={onSave}>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.saveButtonText}>GUARDAR</Text>
           </TouchableOpacity>
         )}
@@ -91,7 +164,7 @@ const styles = StyleSheet.create({
     width: '100%',
     borderWidth: 1,
     borderColor: Colors.grey4,
-    borderRadius: 24,
+    borderRadius: 15,
     padding: 16,
     marginBottom: 12,
     backgroundColor: Colors.white
@@ -105,10 +178,8 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   positionNumberContainer: {
-    backgroundColor: Colors.grey1,
     paddingLeft: 12,
     paddingVertical: 12,
-    paddingRight: '60%',
     borderRadius: 16
   },
   label: {
@@ -148,7 +219,7 @@ const styles = StyleSheet.create({
   },
   resourceName: {
     fontSize: 18,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Inter_700Bold',
     color: Colors.black
   },
   resourceCount: {
@@ -158,7 +229,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     alignSelf: 'center',
-    width: '50%',
+    width: '100%',
     backgroundColor: Colors.mainBlue,
     paddingVertical: 16,
     alignItems: 'center',
@@ -169,6 +240,19 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 16,
     fontFamily: 'Inter_700Bold'
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.grey4
+  },
+  hiddenInput: {
+    height: 0,
+    width: 0,
+    opacity: 0,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    zIndex: -1
   }
 })
 

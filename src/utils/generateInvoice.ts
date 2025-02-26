@@ -2,7 +2,9 @@
 import { Order, OrderDetails, OrderPosition } from '../types/order'
 
 export const generateInvoiceHTML = (order: Order): string => {
-  const { id, created_at, OrderDetails, OrderPositions } = order
+  const { created_at, OrderDetails, OrderPositions, order_tenant_id } = order
+
+  const tenantOrderId = order_tenant_id
 
   // Formatear la fecha
   const formattedDate = created_at
@@ -101,7 +103,7 @@ export const generateInvoiceHTML = (order: Order): string => {
       <div class="header">
         <img src="https://example.com/logo.png" alt="Logo de la Empresa" class="logo">
         <h1>Recibo/Factura</h1>
-        <p><strong>Número de Pedido:</strong> ${id}</p>
+        <p><strong>Número de Pedido:</strong> ${tenantOrderId}</p>
         <p><strong>Fecha:</strong> ${formattedDate}</p>
       </div>
 

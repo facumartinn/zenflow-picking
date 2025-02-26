@@ -16,8 +16,8 @@ interface PickingInfoProps {
 }
 
 const PickingInfo: React.FC<PickingInfoProps> = ({ productId, orderId, quantity, quantityPicked, warehouseOrder, onRestartQuantity, isCompleted }) => {
-  // Asegurar que el progreso sea un número entre 0 y 1 con máximo 2 decimales
-  const progress = quantity > 0 ? Math.min(Math.round((quantityPicked / quantity) * 100) / 100, 1) : 0
+  // Asegurar que el progreso sea un número entero entre 0 y 1
+  const progress = quantity > 0 ? Math.min(1, Math.round((Math.floor(quantityPicked) / Math.floor(quantity)) * 10) / 10) : 0
 
   return (
     <View style={styles.quantityBox}>
@@ -105,13 +105,13 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     marginTop: 10,
-    width: 200,
+    width: 160,
     height: 14,
     backgroundColor: Colors.mainLightBlue2,
     borderRadius: 20
   },
   restartButton: {
-    marginLeft: 10
+    marginLeft: 15
   },
   quantityTotals: {
     marginTop: 5,

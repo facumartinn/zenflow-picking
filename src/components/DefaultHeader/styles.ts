@@ -5,7 +5,6 @@ export const styles = StyleSheet.create({
   container: {
     height: 80,
     width: '100%',
-    backgroundColor: Colors.white,
     paddingHorizontal: 10,
     display: 'flex',
     flexDirection: 'row',
@@ -16,8 +15,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 100,
-    backgroundColor: 'white'
+    borderRadius: 100
   },
   middleColumn: {
     flex: 6,

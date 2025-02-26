@@ -1,4 +1,3 @@
-// src/store/index.ts
 export * from './authAtoms'
 export * from './orderAtoms'
 export * from './userAtoms'

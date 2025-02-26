@@ -1,6 +1,5 @@
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import { ProgressBar } from 'react-native-paper'
 import Colors from '../../../constants/Colors'
 import { OrderDetails } from '../../../types/order'
 import { RestartSvg } from '../../svg/Restart'
@@ -8,7 +7,6 @@ import { RestartSvg } from '../../svg/Restart'
 interface PickingInfoWeightProps {
   item: OrderDetails
   onRestartQuantity: (productId: number, orderId: number) => void
-  isCompleted?: boolean
 }
 
 const ensureNumber = (value: number | undefined | null): number => {
@@ -33,25 +31,22 @@ const formatWeight = (weightInGrams: number | undefined | null): { value: string
   }
 }
 
-const PickingInfoWeight = ({ item, onRestartQuantity, isCompleted }: PickingInfoWeightProps) => {
+const PickingInfoWeight = ({ item, onRestartQuantity }: PickingInfoWeightProps) => {
   // Todos los cálculos internos en gramos
   const weightPerUnit = ensureNumber(item.sales_unit) * 1000 // Convertir la unidad base (kg) a gramos
   const totalRequiredWeight = ensureNumber(item.quantity) * weightPerUnit
   const currentWeight = ensureNumber(item.final_weight)
   // Asegurar que el progreso sea un número entre 0 y 1 con máximo 2 decimales
-  const progress = totalRequiredWeight > 0 ? Math.min(Math.round((currentWeight / totalRequiredWeight) * 100) / 100, 1) : 0
-  const quantityPicked = ensureNumber(item.quantity_picked)
 
   // Formatear los pesos para mostrar
   const formattedRequired = formatWeight(totalRequiredWeight)
   const formattedCurrent = formatWeight(currentWeight)
-  const formattedPerUnit = formatWeight(weightPerUnit)
 
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
         <Text style={styles.positionText}>
-          Posición <Text style={styles.boldText}>000{item.warehouse_order}</Text>
+          Posición <Text style={styles.boldText}>{item.warehouse_order}</Text>
         </Text>
         <TouchableOpacity style={styles.restartButton} onPress={() => onRestartQuantity(item.id, item.order_id)}>
           <RestartSvg width={30} height={30} color={Colors.grey3} />
@@ -59,28 +54,17 @@ const PickingInfoWeight = ({ item, onRestartQuantity, isCompleted }: PickingInfo
       </View>
 
       <View style={styles.progressContainer}>
-        <View style={styles.quantityInfo}>
-          <Text style={styles.quantityLabel}>{isCompleted ? 'Productos levantados' : `Unidades (${formattedPerUnit.value} ${formattedPerUnit.unit} c/u)`}</Text>
-          <View style={styles.quantityValues}>
-            <Text style={[styles.currentValue, isCompleted && { color: Colors.green }]}>{quantityPicked}</Text>
-            <Text style={styles.separator}>/</Text>
-            <Text style={styles.totalValue}>{item.quantity}</Text>
-          </View>
-        </View>
-
-        <ProgressBar progress={progress} color={isCompleted ? Colors.green : Colors.mainBlue} style={styles.progressBar} />
-
         <View style={styles.weightContainer}>
           <View style={styles.weightBox}>
-            <Text style={styles.weightTitle}>Peso objetivo</Text>
+            <Text style={styles.weightTitle}>Peso</Text>
             <Text style={styles.weightValue}>
               {formattedRequired.value} {formattedRequired.unit}
             </Text>
           </View>
-          <View style={styles.weightBox}>
-            <Text style={styles.weightTitle}>Peso actual</Text>
-            <Text style={[styles.weightValue, { color: isCompleted ? Colors.green : currentWeight >= totalRequiredWeight ? Colors.green : Colors.mainBlue }]}>
-              {formattedCurrent.value} {formattedCurrent.unit}
+          <View style={[styles.weightRealBox, Number(formattedCurrent.value) > 0 && { backgroundColor: Colors.mainLightBlue3 }]}>
+            <Text style={[styles.weightRealTitle, Number(formattedCurrent.value) > 0 && { color: Colors.black }]}>Peso real</Text>
+            <Text style={[styles.weightRealValue, Number(formattedCurrent.value) > 0 ? { color: Colors.black } : { color: Colors.grey5 }]}>
+              {Number(formattedCurrent.value) > 0 ? formattedCurrent.value : '--'} {formattedCurrent.unit || 'gr'}
             </Text>
           </View>
         </View>
@@ -91,7 +75,7 @@ const PickingInfoWeight = ({ item, onRestartQuantity, isCompleted }: PickingInfo
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 15,
     borderWidth: 1,
     borderColor: Colors.mainBlue,
     borderRadius: 20,
@@ -153,26 +137,45 @@ const styles = StyleSheet.create({
   },
   weightContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10
+    justifyContent: 'space-between'
   },
   weightBox: {
     flex: 1,
     alignItems: 'center',
     padding: 10,
-    backgroundColor: Colors.mainLightBlue2,
+    backgroundColor: Colors.mainBlue,
     borderRadius: 10,
     marginHorizontal: 5
   },
   weightTitle: {
     fontSize: 14,
-    color: Colors.grey5,
+    color: Colors.white,
     marginBottom: 5,
     fontFamily: 'Inter_400Regular'
   },
   weightValue: {
-    fontSize: 20,
-    color: Colors.mainBlue,
+    fontSize: 24,
+    color: Colors.white,
+    fontFamily: 'Inter_700Bold'
+  },
+  weightRealBox: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+    backgroundColor: Colors.grey1,
+    borderRadius: 10,
+    marginHorizontal: 5
+  },
+  weightRealTitle: {
+    fontSize: 14,
+    color: Colors.grey5,
+    marginBottom: 5,
+    fontFamily: 'Inter_400Regular'
+  },
+  weightRealValue: {
+    fontSize: 24,
+    color: Colors.grey5,
     fontFamily: 'Inter_700Bold'
   },
   restartButton: {

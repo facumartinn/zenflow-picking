@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import Colors from '../constants/Colors'
 import { useAtom } from 'jotai'
 import { packingOrdersAtom } from '../store'
 import { DefaultHeader } from '../components/DefaultHeader'
-import { BackSvg } from '../components/svg/BackSvg'
+import BottomButton from '../components/BottomButton'
 
 const PackingOrderCompletedScreen = () => {
   const router = useRouter()
@@ -18,7 +18,7 @@ const PackingOrderCompletedScreen = () => {
   const totalItems = packingOrderDetail[parseInt(orderId as string)]?.resources?.length || 0
 
   const handleContinue = () => {
-    router.navigate('/packing-orders')
+    router.push('/packing-orders')
   }
 
   const handlePrintAgain = () => {
@@ -26,20 +26,10 @@ const PackingOrderCompletedScreen = () => {
   }
 
   return (
-    <LinearGradient
-      colors={[Colors.lightGreen, Colors.background]}
-      style={styles.container}
-      start={{ x: 0.5, y: 0 }}
-      end={{ x: 0.5, y: 1 }}
-      locations={[0.35, 0.35]}
-    >
-      <DefaultHeader title="Empaquetado" leftIcon={<BackSvg width={30} height={30} color="black" />} leftAction={() => router.navigate('/packing-orders')} />
+    <LinearGradient colors={[Colors.lightGreen2, Colors.white]} style={styles.container} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} locations={[0.2, 0.2]}>
+      <DefaultHeader title="Empaquetado" backgroundColor="transparent" />
 
       <ScrollView style={styles.content}>
-        <View style={styles.orderInfo}>
-          <Text style={styles.orderLabel}>Pedido</Text>
-          <Text style={styles.orderId}>000{orderId}</Text>
-        </View>
         <View style={styles.summaryWrapper}>
           <View style={styles.summaryContainer}>
             <View style={styles.totalRow}>
@@ -47,19 +37,16 @@ const PackingOrderCompletedScreen = () => {
               <Text style={styles.totalQuantity}>{totalItems}</Text>
             </View>
           </View>
-        </View>
-        <View style={styles.continueButtonContainer}>
-          <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-            <Text style={styles.continueButtonText}>CONTINUAR</Text>
-          </TouchableOpacity>
+          <Text style={styles.summaryText}>Pegá cada etiqueta a los empaques correspondientes</Text>
         </View>
       </ScrollView>
-
       <View style={styles.printAgainButtonContainer}>
         <TouchableOpacity style={styles.printAgainButton} onPress={handlePrintAgain}>
-          <Text style={styles.printAgainButtonText}>Volver a imprimir</Text>
+          <Text style={styles.printAgainButtonText}>VOLVER A IMPRIMIR</Text>
         </TouchableOpacity>
       </View>
+
+      <BottomButton text="YA ETIQUETE EL PEDIDO" onPress={handleContinue} />
     </LinearGradient>
   )
 }
@@ -104,10 +91,10 @@ const styles = StyleSheet.create({
     width: '100%'
   },
   summaryContainer: {
-    width: '70%',
+    width: '60%',
     backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 10,
+    padding: 10,
     marginVertical: 24,
     borderWidth: 1,
     borderColor: Colors.green
@@ -139,7 +126,7 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     width: '60%',
-    fontSize: 18,
+    fontSize: 14,
     fontFamily: 'Inter_700Bold',
     color: Colors.green
   },
@@ -183,20 +170,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20
+    marginTop: 20,
+    marginBottom: 80
   },
   printAgainButton: {
-    paddingHorizontal: 30,
     paddingVertical: 16,
     alignItems: 'center',
-    marginHorizontal: 16,
-    marginBottom: 36,
-    borderRadius: 30
+    marginBottom: 36
   },
   printAgainButtonText: {
     color: Colors.mainBlue,
     fontSize: 18,
-    fontFamily: 'Inter_400Regular'
+    fontFamily: 'Inter_700Bold'
+  },
+  summaryText: {
+    fontSize: 18,
+    fontFamily: 'Inter_400Regular',
+    color: Colors.black2,
+    textAlign: 'center',
+    marginTop: 10
   }
 })
 

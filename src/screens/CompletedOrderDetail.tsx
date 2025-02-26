@@ -1,18 +1,18 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { View, Text, Alert, StyleSheet } from 'react-native'
 import { DefaultHeader } from '../components/DefaultHeader'
 import { OrderDetailLoader } from '../store/OrderLoader'
 import Colors from '../constants/Colors'
 import { useAtom } from 'jotai'
-import { orderDetailsAtom, warehousesAtom } from '../store'
+import { orderDetailsAtom, warehousesAtom, orderResourcesAtom } from '../store'
 import PositionsList from '../components/PositionCard'
 import * as FileSystem from 'expo-file-system'
 import { router, useLocalSearchParams } from 'expo-router'
 import { usePdfGenerator, usePdfViewer } from '../hooks/usePdfGenerator'
 import { OrderDetailTemplate } from '../templates/OrderDetailTemplate'
 import { getResources } from '../services/order'
-import { OrderResourceItem } from '../types/order'
+import { PickingDetailEnum } from '../types/order'
 import { DefaultButton } from '../components/DefaultButton'
 import { format } from 'date-fns'
 import { BackSvg } from '../components/svg/BackSvg'
@@ -21,99 +21,133 @@ type LocalSearchParams = {
   orderId: number
   stateId: number
   quantity: number
+  tenantOrderId: number
 }
 
 const CompletedOrderDetail = () => {
-  const { orderId, stateId, quantity }: Partial<LocalSearchParams> = useLocalSearchParams()
-  const [orderDetails, setOrderDetails] = useAtom(orderDetailsAtom)
+  const { orderId, stateId, quantity, tenantOrderId }: Partial<LocalSearchParams> = useLocalSearchParams()
+  const [orderDetails] = useAtom(orderDetailsAtom)
+  const [orderResources, setOrderResources] = useAtom(orderResourcesAtom)
   const { generatePdf } = usePdfGenerator()
   const { showPdf } = usePdfViewer()
-  const [resources, setResources] = useState<OrderResourceItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [warehouseConfig] = useAtom(warehousesAtom)
-  const shift = warehouseConfig?.use_shifts?.shifts?.find(shift => shift.id === orderDetails[0]?.Orders?.assembly_schedule)
-  const totalQuantity = orderDetails.reduce((acc, product) => acc + product.quantity, 0)
+
+  const resources = useMemo(() => {
+    return orderResources[orderId?.toString() || ''] || []
+  }, [orderResources, orderId])
 
   useEffect(() => {
-    const fetchResources = async () => {
+    const loadData = async () => {
       try {
-        if (orderId) {
-          const response = await getResources(Number(orderId))
-          setResources(response.resources)
+        if (!orderId) return
+
+        // Si ya tenemos los recursos para este pedido, no los volvemos a cargar
+        if (orderResources[orderId.toString()]?.length > 0) {
+          return
         }
+
+        const resourcesResponse = await getResources(Number(orderId))
+        setOrderResources(prev => ({
+          ...prev,
+          [orderId.toString()]: resourcesResponse.resources
+        }))
       } catch (error) {
-        console.error('Error al obtener recursos:', error)
-        Alert.alert('Error', 'No se pudieron cargar los recursos del pedido')
-      } finally {
-        setIsLoading(false)
+        console.error('Error al obtener datos:', error)
+        Alert.alert('Error', 'No se pudieron cargar los datos del pedido')
       }
     }
 
-    fetchResources()
-  }, [orderId])
+    loadData()
+  }, [orderId, orderResources, setOrderResources])
 
-  const transformedPositions = resources.reduce(
-    (acc, resource) => {
-      const existingPosition = acc.find(pos => pos.position === resource.position)
+  useEffect(() => {
+    if (orderDetails.length > 0 && resources.length > 0) {
+      setIsLoading(false)
+    }
+  }, [orderDetails, resources])
 
-      if (existingPosition) {
-        const existingType = existingPosition.details.find(detail => detail.type === resource.resource_name)
+  const shift = warehouseConfig?.use_shifts?.shifts?.find(shift => shift.id === orderDetails[0]?.Orders?.assembly_schedule)
+  const totalQuantity = orderDetails.reduce((acc, product) => acc + product.quantity, 0)
 
-        if (existingType) {
-          existingType.quantity += resource.quantity
+  const transformedPositions = useMemo(() => {
+    return resources.reduce(
+      (acc, resource) => {
+        const existingPosition = acc.find(pos => pos.position === resource.position)
+
+        if (existingPosition) {
+          const existingType = existingPosition.details.find(detail => detail.type === resource.resource_name)
+
+          if (existingType) {
+            existingType.quantity += resource.quantity
+          } else {
+            existingPosition.details.push({
+              type: resource.resource_name,
+              quantity: resource.quantity
+            })
+          }
+
+          if (!existingPosition.barcodes) {
+            existingPosition.barcodes = []
+          }
+          existingPosition.barcodes.push({
+            barcode: resource.barcode,
+            resource_name: resource.resource_name
+          })
         } else {
-          existingPosition.details.push({
-            type: resource.resource_name,
-            quantity: resource.quantity
+          acc.push({
+            id: acc.length + 1,
+            position: resource.position,
+            details: [
+              {
+                type: resource.resource_name,
+                quantity: resource.quantity
+              }
+            ],
+            barcodes: [
+              {
+                barcode: resource.barcode,
+                resource_name: resource.resource_name
+              }
+            ]
           })
         }
 
-        if (!existingPosition.barcodes) {
-          existingPosition.barcodes = []
-        }
-        existingPosition.barcodes.push({
-          barcode: resource.barcode,
-          resource_name: resource.resource_name
-        })
-      } else {
-        acc.push({
-          id: acc.length + 1,
-          position: resource.position,
-          details: [
-            {
-              type: resource.resource_name,
-              quantity: resource.quantity
-            }
-          ],
-          barcodes: [
-            {
-              barcode: resource.barcode,
-              resource_name: resource.resource_name
-            }
-          ]
-        })
-      }
-
-      return acc
-    },
-    [] as Array<{
-      id: number
-      position: string
-      details: Array<{ type: string; quantity: number }>
-      barcodes: Array<{ barcode: string; resource_name: string }>
-    }>
-  )
+        return acc
+      },
+      [] as Array<{
+        id: number
+        position: string
+        details: Array<{ type: string; quantity: number }>
+        barcodes: Array<{ barcode: string; resource_name: string }>
+      }>
+    )
+  }, [resources])
 
   const handleBack = () => {
-    setOrderDetails([])
-    router.navigate('/home')
+    router.push('/home')
   }
 
+  const hasIncompleteProducts = orderDetails.some(detail => detail.state_picking_details_id === PickingDetailEnum.INCOMPLETE)
+
   const handleOrderDetailNavigation = () => {
-    router.navigate({ pathname: '/order-detail', params: { orderId, quantity, stateId } })
+    if (isLoading) return
+
+    const route = hasIncompleteProducts ? '/incomplete-order-detail' : '/order-detail'
+    router.push({
+      pathname: route,
+      params: {
+        orderId,
+        tenantOrderId: orderDetails[0]?.Orders?.order_tenant_id || 0,
+        quantity,
+        stateId
+      }
+    })
   }
 
   const generatePDF = async () => {
+    if (isLoading) return
+
     try {
       const pdfData = {
         orderId: orderId || 0,
@@ -136,42 +170,81 @@ const CompletedOrderDetail = () => {
     }
   }
 
+  const ScreenSkeleton = () => (
+    <View style={styles.bodyContainer}>
+      <View style={styles.titleBox}>
+        <View style={[styles.placeholder, { width: 150, height: 20 }]} />
+        <View style={[styles.placeholder, { width: 100, height: 24, marginTop: 5 }]} />
+      </View>
+      <View style={styles.infoBox}>
+        <View style={styles.titleBox}>
+          <View style={[styles.placeholder, { width: 80, height: 20 }]} />
+          <View style={[styles.placeholder, { width: 120, height: 24, marginTop: 5 }]} />
+        </View>
+        <View style={styles.titleBox}>
+          <View style={[styles.placeholder, { width: 80, height: 20 }]} />
+          <View style={[styles.placeholder, { width: 100, height: 24, marginTop: 5 }]} />
+        </View>
+      </View>
+      <View style={styles.infoBox}>
+        <View style={styles.titleBox}>
+          <View style={[styles.placeholder, { width: 80, height: 20 }]} />
+          <View style={[styles.placeholder, { width: 120, height: 24, marginTop: 5 }]} />
+        </View>
+        <View style={styles.titleBox}>
+          <View style={[styles.placeholder, { width: 80, height: 20 }]} />
+          <View style={[styles.placeholder, { width: 100, height: 24, marginTop: 5 }]} />
+        </View>
+      </View>
+      <View style={[styles.positionsContainer, { marginTop: 16 }]}>
+        <View style={[styles.placeholder, { width: 100, height: 24, marginBottom: 16 }]} />
+        <PositionsList positions={[]} isLoading={true} />
+      </View>
+    </View>
+  )
+
   return (
     <View style={styles.container}>
       <OrderDetailLoader orderId={orderId!} />
       <DefaultHeader title="Detalle pedido" leftIcon={<BackSvg width={30} height={30} color="black" />} leftAction={handleBack} />
-      <View style={styles.bodyContainer}>
-        <View style={styles.titleBox}>
-          <Text style={styles.title}>Número de pedido</Text>
-          <Text style={styles.value}>0000{orderId}</Text>
+      {isLoading ? (
+        <ScreenSkeleton />
+      ) : (
+        <View style={styles.bodyContainer}>
+          <View style={styles.titleBox}>
+            <Text style={styles.title}>Número de pedido</Text>
+            <Text style={styles.value}>{tenantOrderId}</Text>
+          </View>
+          <View style={styles.infoBox}>
+            <View style={styles.titleBox}>
+              <Text style={styles.title}>Día</Text>
+              <Text style={styles.value}>
+                {orderDetails[0]?.Orders?.assembly_date ? format(new Date(orderDetails[0]?.Orders?.assembly_date), 'dd/MM/yyyy') : ''}
+              </Text>
+            </View>
+            <View style={styles.titleBox}>
+              <Text style={styles.title}>Turno</Text>
+              <Text style={styles.value}>{shift?.name}</Text>
+            </View>
+          </View>
+          <View style={styles.infoBox}>
+            <View style={styles.titleBox}>
+              <Text style={styles.title}>Picker</Text>
+              <Text style={styles.value}>{orderDetails[0]?.Orders?.user_id}</Text>
+            </View>
+            <View style={styles.titleBox}>
+              <Text style={styles.title}>Cantidad</Text>
+              <Text style={styles.value}>{totalQuantity}</Text>
+            </View>
+          </View>
+          <View style={styles.positionsContainer}>
+            <PositionsList positions={transformedPositions} isLoading={false} />
+          </View>
         </View>
-        <View style={styles.infoBox}>
-          <View style={styles.titleBox}>
-            <Text style={styles.title}>Día</Text>
-            <Text style={styles.value}>
-              {orderDetails[0]?.Orders?.assembly_date ? format(new Date(orderDetails[0]?.Orders?.assembly_date), 'dd/MM/yyyy') : ''}
-            </Text>
-          </View>
-          <View style={styles.titleBox}>
-            <Text style={styles.title}>Turno</Text>
-            <Text style={styles.value}>{shift?.name}</Text>
-          </View>
-        </View>
-        <View style={styles.infoBox}>
-          <View style={styles.titleBox}>
-            <Text style={styles.title}>Picker</Text>
-            <Text style={styles.value}>{orderDetails[0]?.Orders?.user_id}</Text>
-          </View>
-          <View style={styles.titleBox}>
-            <Text style={styles.title}>Cantidad</Text>
-            <Text style={styles.value}>{totalQuantity}</Text>
-          </View>
-        </View>
-        <PositionsList positions={transformedPositions} isLoading={isLoading} />
-      </View>
+      )}
       <View style={styles.buttonContainer}>
-        <DefaultButton label="VER DETALLE" backgroundColor={Colors.mainBlue} color={Colors.white} onPress={handleOrderDetailNavigation} />
-        <DefaultButton label="DESCARGAR DETALLE" backgroundColor="transparent" color={Colors.black} onPress={generatePDF} />
+        <DefaultButton label="VER DETALLE" backgroundColor={Colors.mainBlue} color={Colors.white} onPress={handleOrderDetailNavigation} disabled={isLoading} />
+        <DefaultButton label="DESCARGAR DETALLE" backgroundColor="transparent" color={Colors.black} onPress={generatePDF} disabled={isLoading} />
       </View>
     </View>
   )
@@ -181,11 +254,16 @@ export default CompletedOrderDetail
 
 const styles = StyleSheet.create({
   container: {
-    // paddingTop: 20
+    flex: 1
+    // backgroundColor: Colors.white
   },
   bodyContainer: {
+    flex: 1,
     paddingTop: 30,
     paddingHorizontal: 16
+  },
+  positionsContainer: {
+    flex: 1
   },
   headerTitle: {
     fontSize: 16,
@@ -208,39 +286,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_700Bold',
     color: Colors.black
   },
-  enterDetailScreen: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '50%',
-    backgroundColor: Colors.mainBlue,
-    marginVertical: 10,
-    marginHorizontal: 30,
-    height: 66,
-    borderRadius: 50
-  },
-  startPickingText: {
-    color: Colors.white,
-    fontFamily: 'Inter_700Bold',
-    fontSize: 16
-  },
   buttonContainer: {
-    marginTop: 20,
+    padding: 20,
     width: '100%',
     display: 'flex',
     alignItems: 'center'
-  },
-  downloadDetailScreen: {
-    marginTop: 10
-  },
-  downloadDetailText: {
-    color: Colors.black,
-    fontFamily: 'Inter_700Bold',
-    fontSize: 16
   },
   infoBox: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginRight: 40
+  },
+  placeholder: {
+    backgroundColor: Colors.grey3,
+    borderRadius: 4
   }
 })

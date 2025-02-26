@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native'
 import { RelativePathString, useRouter } from 'expo-router'
 import Colors from '../../constants/Colors'
 import { LoadingPackingBackgroundSvg } from '../svg/LoadingPackingBackground'
-import { CheckSvg } from '../svg/Check'
+import { CheckSignSvg } from '../svg/CheckSign'
 
 interface LoadingScreenProps {
   message: string
@@ -30,7 +30,7 @@ const LoadingPackingScreen: React.FC<LoadingScreenProps> = ({ title, subtitle, m
   return (
     <View style={styles.container}>
       <View style={styles.contentContainer}>
-        <CheckSvg width={50} height={50} color={Colors.green} />
+        <CheckSignSvg width={80} height={80} color={Colors.green} />
         <Text style={styles.title}>{title}</Text>
         {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
         <Text style={styles.message}>{message}</Text>

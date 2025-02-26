@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { View, Text, TouchableOpacity } from 'react-native'
 import Colors from '../../constants/Colors'
 import { styles } from './styles'
 import { PrinterSvg } from '../svg/Printer'
@@ -66,6 +66,25 @@ const PositionCard = ({ position, details, barcodes = [] }: PositionCardProps) =
   )
 }
 
+const PositionCardSkeleton = () => (
+  <View style={styles.positionContainer}>
+    <View style={styles.leftContainer}>
+      <View style={styles.positionLabelContainer}>
+        <View style={[styles.placeholder, { width: 80, height: 16, marginBottom: 4 }]} />
+        {/* <View style={[styles.placeholder, { width: 120, height: 20 }]} /> */}
+      </View>
+      <View style={styles.detailBox}>
+        <View style={styles.detailContainer}>
+          <View style={[styles.placeholder, { width: 150, height: 16, marginBottom: 4 }]} />
+        </View>
+        <View style={styles.detailContainer}>
+          <View style={[styles.placeholder, { width: 130, height: 16, marginBottom: 4 }]} />
+        </View>
+      </View>
+    </View>
+  </View>
+)
+
 interface PositionsListProps {
   positions: Array<{
     id: number
@@ -80,9 +99,11 @@ const PositionsList = ({ positions, isLoading = false }: PositionsListProps) => 
   <View style={styles.container}>
     <Text style={styles.sectionTitle}>Entrega</Text>
     {isLoading ? (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.mainBlue} />
-      </View>
+      <>
+        <PositionCardSkeleton />
+        <View style={styles.separator} />
+        <PositionCardSkeleton />
+      </>
     ) : positions.length > 0 ? (
       positions.map((position, index) => (
         <View key={position.id}>

@@ -1,19 +1,18 @@
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import { BoxDetailSvg } from '../svg/BoxDetail'
-import { BasketSvg } from '../svg/Basket'
 import Colors from '../../constants/Colors'
 import { PrintStatusEnum } from '../../types/flow'
+import { CheckSignSvg } from '../svg/CheckSign'
+import { WarningTriangleSvg } from '../svg/WarningTriangle'
 
 interface PackingOrderCardProps {
-  orderId: number
+  tenantOrderId: number
   printStatus: PrintStatusEnum
-  basketCount: string
   quantity: number
   onPress: () => void
 }
 
-export const PackingOrderCard: React.FC<PackingOrderCardProps> = ({ orderId, basketCount, quantity, onPress, printStatus }) => {
+export const PackingOrderCard: React.FC<PackingOrderCardProps> = ({ tenantOrderId, quantity, onPress, printStatus }) => {
   const isReady = printStatus === PrintStatusEnum.PRINTED
 
   return (
@@ -21,34 +20,27 @@ export const PackingOrderCard: React.FC<PackingOrderCardProps> = ({ orderId, bas
       <View style={styles.infoContainer}>
         <View style={styles.detailRow}>
           <View style={styles.detailRowText}>
-            <BoxDetailSvg width={20} height={20} color={Colors.black} />
-            <Text style={styles.detailTitle}>Pedido</Text>
+            <Text style={styles.detailTitle}>Número de pedido</Text>
           </View>
-          <Text style={styles.detailText}>000{orderId}</Text>
+          <Text style={styles.detailText}>{tenantOrderId}</Text>
         </View>
-        {basketCount && (
-          <View style={styles.detailRow}>
-            <View style={styles.detailRowText}>
-              <BasketSvg width={20} height={20} color={Colors.black} />
-              <Text style={styles.detailTitle}>Canasto</Text>
-            </View>
-            <Text style={styles.detailText}>{basketCount}</Text>
-          </View>
-        )}
         <View style={styles.detailRow}>
-          <Text style={styles.detailTitle}>Cant.</Text>
+          <Text style={styles.detailTitle}>Cantidad</Text>
           <Text style={styles.detailText}>{quantity}</Text>
         </View>
       </View>
-      <Text style={[styles.stateLabel, isReady && styles.stateLabelReady]}>{isReady ? 'LISTO' : 'PENDIENTE DE PACKING'}</Text>
+      <View style={styles.stateContainer}>
+        {isReady ? <CheckSignSvg width={20} height={20} color={Colors.green} /> : <WarningTriangleSvg width={20} height={20} color={Colors.orange} />}
+        <Text style={[styles.stateLabel, isReady && styles.stateLabelReady]}>{isReady ? 'Empaquetado' : 'Sin empaquetar'}</Text>
+      </View>
     </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
-    borderColor: Colors.orange,
+    borderWidth: 1.5,
+    borderColor: Colors.mainOrange,
     backgroundColor: Colors.white,
     borderRadius: 20,
     padding: 16,
@@ -58,25 +50,30 @@ const styles = StyleSheet.create({
     borderColor: Colors.green
   },
   infoContainer: {
+    width: '100%',
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 50,
     alignItems: 'center',
-    marginBottom: 12
+    justifyContent: 'center',
+    marginBottom: 12,
+    gap: 15
   },
   detailRow: {
-    alignItems: 'center'
+    backgroundColor: Colors.grey1,
+    padding: 10,
+    borderRadius: 10,
+    alignItems: 'flex-start',
+    width: '49%'
   },
   detailRowText: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
     marginBottom: 4
   },
   detailTitle: {
     fontSize: 14,
     fontFamily: 'Inter_400Regular',
-    color: Colors.grey5,
-    marginLeft: 4
+    color: Colors.grey5
   },
   detailText: {
     fontSize: 16,
@@ -86,10 +83,17 @@ const styles = StyleSheet.create({
   stateLabel: {
     fontSize: 14,
     fontFamily: 'Inter_700Bold',
-    color: Colors.orange,
+    color: Colors.lightOrange2,
     textAlign: 'center'
   },
   stateLabelReady: {
     color: Colors.green
+  },
+  stateContainer: {
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8
   }
 })

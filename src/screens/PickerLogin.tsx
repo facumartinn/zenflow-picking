@@ -29,6 +29,18 @@ const PickerLoginScreen = () => {
   const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT })
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({ value, setValue })
 
+  // Efecto para enfocar automáticamente el input al cargar la pantalla
+  useEffect(() => {
+    // Pequeño delay para asegurar que el componente esté completamente montado
+    const timer = setTimeout(() => {
+      if (ref.current) {
+        ref.current.focus()
+      }
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [fontsLoaded])
+
   const handleCodeSubmit = async (code: string) => {
     try {
       setIsSubmitting(true)
@@ -39,7 +51,7 @@ const PickerLoginScreen = () => {
       // Pequeño delay para mostrar el feedback de éxito
       setTimeout(() => {
         setValue('')
-        router.replace('/home')
+        router.push('/home')
       }, 1000)
     } catch (error) {
       setIsCodeCorrect(false)

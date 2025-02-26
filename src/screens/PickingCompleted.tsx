@@ -32,7 +32,7 @@ const PickingCompletedScreen = () => {
                 style={styles.profilePicture}
               />
             }
-            rightAction={() => router.navigate('/profile')}
+            rightAction={() => router.push('/profile')}
           />
         </View>
       </View>

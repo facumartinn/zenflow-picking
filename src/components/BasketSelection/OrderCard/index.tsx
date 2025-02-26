@@ -20,7 +20,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, isOrderReady }) => {
         <View style={styles.orderBox}>
           <View>
             <Text style={styles.orderLabel}>Nro pedido</Text>
-            <Text style={styles.orderNumber}>000{order.order_id}</Text>
+            <Text style={styles.orderNumber}>{order.order_tenant_id || order.order_id}</Text>
           </View>
         </View>
         <View style={styles.orderBox}>

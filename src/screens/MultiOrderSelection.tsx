@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { View, StyleSheet, Alert } from 'react-native'
 import { DefaultHeader } from '../components/DefaultHeader'
 import Colors from '../constants/Colors'
-import { router } from 'expo-router'
+import { router, useFocusEffect } from 'expo-router'
 import MultiSelectOrdersList from '../components/MultiSelectOrderList'
 import BottomButton from '../components/BottomButton'
 import { createFlow } from '../services/flow'
@@ -14,9 +14,20 @@ import { BackSvg } from '../components/svg/BackSvg'
 
 const MultiOrderSelectionScreen = () => {
   const [selectedOrders, setSelectedOrders] = useState<number[]>([])
+  const [shouldRefreshOrders, setShouldRefreshOrders] = useState(false)
   const { pickerUser } = useAuth()
   const [, setFlow] = useAtom(flowAtom)
   const [, setFlowOrderDetails] = useAtom(flowOrderDetailsAtom)
+
+  useFocusEffect(
+    useCallback(() => {
+      setShouldRefreshOrders(true)
+      return () => {
+        setShouldRefreshOrders(false)
+      }
+    }, [])
+  )
+
   const handleSelectionChange = (selectedOrders: number[]) => {
     setSelectedOrders(selectedOrders)
   }
@@ -32,7 +43,7 @@ const MultiOrderSelectionScreen = () => {
         const response: FlowResponse = await createFlow(flowData)
         setFlow(response.flow)
         setFlowOrderDetails(response.orderDetails)
-        router.navigate('/basket-selection')
+        router.push('/basket-selection')
       }
     } catch (error) {
       console.error('Error creating flow:', error)
@@ -44,7 +55,7 @@ const MultiOrderSelectionScreen = () => {
     <View style={styles.container}>
       <DefaultHeader title="Picking múltiple" leftIcon={<BackSvg width={30} height={30} color="black" />} leftAction={() => router.back()} />
       <View style={styles.bodyContainer}>
-        <MultiSelectOrdersList selectedTab={'pending'} onSelectionChange={handleSelectionChange} />
+        <MultiSelectOrdersList selectedTab={'pending'} onSelectionChange={handleSelectionChange} shouldRefreshOrders={shouldRefreshOrders} />
       </View>
       {selectedOrders.length > 0 && <BottomButton text="CONTINUAR" onPress={handleNext} />}
     </View>

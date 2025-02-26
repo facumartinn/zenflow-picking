@@ -1,6 +1,7 @@
-import React from 'react'
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import React, { useCallback, useState, useRef, useEffect } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useFocusEffect } from '@react-navigation/native'
 import Colors from '../constants/Colors'
 import { PickingHeader } from '../components/PickingHeader'
 import { ManualPickingModal } from '../components/ManualPickingModal'
@@ -11,6 +12,9 @@ import { WarningSvg } from '../components/svg/Warning'
 import { router } from 'expo-router'
 
 const PickingScreen = () => {
+  const [quantityPicked, setQuantityPicked] = useState(0)
+  const [inputValue, setInputValue] = useState('')
+  const inputRef = useRef<TextInput>(null)
   const {
     currentProduct,
     modalVisible,
@@ -21,14 +25,57 @@ const PickingScreen = () => {
     setErrorModalVisible,
     handleScan,
     handleManualPicking,
-    handleIncompleteConfirm,
     handleRestartQuantity,
-    isCompleted
+    isCompleted,
+    checkAndUpdateCurrentProduct,
+    isProductProcessed
   } = usePickingLogicV2()
 
+  // Mantener el foco en el input oculto
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!currentProduct || isProductProcessed(currentProduct.state_picking_details_id)) {
+        checkAndUpdateCurrentProduct()
+      }
+      // Asegurar que el input tenga el foco cuando la pantalla está en foco
+      inputRef.current?.focus()
+    }, [currentProduct, isProductProcessed])
+  )
+
+  // Manejar el escaneo de códigos de barras
+  const handleBarcodeScan = (barcode: string) => {
+    if (currentProduct) {
+      handleScan(barcode)
+      // Resetear el input después de escanear
+      setInputValue('')
+      // Mantener el foco en el input
+      inputRef.current?.focus()
+    }
+  }
+
+  if (!currentProduct) {
+    return (
+      <View style={styles.emptyStateContainer}>
+        <Text style={styles.emptyStateText}>No hay productos disponibles</Text>
+      </View>
+    )
+  }
+
+  const manualPickingAction = (quantity: number) => {
+    setQuantityPicked(quantity)
+    if (quantity === currentProduct?.quantity) {
+      return handleManualPicking(quantity)
+    } else {
+      setIncompleteModalVisible(true)
+    }
+  }
   return (
     <LinearGradient
-      colors={[Colors.mainLightBlue2, Colors.grey1]}
+      colors={[Colors.mainLightBlue3, Colors.white]}
       style={styles.container}
       start={{ x: 0.5, y: 0 }}
       end={{ x: 0.5, y: 1 }}
@@ -37,8 +84,8 @@ const PickingScreen = () => {
       <View style={styles.topBodyContainer}>
         <PickingHeader
           title="Escanear artículo"
-          leftAction={() => handleScan(currentProduct?.weighable ? `${currentProduct.product_barcode}000500` : currentProduct?.product_barcode ?? '')}
-          rightAction={() => router.navigate('/picking-orders')}
+          leftAction={() => handleBarcodeScan(currentProduct.weighable ? `${currentProduct.product_barcode}000500` : currentProduct.product_barcode ?? '')}
+          rightAction={() => router.push('/picking-orders')}
         />
       </View>
       <View style={styles.bodyContainer}>
@@ -55,36 +102,62 @@ const PickingScreen = () => {
           </View>
         )}
       </View>
-      {currentProduct && (
-        <>
-          <ManualPickingModal
-            visible={modalVisible}
-            quantityPicked={0}
-            maxQuantity={currentProduct.quantity}
-            onConfirm={handleManualPicking}
-            onClose={() => setModalVisible(false)}
-          />
-          <DefaultModal
-            visible={incompleteModalVisible}
-            title="Artículos pendientes"
-            description="Quedaron productos pendientes de escanear. Podrá levantar el producto al final de la preparación."
-            primaryButtonText="SEGUIR SIN LEVANTAR"
-            primaryButtonAction={handleIncompleteConfirm}
-            secondaryButtonText="ATRÁS"
-            secondaryButtonAction={() => setIncompleteModalVisible(false)}
-          />
-          <DefaultModal
-            visible={errorModalVisible}
-            title="Producto equivocado"
-            description={`Código del producto: ${currentProduct.product_barcode}`}
-            primaryButtonText="ATRÁS"
-            primaryButtonColor={Colors.mainBlue}
-            primaryButtonAction={() => setErrorModalVisible(false)}
-            icon={<WarningSvg width={40} height={41} color={Colors.red} />}
-            iconBackgroundColor={Colors.lightRed}
-          />
-        </>
-      )}
+
+      {/* Input oculto para escaneo de códigos de barras */}
+      <TextInput
+        ref={inputRef}
+        style={styles.hiddenInput}
+        value={inputValue}
+        onChangeText={setInputValue}
+        onSubmitEditing={e => handleBarcodeScan(e.nativeEvent.text)}
+        blurOnSubmit={false}
+      />
+
+      <ManualPickingModal
+        visible={modalVisible}
+        quantityPicked={currentProduct?.quantity_picked ?? 0}
+        maxQuantity={currentProduct.quantity}
+        onConfirm={quantity => manualPickingAction(quantity)}
+        onClose={() => {
+          setModalVisible(false)
+          // Asegurar que el input mantenga el foco después de cerrar el modal
+          inputRef.current?.focus()
+        }}
+      />
+
+      <DefaultModal
+        visible={incompleteModalVisible}
+        title="Artículos pendientes"
+        description="Quedaron productos pendientes de escanear. Podrá levantar el producto al final de la preparación."
+        primaryButtonText="SEGUIR SIN LEVANTAR"
+        primaryButtonAction={() => {
+          setIncompleteModalVisible(false)
+          handleManualPicking(quantityPicked)
+          // Asegurar que el input mantenga el foco después de cerrar el modal
+          inputRef.current?.focus()
+        }}
+        secondaryButtonText="ATRÁS"
+        secondaryButtonAction={() => {
+          setIncompleteModalVisible(false)
+          // Asegurar que el input mantenga el foco después de cerrar el modal
+          inputRef.current?.focus()
+        }}
+      />
+
+      <DefaultModal
+        visible={errorModalVisible}
+        title="Producto equivocado"
+        description={`Código del producto: ${currentProduct.product_barcode}`}
+        primaryButtonText="ATRÁS"
+        primaryButtonColor={Colors.mainBlue}
+        primaryButtonAction={() => {
+          setErrorModalVisible(false)
+          // Asegurar que el input mantenga el foco después de cerrar el modal
+          inputRef.current?.focus()
+        }}
+        icon={<WarningSvg width={40} height={41} color={Colors.red} />}
+        iconBackgroundColor={Colors.lightRed}
+      />
     </LinearGradient>
   )
 }
@@ -129,5 +202,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_400Regular',
     color: Colors.grey3,
     textAlign: 'center'
+  },
+  hiddenInput: {
+    height: 0,
+    width: 0,
+    opacity: 0
   }
 })

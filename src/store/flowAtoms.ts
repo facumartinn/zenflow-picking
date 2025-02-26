@@ -71,10 +71,13 @@ export const resetCurrentProductIndexAtom = atom(null, (get, set) => {
 
 // Átomo para resetear todos los átomos del flujo
 export const resetAllFlowAtoms = atom(null, (get, set) => {
+  // Primero reseteamos los átomos que no afectan a la UI directamente
   set(resetFlowAtom)
   set(resetFlowOrderDetailsAtom)
   set(resetBasketsByOrderAtom)
   set(resetFlowBasketAssignmentsAtom)
-  set(resetPackingOrdersAtom)
   set(resetCurrentProductIndexAtom)
+
+  // Por último reseteamos packingOrders para evitar errores de UI
+  set(resetPackingOrdersAtom)
 })

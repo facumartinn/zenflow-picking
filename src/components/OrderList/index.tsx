@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
-import { Text, FlatList, RefreshControl, View } from 'react-native'
-import { useQuery } from '@tanstack/react-query'
+import React, { useState, useEffect } from 'react'
+import { Text, FlatList, RefreshControl, View, ActivityIndicator } from 'react-native'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { getFilteredOrders } from '../../services/order'
 import OrderItem from './OrderItem'
-import { Order, OrderStateEnum } from '../../types/order'
+import { Order, OrderStateEnum, FilteredOrdersResponse } from '../../types/order'
 import { useAtom } from 'jotai'
 import { orderTotalsAtom, warehousesAtom } from '../../store'
 import { styles } from './styles'
@@ -15,6 +15,7 @@ import { useAuth } from '../../context/auth'
 
 interface OrdersListProps {
   selectedTab: 'pending' | 'completed'
+  shouldRefreshOrders?: boolean
 }
 
 interface GroupedOrders {
@@ -25,7 +26,7 @@ interface GroupedOrders {
   }[]
 }
 
-const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
+const OrdersList: React.FC<OrdersListProps> = ({ selectedTab, shouldRefreshOrders = false }) => {
   const { pickerUser } = useAuth()
   const [warehouseConfig] = useAtom(warehousesAtom)
   const [, setOrderTotals] = useAtom(orderTotalsAtom)
@@ -33,26 +34,50 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
   const stateId =
     selectedTab === 'pending' ? [OrderStateEnum.NEW, OrderStateEnum.READY_TO_PICK, OrderStateEnum.SCHEDULED] : [OrderStateEnum.FINISHED, OrderStateEnum.DELETED]
 
-  const {
-    data: orders = [],
-    isLoading,
-    error,
-    refetch
-  } = useQuery<Order[]>({
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } = useInfiniteQuery<FilteredOrdersResponse>({
     queryKey: ['orders', stateId],
-    queryFn: async () => {
-      const filters = {
-        stateId,
-        ...(pickerUser?.id ? { userId: pickerUser.id } : {})
+    queryFn: async ({ pageParam = 1 }) => {
+      try {
+        const filters = {
+          stateId,
+          ...(pickerUser?.id ? { userId: pickerUser.id } : {}),
+          page: pageParam as number,
+          limit: 20
+        }
+        const response = await getFilteredOrders(filters)
+        return response
+      } catch (error) {
+        console.error('Error fetching orders:', error)
+        return { orders: [], pagination: { total: 0, page: 1, limit: 20, totalPages: 0 } }
       }
-      const orders = await getFilteredOrders(filters)
+    },
+    getNextPageParam: lastPage => {
+      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+        return lastPage.pagination.page + 1
+      }
+      return undefined
+    },
+    initialPageParam: 1
+  })
+
+  // Extraer todas las órdenes de todas las páginas
+  const orders = data?.pages.flatMap(page => page.orders) || []
+
+  // Actualizar el contador de órdenes
+  useEffect(() => {
+    if (orders.length > 0) {
       setOrderTotals(prev => ({
         ...prev,
         [selectedTab]: orders.length
       }))
-      return orders
     }
-  })
+  }, [orders.length, selectedTab, setOrderTotals])
+
+  useEffect(() => {
+    if (shouldRefreshOrders) {
+      refetch()
+    }
+  }, [shouldRefreshOrders, refetch])
 
   const groupOrdersByDateAndSchedule = (orders: Order[]): GroupedOrders[] => {
     const grouped = orders.reduce((acc: { [key: string]: { [key: number]: Order[] } }, order) => {
@@ -86,9 +111,20 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
       .sort((a, b) => a.date.localeCompare(b.date))
   }
 
-  const firstShowPickerOrdersThenTheRest = orders
-    .filter(order => order.user_id === pickerUser?.id)
-    .concat(orders.filter(order => order.user_id !== pickerUser?.id))
+  // Asegurarse de que orders sea siempre un array
+  const ordersArray = Array.isArray(orders) ? orders : []
+
+  // Filtrar y ordenar las órdenes de manera segura
+  let firstShowPickerOrdersThenTheRest: Order[] = []
+
+  try {
+    const pickerOrders = ordersArray.filter(order => order && order.user_id === pickerUser?.id)
+    const otherOrders = ordersArray.filter(order => order && order.user_id !== pickerUser?.id)
+    firstShowPickerOrdersThenTheRest = [...pickerOrders, ...otherOrders]
+  } catch (error) {
+    console.error('Error processing orders:', error)
+    firstShowPickerOrdersThenTheRest = ordersArray
+  }
 
   const groupedOrders = groupOrdersByDateAndSchedule(firstShowPickerOrdersThenTheRest)
 
@@ -138,6 +174,22 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
     setRefreshing(false)
   }
 
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }
+
+  const renderFooter = () => {
+    if (!isFetchingNextPage) return null
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" />
+        <Text style={styles.loadingMoreText}>Cargando más órdenes...</Text>
+      </View>
+    )
+  }
+
   if (isLoading && !refreshing) {
     return <OrderListSkeleton />
   }
@@ -156,6 +208,9 @@ const OrdersList: React.FC<OrdersListProps> = ({ selectedTab }) => {
       renderItem={renderDateSection}
       keyExtractor={item => item.date}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      onEndReached={handleLoadMore}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={renderFooter}
     />
   )
 }

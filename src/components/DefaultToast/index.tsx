@@ -43,7 +43,7 @@ const DefaultToast: React.FC<DefaultToastProps> = ({ visible, message, orderId, 
       </View>
       <View style={styles.textContainer}>
         <Text style={[styles.toastText, { color: textColor }]}>{message}</Text>
-        <Text style={[styles.orderText, { color: textColor }]}>Pedido: 000{orderId}</Text>
+        <Text style={[styles.orderText, { color: textColor }]}>Pedido: {orderId}</Text>
       </View>
     </Animated.View>
   )

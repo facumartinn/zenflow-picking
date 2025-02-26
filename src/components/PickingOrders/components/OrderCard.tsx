@@ -1,68 +1,72 @@
-// components/OrderCard.tsx
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import Colors from '../../../constants/Colors'
-import { BoxDetailSvg } from '../../svg/BoxDetail'
-import { BasketSvg } from '../../svg/Basket'
+import { WarningTriangleSvg } from '../../svg/WarningTriangle'
+import { CheckSignSvg } from '../../svg/CheckSign'
 
 interface OrderCardProps {
-  orderId: number
-  basketCount: string
+  tenantOrderId: number
   pickedQuantity: number
   totalQuantity: number
   state: 'INCOMPLETE' | 'IN_PROGRESS' | 'COMPLETED'
   onPress: () => void
 }
 
-export const OrderCard: React.FC<OrderCardProps> = ({ orderId, basketCount, pickedQuantity, totalQuantity, state, onPress }) => {
+export const OrderCard: React.FC<OrderCardProps> = ({ tenantOrderId, pickedQuantity, totalQuantity, state, onPress }) => {
   const getStateStyles = () => {
     switch (state) {
       case 'INCOMPLETE':
-        return { borderColor: Colors.red, textColor: Colors.red, label: 'INCOMPLETO' }
+        return {
+          borderColor: Colors.mainOrange,
+          textColor: Colors.lightOrange2,
+          label: 'Incompleto',
+          icon: <WarningTriangleSvg width={20} height={20} color={Colors.mainOrange} />
+        }
       case 'IN_PROGRESS':
-        return { borderColor: Colors.grey5, textColor: Colors.grey5, label: 'EN PROCESO' }
+        return { borderColor: 'transparent', textColor: Colors.grey5, label: null }
       case 'COMPLETED':
-        return { borderColor: Colors.green, textColor: Colors.green, label: 'LISTO' }
+        return {
+          borderColor: Colors.green,
+          textColor: Colors.green,
+          label: 'Listo para empaquetar',
+          icon: <CheckSignSvg width={20} height={20} color={Colors.green} />
+        }
       default:
-        return { borderColor: Colors.grey5, textColor: Colors.grey5, label: 'EN PROCESO' }
+        return { borderColor: 'transparent', textColor: Colors.grey5, label: 'En proceso' }
     }
   }
 
-  const { borderColor, textColor, label } = getStateStyles()
+  const { borderColor, textColor, label, icon } = getStateStyles()
 
   return (
     <TouchableOpacity style={[styles.card, { borderColor }]} onPress={onPress}>
       <View style={styles.infoContainer}>
         <View style={styles.detailRow}>
           <View style={styles.detailRowText}>
-            <BoxDetailSvg width={20} height={20} color={Colors.black} />
-            <Text style={styles.detailTitle}>Pedido</Text>
+            <Text style={styles.detailTitle}>Número de pedido</Text>
           </View>
-          <Text style={styles.detailText}>000{orderId}</Text>
+          <Text style={styles.detailText}>{tenantOrderId}</Text>
         </View>
         <View style={styles.detailRow}>
-          <View style={styles.detailRowText}>
-            <BasketSvg width={20} height={20} color={Colors.black} />
-            <Text style={styles.detailTitle}>Cajón</Text>
-          </View>
-
-          <Text style={styles.detailText}>{basketCount}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailTitle}>Cant.</Text>
+          <Text style={styles.detailTitle}>Cantidad</Text>
           <Text style={styles.detailText}>
             {pickedQuantity}/{totalQuantity}
           </Text>
         </View>
       </View>
-      <Text style={[styles.stateLabel, { color: textColor }]}>{label}</Text>
+      {label && (
+        <View style={styles.stateContainer}>
+          {icon}
+          <Text style={[styles.stateLabel, { color: textColor }]}>{label}</Text>
+        </View>
+      )}
     </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     backgroundColor: Colors.white,
     borderRadius: 20,
     padding: 16,
@@ -74,12 +78,17 @@ const styles = StyleSheet.create({
   infoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 20
+    gap: 10,
+    width: '100%'
   },
   detailRow: {
+    width: '49%',
     flexDirection: 'column',
-    alignItems: 'center',
-    gap: 6
+    alignItems: 'flex-start',
+    gap: 6,
+    backgroundColor: Colors.grey1,
+    padding: 10,
+    borderRadius: 10
   },
   detailRowText: {
     flexDirection: 'row',
@@ -92,13 +101,22 @@ const styles = StyleSheet.create({
     color: Colors.black
   },
   detailTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Inter_400Regular',
     color: Colors.grey5
   },
   stateLabel: {
     fontSize: 14,
     fontFamily: 'Inter_700Bold',
-    marginTop: 10
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6
+  },
+  stateContainer: {
+    marginTop: 10,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
   }
 })

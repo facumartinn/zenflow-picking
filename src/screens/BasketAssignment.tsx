@@ -17,15 +17,17 @@ import { CrossSvg } from '../components/svg/CrossSvg'
 
 type LocalSearchParams = {
   orderId: number
+  tenantOrderId: number
 }
 
 const BasketAssignmentScreen = () => {
   const [modalVisible, setModalVisible] = useState(false)
-  const { orderId }: Partial<LocalSearchParams> = useLocalSearchParams()
+  const { orderId, tenantOrderId }: Partial<LocalSearchParams> = useLocalSearchParams()
   const [orderDetails] = useAtom(flowOrderDetailsAtom)
   const [basketsByOrder, setBasketsByOrder] = useAtom(basketsByOrderAtom)
   const [baskets, setBaskets] = useState<number[]>([])
   const inputRef = useRef<TextInput>(null)
+  const [inputValue, setInputValue] = useState('')
   const router = useRouter()
   const [modalTitle, setModalTitle] = useState('Ya usaste este cajón')
   const [modalDescription, setModalDescription] = useState('Probá con otro.')
@@ -55,6 +57,9 @@ const BasketAssignmentScreen = () => {
       setModalTitle('Cajón en uso')
       setModalDescription('Este cajón está siendo utilizado en otro pedido.')
       setModalVisible(true)
+      // Resetear el input y mantener el foco
+      setInputValue('')
+      inputRef.current?.focus()
       return
     }
 
@@ -66,6 +71,10 @@ const BasketAssignmentScreen = () => {
     } else {
       setModalVisible(true)
     }
+
+    // Resetear el input y mantener el foco después de procesar el código
+    setInputValue('')
+    inputRef.current?.focus()
   }
 
   const handleRemoveBasket = (basketId: number) => {
@@ -87,14 +96,14 @@ const BasketAssignmentScreen = () => {
       <DefaultHeader
         title="Selección múltiple"
         leftIcon={<BackSvg width={30} height={30} color="black" />}
-        leftAction={() => router.navigate('/basket-selection')}
+        leftAction={() => router.push('/basket-selection')}
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.bodyContainer}>
           <View style={styles.orderInfo}>
             <View>
               <Text style={styles.orderLabel}>Número de pedido</Text>
-              <Text style={styles.orderNumber}>{orderId}</Text>
+              <Text style={styles.orderNumber}>{tenantOrderId || orderId}</Text>
             </View>
             <View>
               <Text style={styles.orderLabel}>Cantidad</Text>
@@ -116,12 +125,20 @@ const BasketAssignmentScreen = () => {
           </View>
           <View style={styles.scanBoxTitle}>
             <BarcodeScannerSvg width={38} height={38} color={Colors.black} />
-            <Text style={styles.scanText} onPress={() => handleAddBasket('1236')}>
+            <Text style={styles.scanText} onPress={() => handleAddBasket('1235')}>
               Escaneá los canastos
             </Text>
           </View>
-          {/* <Text style={styles.screenTitle}>Cajones estimados: {Math.ceil(totalQuantity / 20)}</Text> */}
-          <TextInput ref={inputRef} style={styles.hiddenInput} onSubmitEditing={e => handleAddBasket(e.nativeEvent.text)} blurOnSubmit={false} />
+          <TextInput
+            ref={inputRef}
+            style={styles.hiddenInput}
+            value={inputValue}
+            onChangeText={setInputValue}
+            onSubmitEditing={e => {
+              handleAddBasket(e.nativeEvent.text)
+            }}
+            blurOnSubmit={false}
+          />
           <View style={styles.orderDetailsBox}>
             <TouchableOpacity onPress={() => handleAddBasket('1235')}>
               <Text style={styles.orderDetailsTitle}>Detalle del pedido</Text>
@@ -145,7 +162,11 @@ const BasketAssignmentScreen = () => {
         description={modalDescription}
         primaryButtonText="VOLVER"
         primaryButtonColor={Colors.mainBlue}
-        primaryButtonAction={() => setModalVisible(false)}
+        primaryButtonAction={() => {
+          setModalVisible(false)
+          // Asegurar que el input mantenga el foco después de cerrar el modal
+          inputRef.current?.focus()
+        }}
       />
     </View>
   )

@@ -1,19 +1,36 @@
-import React, { useState } from 'react'
-import { Text, FlatList, RefreshControl, View } from 'react-native'
-import { useQuery } from '@tanstack/react-query'
+import React, { useState, useEffect } from 'react'
+import { Text, FlatList, RefreshControl, View, ActivityIndicator } from 'react-native'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { getFilteredOrders } from '../../services/order'
-import { Order, OrderStateEnum } from '../../types/order'
+import { Order, OrderStateEnum, FilteredOrdersResponse } from '../../types/order'
 import { useAtom } from 'jotai'
-import { userAtom, warehousesAtom } from '../../store'
+import { warehousesAtom } from '../../store'
 import MultiSelectOrderItem from './OrderItem'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { styles } from '../OrderList/styles'
 import MultiSelectOrderListSkeleton from '../MultiSelectOrderListSkeleton'
+import { useAuth } from '../../context/auth'
+
+// Estilos adicionales para el footer
+const additionalStyles = {
+  footerLoader: {
+    marginVertical: 16,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    flexDirection: 'row' as const
+  },
+  loadingMoreText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular'
+  }
+}
 
 interface MultiSelectOrdersListProps {
   selectedTab: 'pending' | 'completed'
   onSelectionChange: (selectedOrders: number[]) => void
+  shouldRefreshOrders?: boolean
 }
 
 interface GroupedOrders {
@@ -24,23 +41,49 @@ interface GroupedOrders {
   }[]
 }
 
-const MultiSelectOrdersList: React.FC<MultiSelectOrdersListProps> = ({ selectedTab, onSelectionChange }) => {
-  const [pickerUser] = useAtom(userAtom)
+const MultiSelectOrdersList: React.FC<MultiSelectOrdersListProps> = ({ selectedTab, onSelectionChange, shouldRefreshOrders = false }) => {
+  const { pickerUser } = useAuth()
   const [warehouseConfig] = useAtom(warehousesAtom)
   const [selectedOrders, setSelectedOrders] = useState<number[]>([])
   const [refreshing, setRefreshing] = useState(false)
 
   const stateId = selectedTab === 'pending' ? [OrderStateEnum.READY_TO_PICK] : [OrderStateEnum.FINISHED]
 
-  const {
-    data: orders = [],
-    isLoading,
-    error,
-    refetch
-  } = useQuery<Order[]>({
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } = useInfiniteQuery<FilteredOrdersResponse>({
     queryKey: ['orders', stateId],
-    queryFn: () => getFilteredOrders({ stateId: stateId, userId: pickerUser?.id, includeDetails: true })
+    queryFn: async ({ pageParam = 1 }) => {
+      try {
+        const filters = {
+          stateId,
+          userId: pickerUser?.id,
+          includeDetails: true,
+          page: pageParam as number,
+          limit: 20
+        }
+        const response = await getFilteredOrders(filters)
+        return response
+      } catch (error) {
+        console.error('Error fetching orders:', error)
+        return { orders: [], pagination: { total: 0, page: 1, limit: 20, totalPages: 0 } }
+      }
+    },
+    getNextPageParam: lastPage => {
+      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+        return lastPage.pagination.page + 1
+      }
+      return undefined
+    },
+    initialPageParam: 1
   })
+
+  // Extraer todas las órdenes de todas las páginas
+  const orders = data?.pages.flatMap(page => page.orders) || []
+
+  useEffect(() => {
+    if (shouldRefreshOrders) {
+      refetch()
+    }
+  }, [shouldRefreshOrders, refetch])
 
   const groupOrdersByDateAndSchedule = (orders: Order[]): GroupedOrders[] => {
     const grouped = orders.reduce((acc: { [key: string]: { [key: number]: Order[] } }, order) => {
@@ -70,9 +113,20 @@ const MultiSelectOrdersList: React.FC<MultiSelectOrdersListProps> = ({ selectedT
       .sort((a, b) => a.date.localeCompare(b.date))
   }
 
-  const firstShowPickerOrdersThenTheRest = orders
-    .filter(order => order.user_id === pickerUser?.id)
-    .concat(orders.filter(order => order.user_id !== pickerUser?.id))
+  // Asegurarse de que orders sea siempre un array
+  const ordersArray = Array.isArray(orders) ? orders : []
+
+  // Filtrar y ordenar las órdenes de manera segura
+  let firstShowPickerOrdersThenTheRest: Order[] = []
+
+  try {
+    const pickerOrders = ordersArray.filter(order => order && order.user_id === pickerUser?.id)
+    const otherOrders = ordersArray.filter(order => order && order.user_id !== pickerUser?.id)
+    firstShowPickerOrdersThenTheRest = [...pickerOrders, ...otherOrders]
+  } catch (error) {
+    console.error('Error processing orders:', error)
+    firstShowPickerOrdersThenTheRest = ordersArray
+  }
 
   const groupedOrders = groupOrdersByDateAndSchedule(firstShowPickerOrdersThenTheRest)
 
@@ -136,6 +190,22 @@ const MultiSelectOrdersList: React.FC<MultiSelectOrdersListProps> = ({ selectedT
     setRefreshing(false)
   }
 
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }
+
+  const renderFooter = () => {
+    if (!isFetchingNextPage) return null
+    return (
+      <View style={additionalStyles.footerLoader}>
+        <ActivityIndicator size="small" />
+        <Text style={additionalStyles.loadingMoreText}>Cargando más órdenes...</Text>
+      </View>
+    )
+  }
+
   if (isLoading && !refreshing) {
     return <MultiSelectOrderListSkeleton />
   }
@@ -150,6 +220,9 @@ const MultiSelectOrdersList: React.FC<MultiSelectOrdersListProps> = ({ selectedT
       renderItem={renderDateSection}
       keyExtractor={item => item.date}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      onEndReached={handleLoadMore}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={renderFooter}
     />
   )
 }

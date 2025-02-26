@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { getOrderDetail } from '../services/orderDetail'
 import { useAtom } from 'jotai'
 import { orderDetailsAtom } from '.'
-
+import { router } from 'expo-router'
 interface OrderDetailLoaderProps {
   orderId: number
 }
@@ -16,6 +16,7 @@ export const OrderDetailLoader = ({ orderId }: OrderDetailLoaderProps) => {
       return response
     } catch (err) {
       console.log(err)
+      router.push('/home')
     }
   }
 

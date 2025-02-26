@@ -71,10 +71,9 @@ export const usePickingProductDetailLogic = (productId: string) => {
           },
           { skipCurrentProductUpdate: true }
         )
-
         if (newQuantityPicked === product.quantity) {
           router.back()
-          showToast('Producto completado', product.order_id, Colors.green, 'success')
+          showToast('Producto completado', product.order_id, Colors.green, Colors.white)
         }
       } catch (error) {
         setErrorModalVisible(true)
@@ -104,7 +103,7 @@ export const usePickingProductDetailLogic = (productId: string) => {
 
       if (newQuantityPicked === product.quantity) {
         router.back()
-        showToast('Producto completado', product.order_id, Colors.green, 'success')
+        showToast('Producto completado', product.order_id, Colors.green, Colors.white)
       }
     }
   }
@@ -113,7 +112,7 @@ export const usePickingProductDetailLogic = (productId: string) => {
     if (!product) return
 
     if (quantity > product.quantity) {
-      showToast('Cantidad máxima excedida', product.order_id, Colors.red, 'error')
+      showToast('Cantidad máxima excedida', product.order_id, Colors.red, Colors.white)
       return
     }
 
@@ -131,9 +130,9 @@ export const usePickingProductDetailLogic = (productId: string) => {
     router.back()
 
     if (quantity === product.quantity) {
-      showToast('Producto completado', product.order_id, Colors.green, 'success')
+      showToast('Producto completado', product.order_id, Colors.green, Colors.white)
     } else if (quantity > 0) {
-      showToast('Producto incompleto', product.order_id, Colors.orange, 'warning')
+      showToast('Producto incompleto', product.order_id, Colors.orange, Colors.white)
     }
   }
 

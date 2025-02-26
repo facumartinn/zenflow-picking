@@ -11,34 +11,34 @@ import { BarcodeScannerSvg } from '../components/svg/BarcodeScanner'
 import { BoxDetailSvg } from '../components/svg/BoxDetail'
 import { BasketSvg } from '../components/svg/Basket'
 import { DefaultModal } from '../components/DefaultModal'
-import { useToast } from '../context/toast'
 import { WarningSvg } from '../components/svg/Warning'
 import LoadingPackingScreen from '../components/LoadingPackingScreen'
 import { updateOrderDetails } from '../services/orderDetail'
 import { updateOrders } from '../services/order'
 import { calculateOrdersPickingState, groupOrderDetailsByOrderId } from '../helpers/groupOrders'
 import { BackSvg } from '../components/svg/BackSvg'
+import { WarningTriangleSvg } from '../components/svg/WarningTriangle'
+import { CheckSvg } from '../components/svg/Check'
+import { OrderStateEnum } from '../types/order'
 
 const BasketValidationScreen = () => {
-  const [flowOrderDetails, setFlowOrderDetails] = useAtom(flowOrderDetailsAtom)
   const [basketsByOrder] = useAtom(basketsByOrderAtom)
+  const [flowOrderDetails, setFlowOrderDetails] = useAtom(flowOrderDetailsAtom)
   const [currentProduct] = useAtom(currentProductAtom)
   const [currentProductIndex, setCurrentProductIndex] = useAtom(currentProductIndexAtom)
   const router = useRouter()
   const [modalVisible, setModalVisible] = useState(false)
   const [modalIncompleteVisible, setModalIncompleteVisible] = useState(false)
   const [modalSkipBasketVisible, setModalSkipBasketVisible] = useState(false)
-  const [scannedBasketCode, setScannedBasketCode] = useState<number | undefined>(undefined)
+  const [scannedBasketCode, setScannedBasketCode] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<TextInput>(null)
-  const { showToast } = useToast()
   const isPickingIncomplete = flowOrderDetails.some(detail => detail.state_picking_details_id === PickingDetailEnum.INCOMPLETE)
+  const [isBasketValid, setIsBasketValid] = useState(false)
 
   useEffect(() => {
     // Enfocar el input invisible automáticamente al cargar la pantalla
-    if (inputRef.current) {
-      inputRef.current.focus()
-    }
+    inputRef.current?.focus()
   }, [])
 
   const handleFinishPicking = async () => {
@@ -61,12 +61,20 @@ const BasketValidationScreen = () => {
       await updateOrderDetails(transformOrderDetailsForUpdate(flowOrderDetails))
       await updateOrders({ orders: ordersPickingState })
 
-      // Navegar a la pantalla correspondiente después de que todo se complete exitosamente
+      // Actualizar el estado del flujo para reflejar que los pedidos están en estado de packing
+      const updatedFlowOrderDetails = flowOrderDetails.map(detail => ({
+        ...detail,
+        Orders: {
+          ...detail.Orders,
+          state_id: OrderStateEnum.PACKING
+        }
+      }))
+      setFlowOrderDetails(updatedFlowOrderDetails)
+
       router.push('/packing-orders')
     } catch (error) {
       console.error('Error al finalizar el picking:', error)
       setLoading(false)
-      // Aquí podrías mostrar un modal de error o un mensaje al usuario
     }
   }
 
@@ -78,7 +86,7 @@ const BasketValidationScreen = () => {
     return (
       <View style={styles.container}>
         <Text style={styles.errorText}>No hay productos en progreso.</Text>
-        <TouchableOpacity onPress={() => router.replace('/picking')}>
+        <TouchableOpacity onPress={() => router.push('/picking')}>
           <Text style={styles.backButtonText}>Volver a la pantalla de picking</Text>
         </TouchableOpacity>
       </View>
@@ -87,38 +95,24 @@ const BasketValidationScreen = () => {
 
   const baskets = basketsByOrder[currentProduct!.order_id]?.join(', ') || 'N/A'
 
-  const handleBasket = () => {
-    if (!basketsByOrder[currentProduct.order_id]?.includes(scannedBasketCode as number)) {
-      // Mostrar modal de error si el canasto no coincide
-      setModalVisible(true)
-      // Reset input
-      setScannedBasketCode(undefined)
-      return
-    }
-    handleBasketValidation()
-  }
-
   const handleBasketValidation = async () => {
-    const updatedFlowOrderDetails = flowOrderDetails.map((detail, index) => {
-      if (index === currentProductIndex) {
-        if (detail.quantity_picked! < detail.quantity) {
-          return { ...detail, state_picking_details_id: PickingDetailEnum.INCOMPLETE }
-        } else {
-          return { ...detail, state_picking_details_id: PickingDetailEnum.COMPLETED }
-        }
-      } else if (index === currentProductIndex + 1) {
-        return { ...detail, state_picking_details_id: PickingDetailEnum.IN_PROGRESS }
-      } else {
-        return detail
-      }
-    })
+    const isCurrentProductIncomplete = currentProduct!.quantity_picked! < currentProduct!.quantity
+    const newState = isCurrentProductIncomplete ? PickingDetailEnum.INCOMPLETE : PickingDetailEnum.COMPLETED
 
-    setFlowOrderDetails(updatedFlowOrderDetails)
+    // Primero actualizamos el estado del producto actual
+    setFlowOrderDetails(prev => prev.map(detail => (detail.id === currentProduct!.id ? { ...detail, state_picking_details_id: newState } : detail)))
 
     if (currentProductIndex < flowOrderDetails.length - 1) {
-      showToast(`${currentProduct.quantity_picked!} productos levantados`, currentProduct.order_id, Colors.green, Colors.white)
-      setCurrentProductIndex(currentProductIndex + 1)
-      router.replace('/picking')
+      // Solo buscamos el siguiente producto si el actual está completo
+      if (!isCurrentProductIncomplete) {
+        const nextPendingIndex = flowOrderDetails.findIndex(
+          (detail, idx) => idx > currentProductIndex && detail.state_picking_details_id === PickingDetailEnum.PENDING
+        )
+        if (nextPendingIndex !== -1) {
+          setCurrentProductIndex(nextPendingIndex)
+        }
+      }
+      router.push('/picking')
     } else {
       if (isPickingIncomplete) {
         setModalIncompleteVisible(true)
@@ -128,9 +122,32 @@ const BasketValidationScreen = () => {
     }
   }
 
+  const handleBasket = (basketCode: string) => {
+    const basketId = parseInt(basketCode, 10)
+
+    if (!basketsByOrder[currentProduct!.order_id]?.includes(basketId)) {
+      // Mostrar modal de error si el canasto no coincide
+      setModalVisible(true)
+      // Reset input
+      setScannedBasketCode('')
+      // Mantener el foco en el input
+      inputRef.current?.focus()
+      return
+    }
+
+    setIsBasketValid(true)
+    // Resetear el input después de escanear
+    setScannedBasketCode('')
+
+    setTimeout(() => {
+      handleBasketValidation()
+    }, 1000)
+  }
+
   const handleSkipBasket = () => {
     handleBasketValidation()
   }
+
   return (
     <LinearGradient
       colors={[Colors.lightOrange, Colors.grey1]}
@@ -140,7 +157,12 @@ const BasketValidationScreen = () => {
       locations={[0.35, 0.35]}
     >
       <View style={styles.topBodyContainer}>
-        <DefaultHeader title="Guardado" leftIcon={<BackSvg width={30} height={30} color="black" />} leftAction={() => router.back()} />
+        <DefaultHeader
+          title="Guardado en cajón"
+          leftIcon={<BackSvg width={30} height={30} color="black" />}
+          leftAction={() => router.back()}
+          backgroundColor="transparent"
+        />
       </View>
       <View style={styles.contentContainer}>
         <Text style={styles.productName}>{currentProduct?.product_name}</Text>
@@ -164,21 +186,30 @@ const BasketValidationScreen = () => {
             <Text style={styles.orderBoxValue}>{baskets}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.scanContainer} onPress={handleBasket}>
-          <BarcodeScannerSvg width={40} height={40} color={Colors.black} />
-          <Text style={styles.scanText}>Escaneá el cajón</Text>
-        </TouchableOpacity>
+        <View style={styles.scanContainer}>
+          {isBasketValid ? (
+            <>
+              <CheckSvg width={20} height={20} color={Colors.green} />
+              <Text style={[styles.scanText, { color: Colors.green, fontFamily: 'Inter_700Bold', fontSize: 12 }]}>Cajón correcto</Text>
+            </>
+          ) : (
+            <>
+              <BarcodeScannerSvg width={40} height={40} color={Colors.black} />
+              <Text style={styles.scanText}>Escaneá los cajones</Text>
+            </>
+          )}
+        </View>
         <TextInput
           ref={inputRef}
           style={styles.invisibleInput}
-          value={scannedBasketCode?.toString()}
-          onChangeText={text => setScannedBasketCode(Number(text))}
-          onSubmitEditing={handleBasket}
-          autoFocus={true}
+          value={scannedBasketCode}
+          onChangeText={setScannedBasketCode}
+          onSubmitEditing={e => handleBasket(e.nativeEvent.text)}
+          blurOnSubmit={false}
         />
       </View>
       <TouchableOpacity style={styles.skipButton} onPress={() => setModalSkipBasketVisible(true)}>
-        <Text style={styles.skipText}>Omitir</Text>
+        <Text style={styles.skipText}>CONTINUAR MANUALMENTE</Text>
       </TouchableOpacity>
 
       <DefaultModal
@@ -188,7 +219,11 @@ const BasketValidationScreen = () => {
         icon={<WarningSvg width={40} height={41} color={Colors.red} />}
         iconBackgroundColor={Colors.lightRed}
         primaryButtonText="ATRÁS"
-        primaryButtonAction={() => setModalVisible(false)}
+        primaryButtonAction={() => {
+          setModalVisible(false)
+          // Asegurar que el input mantenga el foco después de cerrar el modal
+          inputRef.current?.focus()
+        }}
         primaryButtonColor={Colors.mainBlue}
         primaryButtonTextColor={Colors.white}
       />
@@ -199,7 +234,7 @@ const BasketValidationScreen = () => {
         icon={<WarningSvg width={40} height={41} color={Colors.red} />}
         iconBackgroundColor={Colors.lightRed}
         primaryButtonText="VER PEDIDOS"
-        primaryButtonAction={() => router.replace('/picking-orders')}
+        primaryButtonAction={() => router.push('/picking-orders')}
         primaryButtonColor={Colors.mainBlue}
         primaryButtonTextColor={Colors.white}
         secondaryButtonText="SEGUIR SIN COMPLETAR"
@@ -209,18 +244,22 @@ const BasketValidationScreen = () => {
       />
       <DefaultModal
         visible={modalSkipBasketVisible}
-        title="¡Ciudado!"
-        description={'Escanear el cajón donde se colocan los artículos reduce las posibilidades de mezclar los pedidos.'}
-        icon={<WarningSvg width={40} height={41} color={Colors.red} />}
-        iconBackgroundColor={Colors.lightRed}
-        primaryButtonText="SEGUIR SIN ESCANEAR"
+        title="Continuar sin escanear el cajón"
+        description={'Escanear el cajón reduce las posibilidades de mezclar los pedidos.'}
+        icon={<WarningTriangleSvg width={40} height={40} color={Colors.yellow} />}
+        iconBackgroundColor={Colors.white}
+        primaryButtonText="CONTINUAR"
         primaryButtonAction={handleSkipBasket}
         primaryButtonColor={Colors.mainBlue}
         primaryButtonTextColor={Colors.white}
         secondaryButtonText="ATRÁS"
-        secondaryButtonAction={() => setModalSkipBasketVisible(false)}
+        secondaryButtonAction={() => {
+          setModalSkipBasketVisible(false)
+          // Asegurar que el input mantenga el foco después de cerrar el modal
+          inputRef.current?.focus()
+        }}
         secondaryButtonColor={Colors.white}
-        secondaryButtonTextColor={Colors.red}
+        secondaryButtonTextColor={Colors.mainBlue}
       />
     </LinearGradient>
   )
@@ -290,9 +329,10 @@ const styles = StyleSheet.create({
     color: Colors.black
   },
   orderInfoContainer: {
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 30,
+    gap: 8,
     marginBottom: 40
   },
   orderBoxName: {
@@ -301,13 +341,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   orderBox: {
+    width: '48%',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderColor: Colors.orange,
+    borderColor: Colors.mainOrange,
     backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderRadius: 20,
-    alignItems: 'center'
+    borderWidth: 1.5,
+    borderRadius: 10,
+    alignItems: 'flex-start'
   },
   orderBoxLabel: {
     fontSize: 16,

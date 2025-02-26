@@ -10,7 +10,8 @@ export const styles = StyleSheet.create({
   },
   modalContainer: {
     width: '80%',
-    padding: 20,
+    paddingHorizontal: 40,
+    paddingVertical: 20,
     backgroundColor: 'white',
     borderRadius: 10,
     alignItems: 'center'
@@ -22,16 +23,16 @@ export const styles = StyleSheet.create({
     marginBottom: 10
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: 'Inter_700Bold',
-    marginBottom: 10
+    marginBottom: 15
   },
   description: {
-    fontSize: 14,
+    fontSize: 16,
     textAlign: 'center',
     color: Colors.grey4,
     fontFamily: 'Inter_400Regular',
-    marginBottom: 10
+    marginBottom: 15
   },
   subDescription: {
     fontSize: 16,
@@ -45,7 +46,7 @@ export const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',
-    marginBottom: 10
+    marginBottom: 15
   },
   primaryButtonText: {
     color: 'white',

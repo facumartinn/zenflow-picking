@@ -1,5 +1,5 @@
 // hooks/usePackingOrderDetail.ts
-import { useCallback, useState, useMemo } from 'react'
+import { useCallback, useState, useMemo, useEffect } from 'react'
 import { useAtom } from 'jotai'
 import { packingOrdersAtom, basketsByOrderAtom, warehousesAtom } from '../store'
 import { PrintStatusEnum, Resource } from '../types/flow'
@@ -11,7 +11,7 @@ interface UsePackingOrderDetailProps {
 export const usePackingOrderDetail = ({ orderId }: UsePackingOrderDetailProps) => {
   const [warehouseConfig] = useAtom(warehousesAtom)
   const [basketsByOrder] = useAtom(basketsByOrderAtom)
-  const [, setPackingOrders] = useAtom(packingOrdersAtom)
+  const [packingOrders, setPackingOrders] = useAtom(packingOrdersAtom)
 
   // Obtenemos los recursos disponibles desde el warehouseConfig
   const availableResources = useMemo(() => {
@@ -21,10 +21,22 @@ export const usePackingOrderDetail = ({ orderId }: UsePackingOrderDetailProps) =
     }))
   }, [warehouseConfig])
 
-  // Lista de recursos seleccionados por el usuario (inicia vacía)
-  const [resourceList, setResourceList] = useState<Resource[]>([])
+  // Lista de recursos seleccionados por el usuario (inicializada con los recursos existentes)
+  const [resourceList, setResourceList] = useState<Resource[]>(packingOrders[orderId]?.resources || [])
 
   const [drawerNumber, setDrawerNumber] = useState<number[]>(basketsByOrder[orderId] || [])
+
+  // Mantener sincronizado packingOrders con resourceList
+  useEffect(() => {
+    setPackingOrders(prev => ({
+      ...prev,
+      [orderId]: {
+        print_status: prev[orderId]?.print_status || PrintStatusEnum.NOT_PRINTED,
+        resources: resourceList,
+        packing_delivery_status: prev[orderId]?.packing_delivery_status || 0
+      }
+    }))
+  }, [resourceList, orderId, setPackingOrders])
 
   const incrementResource = useCallback(
     (resourceId: number) => {
@@ -34,7 +46,7 @@ export const usePackingOrderDetail = ({ orderId }: UsePackingOrderDetailProps) =
         {
           resource_id: resourceId,
           resource_name: resourceName,
-          barcode: Date.now(), // Generamos un barcode único
+          barcode: Date.now().toString(), // Generamos un barcode único como string
           position: ''
         }
       ])
@@ -57,16 +69,9 @@ export const usePackingOrderDetail = ({ orderId }: UsePackingOrderDetailProps) =
   }, [])
 
   const handleConfirm = useCallback(() => {
-    setPackingOrders(prev => ({
-      ...prev,
-      [orderId]: {
-        print_status: PrintStatusEnum.NOT_PRINTED,
-        resources: resourceList,
-        packing_delivery_status: 0
-      }
-    }))
+    // Ya no necesitamos actualizar packingOrders aquí porque se mantiene sincronizado con el useEffect
     // Retornamos para que el componente llamante maneje la navegación
-  }, [resourceList, orderId, setPackingOrders])
+  }, [])
 
   return {
     drawerNumber,

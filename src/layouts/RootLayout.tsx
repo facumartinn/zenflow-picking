@@ -56,7 +56,10 @@ const NavigationContent = () => {
         <Stack.Screen name="admin-login/index" />
       ) : isPickerAuthenticated ? (
         <>
-          <Stack.Screen name="home/index" />
+          <Stack.Screen name="home/index" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="flow-finished/index" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="packing-delivery/index" />
+          <Stack.Screen name="packing-delivery-detail/index" />
           <Stack.Screen name="profile/index" />
           <Stack.Screen name="order-detail/index" />
           <Stack.Screen name="completed-order-detail/index" />
@@ -66,12 +69,9 @@ const NavigationContent = () => {
           <Stack.Screen name="packing/index" />
           <Stack.Screen name="packing-orders/index" />
           <Stack.Screen name="packing-order-detail/index" />
-          <Stack.Screen name="packing-order-overview/index" />
           <Stack.Screen name="packing-order-completed/index" />
-          <Stack.Screen name="packing-delivery/index" />
-          <Stack.Screen name="packing-delivery-detail/index" />
-          <Stack.Screen name="flow-finished/index" />
           <Stack.Screen name="incomplete-order-detail/index" />
+          <Stack.Screen name="incomplete-picking-product-order-detail/index" />
         </>
       ) : (
         <Stack.Screen name="picker-login/index" />

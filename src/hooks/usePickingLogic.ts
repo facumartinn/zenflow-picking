@@ -236,7 +236,6 @@ export const usePickingLogic = () => {
       })
 
       setFlowOrderDetails(updatedFlowOrderDetails)
-      console.log('Picking process completed')
     }
   }
 

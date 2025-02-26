@@ -43,7 +43,7 @@ export interface PackingOrder {
 export interface Resource {
   resource_id: number
   resource_name: string
-  barcode: number
+  barcode: string
   position?: string
 }
 

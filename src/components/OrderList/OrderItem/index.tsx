@@ -23,10 +23,11 @@ const OrderItem: React.FC<OrderItemProps> = ({ item, selectedTab }) => {
     <TouchableOpacity
       style={[styles.orderItem, isIncomplete && styles.orderItemIncomplete]}
       onPress={() =>
-        router.navigate({
+        router.push({
           pathname: selectedTab === 'pending' ? '/order-detail' : '/completed-order-detail',
           params: {
             orderId: item.id,
+            tenantOrderId: item.order_tenant_id,
             stateId: item.state_id || undefined
           }
         })
@@ -36,7 +37,7 @@ const OrderItem: React.FC<OrderItemProps> = ({ item, selectedTab }) => {
         <View style={styles.orderBox}>
           <View>
             <Text style={styles.orderLabel}>Nro pedido</Text>
-            <Text style={styles.orderNumber}>000{item.id}</Text>
+            <Text style={styles.orderNumber}>{item.order_tenant_id}</Text>
           </View>
         </View>
         <View style={styles.orderBox}>

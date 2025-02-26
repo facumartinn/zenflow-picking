@@ -1,16 +1,18 @@
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import { BoxDetailSvg } from '../../components/svg/BoxDetail'
 import Colors from '../../constants/Colors'
 import { packingOrdersAtom } from '../../store/flowAtoms'
 import { useAtom } from 'jotai'
+import { WarningTriangleSvg } from '../svg/WarningTriangle'
+import { CheckSignSvg } from '../svg/CheckSign'
 
 interface PackingDeliveryCardProps {
   orderId: number
   onPress: () => void
+  tenantOrderId: number
 }
 
-export const PackingDeliveryCard: React.FC<PackingDeliveryCardProps> = ({ orderId, onPress }) => {
+export const PackingDeliveryCard: React.FC<PackingDeliveryCardProps> = ({ orderId, onPress, tenantOrderId }) => {
   const [packingOrderDetail] = useAtom(packingOrdersAtom)
   // const [flowOrderDetails] = useAtom(flowOrderDetailsAtom)
 
@@ -30,50 +32,45 @@ export const PackingDeliveryCard: React.FC<PackingDeliveryCardProps> = ({ orderI
   const positions = Array.from(new Set(orderResources.map(resource => resource.position))).join(', ')
 
   return (
-    <TouchableOpacity style={[styles.card, { borderColor: isDelivered ? Colors.green : Colors.orange }]} onPress={onPress}>
+    <TouchableOpacity style={[styles.card, { borderColor: isDelivered ? Colors.green : Colors.mainOrange }]} onPress={onPress}>
       <View style={styles.headerRow}>
-        <View style={styles.headerItem}>
-          <View style={styles.headerLabelContainer}>
-            <BoxDetailSvg width={20} height={20} color={Colors.black} />
-            <Text style={styles.headerLabel}>Pedido</Text>
-          </View>
-          <Text style={styles.headerValue}>{orderId}</Text>
-        </View>
-        {!isDelivered ? (
-          <View style={styles.headerItem}>
-            <Text style={styles.headerLabel}>Cant.</Text>
-            <Text style={styles.headerValue}>{orderResources.length}</Text>
-          </View>
-        ) : (
-          <View style={styles.headerItem}>
-            <Text style={styles.headerLabel}>Posición</Text>
-            <Text style={styles.headerValue}>{positions}</Text>
-          </View>
-        )}
-      </View>
-      {!isDelivered && <View style={styles.divider} />}
-
-      {!isDelivered ? (
-        <View style={styles.detailsContainer}>
-          {Object.entries(
-            orderResources.reduce(
-              (acc, resource) => {
-                acc[resource.resource_name] = (acc[resource.resource_name] || 0) + 1
-                return acc
-              },
-              {} as Record<string, number>
-            )
-          ).map(([resourceName, count], index) => (
-            <View style={styles.detailRow} key={index}>
-              <Text style={styles.detailLabel}>{resourceName}</Text>
-              <Text style={styles.detailValue}>{count}</Text>
+        <View style={styles.infoContainer}>
+          <View style={styles.detailRow}>
+            <View style={styles.detailRowText}>
+              <Text style={styles.detailTitle}>Número de pedido</Text>
             </View>
-          ))}
+            <Text style={styles.detailText}>{tenantOrderId}</Text>
+          </View>
+          {!isDelivered ? (
+            <View style={styles.detailRow}>
+              <View style={styles.detailRowText}>
+                <Text style={styles.detailTitle}>Cantidad</Text>
+              </View>
+              <Text style={styles.detailText}>{orderResources.length}</Text>
+            </View>
+          ) : (
+            <View style={styles.detailRow}>
+              <View style={styles.detailRowText}>
+                <Text style={styles.detailTitle}>Posición</Text>
+              </View>
+              <Text style={styles.detailText}>{positions}</Text>
+            </View>
+          )}
         </View>
-      ) : null}
+      </View>
 
       {/* Texto de estado dinámico */}
-      <Text style={[styles.statusLabel, { color: isDelivered ? Colors.green : Colors.orange }]}>{isDelivered ? 'ENTREGADO' : 'PENDIENTE DE ENTREGA'}</Text>
+      {isDelivered ? (
+        <View style={styles.statusContainer}>
+          <CheckSignSvg width={16} height={16} color={Colors.green} />
+          <Text style={styles.statusLabel}>Entregado</Text>
+        </View>
+      ) : (
+        <View style={styles.statusContainer}>
+          <WarningTriangleSvg width={16} height={16} color={Colors.orange} />
+          <Text style={styles.statusWarningLabel}>Sin entregar</Text>
+        </View>
+      )}
     </TouchableOpacity>
   )
 }
@@ -89,7 +86,6 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 32,
     alignItems: 'center',
     marginBottom: 12
   },
@@ -113,22 +109,49 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_700Bold',
     color: Colors.black
   },
+  infoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8
+  },
+  detailRow: {
+    width: '49%',
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    gap: 8,
+    padding: 8,
+    borderRadius: 10,
+    backgroundColor: Colors.grey0
+  },
+  detailRowText: {
+    // flexDirection: 'row',
+    // alignItems: 'center',
+    // gap: 8
+  },
+  detailTitle: {
+    fontSize: 14,
+    color: Colors.grey5,
+    fontFamily: 'Inter_400Regular'
+  },
+  detailText: {
+    fontSize: 18,
+    fontFamily: 'Inter_700Bold',
+    color: Colors.black
+  },
+
   divider: {
     borderWidth: 0.7,
-    borderColor: Colors.orange,
+    borderColor: Colors.mainOrange,
     marginVertical: 4,
     marginHorizontal: 20,
-    backgroundColor: Colors.orange
+    backgroundColor: Colors.mainOrange
   },
   detailsContainer: {
     gap: 8,
     marginTop: 12,
     marginHorizontal: 20
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
   },
   detailLabel: {
     fontSize: 16,
@@ -141,10 +164,23 @@ const styles = StyleSheet.create({
     color: Colors.black
   },
   statusLabel: {
-    marginTop: 12,
-    fontSize: 16,
+    fontSize: 12,
+    color: Colors.green,
     fontFamily: 'Inter_700Bold',
     textAlign: 'center'
+  },
+  statusWarningLabel: {
+    fontSize: 12,
+    fontFamily: 'Inter_700Bold',
+    textAlign: 'center',
+    color: Colors.orange
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginVertical: 12
   }
 })
 

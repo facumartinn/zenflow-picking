@@ -72,7 +72,7 @@ export const PickerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setWarehouseConfig(parsedConfig)
           }
         }
-        router.replace('/home')
+        router.push('/home')
       } catch (error) {
         console.error('Error al verificar autenticación del picker:', error)
       }

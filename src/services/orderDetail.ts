@@ -1,5 +1,5 @@
 import api from './api'
-import { OrderDetails } from '../types/order'
+import { OrderDetails, PickingUpdate } from '../types/order'
 
 // Obtener todos los detalles de pedidos
 export const getAllOrderDetails = async (): Promise<OrderDetails[]> => {
@@ -62,6 +62,41 @@ export const deleteOrderDetail = async (id: number): Promise<void> => {
     await api.delete(`/order-details/${id}`)
   } catch (error) {
     console.error(`Error deleting order detail with ID ${id}:`, error)
+    throw error
+  }
+}
+
+export const updateIncompleteProducts = async (products: OrderDetails[], orderId: number, statePickingId: number) => {
+  try {
+    // Transformar los productos al formato esperado por el endpoint
+    const transformedProducts: PickingUpdate[] = products.map(detail => ({
+      order_id: detail.order_id,
+      product_id: detail.product_id,
+      quantity: detail.quantity,
+      quantity_picked: detail.quantity_picked!,
+      final_weight: detail.final_weight,
+      state_picking_details_id: detail.state_picking_details_id!
+    }))
+
+    // Actualizar los detalles de los productos
+    await updateOrderDetails(transformedProducts)
+
+    // Actualizar el estado del pedido
+    const orderUpdate = {
+      orders: [
+        {
+          id: orderId,
+          data: {
+            state_picking_id: statePickingId // Estado de picking completado
+          }
+        }
+      ]
+    }
+
+    await api.put('/orders/batch-update', orderUpdate)
+    return { success: true }
+  } catch (error) {
+    console.error('Error al actualizar productos:', error)
     throw error
   }
 }

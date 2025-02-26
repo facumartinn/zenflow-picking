@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import { DefaultHeader } from '../components/DefaultHeader'
-import { AntDesign } from '@expo/vector-icons'
 import Colors from '../constants/Colors'
 import { useRouter } from 'expo-router'
 import { useAtom } from 'jotai'
@@ -17,6 +16,7 @@ import { OrderStateEnum } from '../types/order'
 import { FlowStateEnum } from '../types/flow'
 import { updateOrderStatus } from '../services/order'
 import { BasketSvg } from '../components/svg/Basket'
+import { BackSvg } from '../components/svg/BackSvg'
 // import { updateOrderStatus } from '../services/order'
 // import { OrderStateEnum } from '../types/order'
 
@@ -31,38 +31,29 @@ const BasketSelectionScreen = () => {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        router.push('/picking') // Navega a la pantalla de picking
-      }, 3000) // 3 segundos de pantalla de carga
-      return () => clearTimeout(timer) // Limpia el timer si el componente se desmonta
-    }
-  }, [loading, router])
-
-  const handleCardPress = (orderId: number) => {
-    router.push({ pathname: '/basket-assignment', params: { orderId } })
+  const handleCardPress = (orderId: number, tenantOrderId: number) => {
+    router.push({ pathname: '/basket-assignment', params: { orderId, tenantOrderId } })
   }
 
   const allOrdersReady = groupedOrders.every(order => basketsByOrder[order.order_id]?.length > 0)
   const orderIds = Object.keys(basketsByOrder).map(Number)
 
   const handleStartPicking = async () => {
-    // Add API call to save baskets to orders
+    setLoading(true)
     try {
       await assignBasketsToOrders(basketsByOrder)
-      // Actualizar el estado de los pedidos.
       await updateOrderStatus(OrderStateEnum.IN_PREPARATION, orderIds)
-      setLoading(true)
+      router.push('/picking')
     } catch (error) {
       console.error('Error al asignar cajones a las órdenes', error)
+      setLoading(false)
     }
   }
 
   const handleBack = async () => {
     // Aca pegarle a la api para cancelar el flow de picking
     await updateFlowStatus(flow.id, FlowStateEnum.CANCELLED, OrderStateEnum.READY_TO_PICK)
-    router.navigate('/multi-picking')
+    router.push('/multi-picking')
     setResetFlow()
   }
 
@@ -72,15 +63,7 @@ const BasketSelectionScreen = () => {
 
   return (
     <View style={styles.container}>
-      <DefaultHeader
-        title={<Text style={styles.headerTitle}>Picking múltiple</Text>}
-        leftIcon={
-          <View style={{ borderRadius: 100, backgroundColor: 'white', marginLeft: 10 }}>
-            <AntDesign name="arrowleft" size={24} color="black" style={{ padding: 8 }} />
-          </View>
-        }
-        leftAction={() => setModalVisible(true)}
-      />
+      <DefaultHeader title="Picking múltiple" leftIcon={<BackSvg width={24} height={24} color={Colors.black} />} leftAction={() => setModalVisible(true)} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.bodyContainer}>
           <Text style={styles.screenTitle}>Asignación de cajones</Text>
@@ -88,7 +71,7 @@ const BasketSelectionScreen = () => {
           {groupedOrders.map(order => {
             const isOrderReady = basketsByOrder[order.order_id]?.length > 0
             return (
-              <TouchableOpacity key={order.order_id} onPress={() => handleCardPress(order.order_id)}>
+              <TouchableOpacity key={order.order_id} onPress={() => handleCardPress(order.order_id, order.order_tenant_id)}>
                 <OrderCard order={order} isOrderReady={isOrderReady} />
               </TouchableOpacity>
             )
@@ -128,7 +111,6 @@ export default BasketSelectionScreen
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 20,
     flex: 1,
     backgroundColor: Colors.grey1
   },

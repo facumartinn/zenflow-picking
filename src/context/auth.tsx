@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Verificar picker auth
         if (pickerAuth?.token) {
           setIsPickerAuthenticated(true)
-          router.replace('/home')
+          router.push('/home')
         }
       } catch (error) {
         console.error('Error verificando autenticación:', error)
@@ -108,7 +108,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setIsAdminAuthenticated(true)
-      console.log('Login exitoso, redirigiendo...')
 
       // Pequeño delay para asegurar que el estado se actualice
       setTimeout(() => {
@@ -123,11 +122,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginPicker = async (code: string) => {
     try {
-      console.log('code', code)
       setError(null)
 
       const response = await loginPickingUser(Number(code))
-      console.log('response', response)
       const user = response.user
       const parsedConfig = JSON.parse(user.Warehouses?.custom_attributes || '{}')
 
@@ -149,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Pequeño delay para asegurar que el estado se actualice
       setTimeout(() => {
-        router.replace('/home')
+        router.push('/home')
       }, 100)
     } catch (error) {
       setError('Error al iniciar sesión como picker')
@@ -168,7 +165,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Pequeño delay para asegurar que el estado se actualice antes de navegar
       setTimeout(() => {
-        router.replace('/picker-login')
+        router.push('/picker-login')
       }, 100)
     } catch (error) {
       setError('Error al cerrar sesión de picker')
@@ -191,7 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Pequeño delay para asegurar que el estado se actualice antes de navegar
       setTimeout(() => {
-        router.replace('/admin-login')
+        router.push('/admin-login')
       }, 100)
     } catch (error) {
       setError('Error al cerrar sesión de administrador')

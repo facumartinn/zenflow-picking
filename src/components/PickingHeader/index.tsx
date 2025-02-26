@@ -1,9 +1,9 @@
 import React from 'react'
 import { TouchableOpacity, View, Text } from 'react-native'
 import { styles } from './styles'
-import { BoxDetailSvg } from '../svg/BoxDetail'
 import { BarcodeScannerSvg } from '../svg/BarcodeScanner'
 import Colors from '../../constants/Colors'
+import { BoundingBoxSvg } from '../svg/BoundingBox'
 
 interface HeaderProps {
   title?: React.ReactNode
@@ -24,7 +24,7 @@ export const PickingHeader = ({ title, rightAction, leftAction }: HeaderProps) =
       </View>
       <View style={styles.rightColumn}>
         <TouchableOpacity onPress={rightAction} style={styles.rightIcon}>
-          <BoxDetailSvg width={28} height={28} color={Colors.mainBlue} />
+          <BoundingBoxSvg width={28} height={28} color={Colors.mainBlue} />
         </TouchableOpacity>
       </View>
     </View>

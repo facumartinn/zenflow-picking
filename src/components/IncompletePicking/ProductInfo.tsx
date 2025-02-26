@@ -3,26 +3,20 @@ import { View, StyleSheet, Dimensions, Text } from 'react-native'
 import { OrderDetails } from '../../types/order'
 import Colors from '../../constants/Colors'
 import { BoxDetailSvg } from '../svg/BoxDetail'
-import { BasketSvg } from '../svg/Basket'
-import ProductDetails from './components/ProductDetails'
-import PickingInfo from './components/PickingInfo'
-import { useAtom } from 'jotai'
-import { basketsByOrderAtom } from '../../store'
-import PickingInfoWeight from './components/PickingInfoWeight'
+import ProductDetails from '../PickingProduct/components/ProductDetails'
+import PickingInfo from '../PickingProduct/components/PickingInfo'
+import PickingInfoWeight from '../PickingProduct/components/PickingInfoWeight'
 
 const { width } = Dimensions.get('window')
 
 interface ProductInfoProps {
   item: OrderDetails
+  positions: string
   onRestartQuantity: () => void
   isCompleted?: boolean
 }
 
-const ProductInfo: React.FC<ProductInfoProps> = ({ item, onRestartQuantity, isCompleted }) => {
-  const [basketsByOrder] = useAtom(basketsByOrderAtom)
-  const baskets = basketsByOrder[item!.order_id]?.join(', ') || 'N/A'
-  const basketTag = `Caj${basketsByOrder[item!.order_id]?.length > 1 ? 'ones' : 'ón'}`
-
+const IncompletePickingProductInfo: React.FC<ProductInfoProps> = ({ item, positions, onRestartQuantity, isCompleted }) => {
   return (
     <View style={styles.card}>
       <ProductDetails productPhoto={item.product_photo!} productName={item.product_name} productBarcode={item.product_barcode!} />
@@ -45,21 +39,20 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ item, onRestartQuantity, isCo
             <BoxDetailSvg width={28} height={28} color={Colors.grey5} />
             <Text style={styles.orderInfo}>Nro pedido</Text>
           </View>
-          <Text style={styles.orderNumber}>0000{item.order_id}</Text>
+          <Text style={styles.orderNumber}>{item.Orders.order_tenant_id}</Text>
         </View>
         <View style={styles.orderBox}>
           <View style={styles.orderContainer}>
-            <BasketSvg width={28} height={26} color={Colors.grey5} />
-            <Text style={styles.orderInfo}>{basketTag}</Text>
+            <Text style={styles.orderInfo}>Posición de entrega</Text>
           </View>
-          <Text style={styles.orderNumber}>{baskets}</Text>
+          <Text style={styles.orderNumber}>{positions}</Text>
         </View>
       </View>
     </View>
   )
 }
 
-export default ProductInfo
+export default IncompletePickingProductInfo
 
 const styles = StyleSheet.create({
   card: {
@@ -76,15 +69,18 @@ const styles = StyleSheet.create({
     gap: 30
   },
   orderBox: {
+    padding: 10,
+    borderRadius: 10,
     flexDirection: 'column',
-    justifyContent: 'center'
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    backgroundColor: Colors.grey1
   },
   orderContainer: {
     flexDirection: 'row',
     alignItems: 'center'
   },
   orderInfo: {
-    marginLeft: 6,
     fontSize: 18,
     fontFamily: 'Inter_400Regular',
     color: Colors.grey5
@@ -92,7 +88,7 @@ const styles = StyleSheet.create({
   orderNumber: {
     fontSize: 20,
     fontFamily: 'Inter_700Bold',
-    color: Colors.grey5,
+    color: Colors.black,
     textAlign: 'center'
   }
 })

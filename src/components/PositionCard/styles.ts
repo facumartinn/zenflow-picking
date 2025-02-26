@@ -90,5 +90,9 @@ export const styles = StyleSheet.create({
   },
   iconContainerDisabled: {
     opacity: 0.5
+  },
+  placeholder: {
+    backgroundColor: Colors.grey3,
+    borderRadius: 4
   }
 })

@@ -17,5 +17,16 @@ export const styles = StyleSheet.create({
     fontFamily: 'Inter_400Regular',
     color: Colors.black,
     marginBottom: 20
+  },
+  footerLoader: {
+    marginBottom: 16,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    flexDirection: 'row' as const
+  },
+  loadingMoreText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular'
   }
 })

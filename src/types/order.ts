@@ -16,6 +16,7 @@ export interface Order {
   positions: string | null
   OrderDetails?: OrderDetails[]
   OrderPositions: OrderPosition[]
+  OrderResources: OrderResource[]
 }
 
 export interface OrderDetails {
@@ -66,6 +67,8 @@ export interface FilterParamTypes {
   startDate?: Date
   endDate?: Date
   includeDetails?: boolean
+  page?: number
+  limit?: number
 }
 
 export enum OrderStateEnum {
@@ -138,4 +141,17 @@ export interface OrderResourceItem {
   barcode: string
   position: string
   resource_name: string
+}
+
+// Nuevas interfaces para la respuesta paginada
+export interface PaginationInfo {
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+export interface FilteredOrdersResponse {
+  orders: Order[]
+  pagination: PaginationInfo
 }
