@@ -1,7 +1,7 @@
 {
   "name": "picking",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "build:android": "npx eas-cli build --platform android",
     "build:ios": "npx eas-cli build --platform ios --local",
