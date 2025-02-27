@@ -2,7 +2,7 @@
   "expo": {
     "name": "ZenFlow",
     "slug": "picking",
-    "version": "0.0.1",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "zenflow-picking",
@@ -18,7 +18,7 @@
     },
     "android": {
       "package": "com.zenflow.picking",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
